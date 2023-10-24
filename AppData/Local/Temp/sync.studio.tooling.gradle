@@ -1,0 +1,8 @@
+initscript {
+    dependencies {
+        classpath files([mapPath('C:/Program Files/Android/Android Studio/plugins/android/lib/android-gradle.jar'), mapPath('C:/Program Files/Android/Android Studio/plugins/android/lib/android-gradle.jar'), mapPath('C:/Program Files/Android/Android Studio/lib/3rd-party-rt.jar')])
+    }
+}
+allprojects {
+    apply plugin: com.android.ide.gradle.model.builder.AndroidStudioToolingPlugin
+}

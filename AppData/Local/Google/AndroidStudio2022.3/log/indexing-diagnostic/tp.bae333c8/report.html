@@ -1,0 +1,201 @@
+<html>
+  <head>
+    <title>Indexing diagnostics of 'TP1_DEV_MOB1'</title>
+    <style>body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+table {
+  width: 80%;
+}
+
+table.two-columns td {
+  width: 50%;
+}
+
+th, td {
+  padding: 3px;
+}
+
+th {
+  background: lightgrey;
+}
+
+td {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+        
+.stats-content {
+  margin-left: 20%;
+}
+
+.aggregate-report-content {
+  margin-left: 10%;
+}
+
+.navigation-bar {
+  width: 15%;
+  background-color: lightgrey;
+  position: fixed;
+  height: 100%;
+}
+
+div.navigation-bar ul {
+  list-style-type: none;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  font-size: 24px;
+}
+
+div.navigation-bar ul li a, label {
+  display: block;
+  color: #000;
+  padding: 8px 20px;
+  text-decoration: none;
+}
+
+label input {
+  margin-left: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+div.navigation-bar ul li a:hover {
+  background-color: #555;
+  color: white;
+}
+
+.minor-data {}
+
+.invisible {
+  display: none;
+}
+
+.jetbrains-logo {
+  width: 50%;
+  bottom: 5%;
+  position: absolute;
+  left: 20%;
+}
+
+.centered-text {
+  text-align: center;
+}
+
+.linkable-table-row:hover {
+  background: #f2f3ff;
+  outline: none;
+  cursor: pointer;
+}</style>
+    <script>document.addEventListener("DOMContentLoaded", () => {
+  const rows = document.getElementsByClassName("linkable-table-row")
+  for (const row of rows) {
+    const href = row.getAttribute("href")
+    row.addEventListener("click", () => {
+      window.open(href, "_blank");
+    });
+  }
+});</script>
+  </head>
+  <body>
+    <div class="aggregate-report-content">
+      <h1 class="Project name"></h1>
+TP1_DEV_MOB1
+      <div>
+        <h1 class="Indexing history"></h1>
+        <table class="centered-text"><caption style="caption-side: bottom; text-align: right; font-size: 14px">Hover for details</caption>
+          <thead>
+            <tr>
+              <th colspan="7">Time</th>
+              <th colspan="6">Files</th>
+              <th rowspan="2">IDE</th>
+              <th rowspan="2">Type</th>
+            </tr>
+            <tr>
+              <th>Started</th>
+              <th>Total</th>
+              <th>Creating iterators</th>
+              <th>Scanning</th>
+              <th>Indexing</th>
+              <th>Content loading</th>
+              <th>Finished</th>
+              <th>Providers</th>
+              <th>Scanned</th>
+              <th>Shared indexes (w/o content loading)</th>
+              <th>Scheduled for indexing</th>
+              <th>Shared indexes (content loaded)</th>
+              <th>Total indexed (shared indexes included)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="linkable-table-row" href="diagnostic-2023-10-22-15-07-19.885.html">
+              <td><strong class="changes in: &quot;Module 'TP1_DEV_MOB1' (TP)&quot;, &quot;JDK jbr-17 C:/Program Files/Android/Android Studio/jbr!/java.base, C:/Program Files/Android/Android Studio/jbr!/java.compiler, C:/Program Files/Android/Android Studio/jbr!/java.datatransfer, C:/Program Files/Android/Android Studio/jbr!/java.desktop, C:/Program Files/Android/Android Studio/jbr!/java.instrument, C:/Program Files/Android/Android Studio/jbr!/java.logging, C:/Program Files/Android/Android Studio/jbr!/java.management, C:/Program Files/Android/Android Studio/jbr!/java.management.rmi, C:/Program Files/Android/Android Studio/jbr!/java.naming, C:/Program Files/Android/Android Studio/jbr!/java.net.http, C:/Program Files/Android/Android Studio/jbr!/java.prefs, C:/Program Files/Android/Android Studio/jbr!/java.rmi, C:/Program Files/Android/Android Studio/jbr!/java.scripting, C:/Program Files/Android/Android Studio/jbr!/java.se, C:/Program Files/Android/Android Studio/jbr!/java.security.jgss, C:/Program Files/Android/Android Studio/jbr!/java.security.sasl, C:/Program Files/Android/Android Studio/jbr!/java.smartcardio, C:/Program Files/Android/Android Studio/jbr!/java.sql, C:/Program Files/Android/Android Studio/jbr!/java.sql.rowset, C:/Program Files/Android/Android Studio/jbr!/java.transaction.xa, C:/Program Files/Android/Android Studio/jbr!/java.xml, C:/Program Files/Android/Android Studio/jbr!/java.xml.crypto, C:/Program Files/Android/Android Studio/jbr!/jdk.accessibility, C:/Program Files/Android/Android Studio/jbr!/jdk.attach, C:/Program Files/Android/Android Studio/jbr!/jdk.charsets, C:/Program Files/Android/Android Studio/jbr!/jdk.compiler, C:/Program Files/Android/Android Studio/jbr!/jdk.crypto.cryptoki, C:/Program Files/Android/Android Studio/jbr!/jdk.crypto.ec, C:/Program Files/Android/Android Studio/jbr!/jdk.dynalink, C:/Program Files/Android/Android Studio/jbr!/jdk.hotspot.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.httpserver, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.ed, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.jvmstat, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.le, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.opt, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.ci, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.compiler, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.compiler.management, C:/Program Files/Android/Android Studio/jbr!/jdk.jartool, C:/Program Files/Android/Android Studio/jbr!/jdk.javadoc, C:/Program Files/Android/Android Studio/jbr!/jdk.jcmd, C:/Program Files/Android/Android Studio/jbr!/jdk.jdeps, C:/Program Files/Android/Android Studio/jbr!/jdk.jdi, C:/Program Files/Android/Android Studio/jbr!/jdk.jdwp.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.jfr, C:/Program Files/Android/Android Studio/jbr!/jdk.jlink, C:/Program Files/Android/Android Studio/jbr!/jdk.jsobject, C:/Program Files/Android/Android Studio/jbr!/jdk.localedata, C:/Program Files/Android/Android Studio/jbr!/jdk.management, C:/Program Files/Android/Android Studio/jbr!/jdk.management.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.management.jfr, C:/Program Files/Android/Android Studio/jbr!/jdk.naming.dns, C:/Program Files/Android/Android Studio/jbr!/jdk.naming.rmi, C:/Program Files/Android/Android Studio/jbr!/jdk.net, C:/Program Files/Android/Android Studio/jbr!/jdk.sctp, C:/Program Files/Android/Android Studio/jbr!/jdk.security.auth, C:/Program Files/Android/Android Studio/jbr!/jdk.security.jgss, C:/Program Files/Android/Android Studio/jbr!/jdk.unsupported, C:/Program Files/Android/Android Studio/jbr!/jdk.unsupported.desktop, C:/Program Files/Android/Android Studio/jbr!/jdk.xml.dom, C:/Program Files/Android/Android Studio/jbr!/jdk.zipfs&quot;"></strong><br>15:07:18 22 oct.</td>
+              <td>1 s 211 ms</td>
+              <td>0</td>
+              <td>1 s 185 ms</td>
+              <td>&lt; 1 ms</td>
+              <td>&lt; 1 ms</td>
+              <td>15:07:19 22 oct.</td>
+              <td>2</td>
+              <td>26209</td>
+              <td>0</td>
+              <td>1</td>
+              <td>0</td>
+              <td>1</td>
+              <td>AI-223.8836.35.2231.10811636</td>
+              <td>partial</td>
+            </tr>
+            <tr class="linkable-table-row" href="diagnostic-2023-10-22-15-07-18.021.html">
+              <td><strong class="On project open"></strong><br>15:07:14 22 oct.</td>
+              <td>3 s 141 ms</td>
+              <td>84 ms</td>
+              <td>3 s 31 ms</td>
+              <td>0</td>
+              <td>0</td>
+              <td>15:07:18 22 oct.</td>
+              <td>4</td>
+              <td>211</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>AI-223.8836.35.2231.10811636</td>
+              <td>full on project open</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h1 class="Scanning to push properties of changed files"></h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Reason</th>
+              <th>Full duration</th>
+              <th>Is cancelled</th>
+              <th>Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>15:07:18 22 oct.</td>
+              <td>Push on VFS changes</td>
+              <td>22 ms</td>
+              <td>fully finished</td>
+              <td>1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>

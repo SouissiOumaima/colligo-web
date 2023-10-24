@@ -1,0 +1,112 @@
+{
+  "appInfo" : {
+    "build" : "223.8836.35.2231.10811636",
+    "buildDate" : "2023-09-14T21:58:20.359Z[UTC]",
+    "productCode" : "AI",
+    "generated" : "2023-10-22T14:07:19.88502Z",
+    "os" : "Windows 11 10.0",
+    "runtime" : "JetBrains s.r.o. 17.0.6 17.0.6+0-b2043.56-10027231"
+  },
+  "runtimeInfo" : {
+    "maxMemory" : 1342177280,
+    "numberOfProcessors" : 8,
+    "maxNumberOfIndexingThreads" : 7,
+    "maxSizeOfFileForIntelliSense" : 2560000,
+    "maxSizeOfFileForContentLoading" : 20971520
+  },
+  "projectIndexingHistory" : {
+    "projectName" : "TP1_DEV_MOB1",
+    "times" : {
+      "indexingReason" : "changes in: \"Module 'TP1_DEV_MOB1' (TP)\", \"JDK jbr-17 C:/Program Files/Android/Android Studio/jbr!/java.base, C:/Program Files/Android/Android Studio/jbr!/java.compiler, C:/Program Files/Android/Android Studio/jbr!/java.datatransfer, C:/Program Files/Android/Android Studio/jbr!/java.desktop, C:/Program Files/Android/Android Studio/jbr!/java.instrument, C:/Program Files/Android/Android Studio/jbr!/java.logging, C:/Program Files/Android/Android Studio/jbr!/java.management, C:/Program Files/Android/Android Studio/jbr!/java.management.rmi, C:/Program Files/Android/Android Studio/jbr!/java.naming, C:/Program Files/Android/Android Studio/jbr!/java.net.http, C:/Program Files/Android/Android Studio/jbr!/java.prefs, C:/Program Files/Android/Android Studio/jbr!/java.rmi, C:/Program Files/Android/Android Studio/jbr!/java.scripting, C:/Program Files/Android/Android Studio/jbr!/java.se, C:/Program Files/Android/Android Studio/jbr!/java.security.jgss, C:/Program Files/Android/Android Studio/jbr!/java.security.sasl, C:/Program Files/Android/Android Studio/jbr!/java.smartcardio, C:/Program Files/Android/Android Studio/jbr!/java.sql, C:/Program Files/Android/Android Studio/jbr!/java.sql.rowset, C:/Program Files/Android/Android Studio/jbr!/java.transaction.xa, C:/Program Files/Android/Android Studio/jbr!/java.xml, C:/Program Files/Android/Android Studio/jbr!/java.xml.crypto, C:/Program Files/Android/Android Studio/jbr!/jdk.accessibility, C:/Program Files/Android/Android Studio/jbr!/jdk.attach, C:/Program Files/Android/Android Studio/jbr!/jdk.charsets, C:/Program Files/Android/Android Studio/jbr!/jdk.compiler, C:/Program Files/Android/Android Studio/jbr!/jdk.crypto.cryptoki, C:/Program Files/Android/Android Studio/jbr!/jdk.crypto.ec, C:/Program Files/Android/Android Studio/jbr!/jdk.dynalink, C:/Program Files/Android/Android Studio/jbr!/jdk.hotspot.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.httpserver, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.ed, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.jvmstat, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.le, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.opt, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.ci, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.compiler, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.compiler.management, C:/Program Files/Android/Android Studio/jbr!/jdk.jartool, C:/Program Files/Android/Android Studio/jbr!/jdk.javadoc, C:/Program Files/Android/Android Studio/jbr!/jdk.jcmd, C:/Program Files/Android/Android Studio/jbr!/jdk.jdeps, C:/Program Files/Android/Android Studio/jbr!/jdk.jdi, C:/Program Files/Android/Android Studio/jbr!/jdk.jdwp.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.jfr, C:/Program Files/Android/Android Studio/jbr!/jdk.jlink, C:/Program Files/Android/Android Studio/jbr!/jdk.jsobject, C:/Program Files/Android/Android Studio/jbr!/jdk.localedata, C:/Program Files/Android/Android Studio/jbr!/jdk.management, C:/Program Files/Android/Android Studio/jbr!/jdk.management.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.management.jfr, C:/Program Files/Android/Android Studio/jbr!/jdk.naming.dns, C:/Program Files/Android/Android Studio/jbr!/jdk.naming.rmi, C:/Program Files/Android/Android Studio/jbr!/jdk.net, C:/Program Files/Android/Android Studio/jbr!/jdk.sctp, C:/Program Files/Android/Android Studio/jbr!/jdk.security.auth, C:/Program Files/Android/Android Studio/jbr!/jdk.security.jgss, C:/Program Files/Android/Android Studio/jbr!/jdk.unsupported, C:/Program Files/Android/Android Studio/jbr!/jdk.unsupported.desktop, C:/Program Files/Android/Android Studio/jbr!/jdk.xml.dom, C:/Program Files/Android/Android Studio/jbr!/jdk.zipfs\"",
+      "scanningType" : "PARTIAL",
+      "totalUpdatingTime" : 1211707900,
+      "indexingTime" : 997100,
+      "contentLoadingVisibleTime" : 54961,
+      "creatingIteratorsTime" : 0,
+      "scanFilesTime" : 1185082000,
+      "pushPropertiesTime" : 21858300,
+      "indexExtensionsTime" : 0,
+      "isAppliedAllValuesSeparately" : true,
+      "separateApplyingIndexesVisibleTime" : 6136,
+      "updatingStart" : "2023-10-22T14:07:18.6263571Z",
+      "updatingEnd" : "2023-10-22T14:07:19.8391432Z",
+      "totalSuspendedTime" : 0,
+      "wasInterrupted" : false
+    },
+    "fileCount" : {
+      "numberOfFileProviders" : 2,
+      "numberOfScannedFiles" : 26209,
+      "numberOfFilesIndexedByInfrastructureExtensionsDuringScan" : 0,
+      "numberOfFilesScheduledForIndexingAfterScan" : 1,
+      "numberOfFilesIndexedByInfrastructureExtensionsDuringIndexingStage" : 0,
+      "numberOfFilesIndexedWithLoadingContent" : 1
+    },
+    "totalStatsPerFileType" : [ {
+      "fileType" : "Kotlin",
+      "partOfTotalProcessingTime" : {
+        "part" : 485900,
+        "total" : 485900
+      },
+      "partOfTotalContentLoadingTime" : {
+        "part" : 41200,
+        "total" : 41200
+      },
+      "totalNumberOfFiles" : 1,
+      "totalFilesSize" : 332,
+      "totalProcessingSpeed" : {
+        "totalBytes" : 332,
+        "totalTime" : 485900
+      },
+      "biggestContributors" : [ {
+        "providerName" : "Module 'TP1_DEV_MOB1' (TP)",
+        "numberOfFiles" : 1,
+        "totalFilesSize" : 332,
+        "partOfTotalProcessingTimeOfThisFileType" : {
+          "part" : 485900,
+          "total" : 485900
+        }
+      } ]
+    } ],
+    "totalStatsPerIndexer" : [ ],
+    "scanningStatistics" : [ {
+      "providerName" : "JDK jbr-17 C:/Program Files/Android/Android Studio/jbr!/java.base, C:/Program Files/Android/Android Studio/jbr!/java.compiler, C:/Program Files/Android/Android Studio/jbr!/java.datatransfer, C:/Program Files/Android/Android Studio/jbr!/java.desktop, C:/Program Files/Android/Android Studio/jbr!/java.instrument, C:/Program Files/Android/Android Studio/jbr!/java.logging, C:/Program Files/Android/Android Studio/jbr!/java.management, C:/Program Files/Android/Android Studio/jbr!/java.management.rmi, C:/Program Files/Android/Android Studio/jbr!/java.naming, C:/Program Files/Android/Android Studio/jbr!/java.net.http, C:/Program Files/Android/Android Studio/jbr!/java.prefs, C:/Program Files/Android/Android Studio/jbr!/java.rmi, C:/Program Files/Android/Android Studio/jbr!/java.scripting, C:/Program Files/Android/Android Studio/jbr!/java.se, C:/Program Files/Android/Android Studio/jbr!/java.security.jgss, C:/Program Files/Android/Android Studio/jbr!/java.security.sasl, C:/Program Files/Android/Android Studio/jbr!/java.smartcardio, C:/Program Files/Android/Android Studio/jbr!/java.sql, C:/Program Files/Android/Android Studio/jbr!/java.sql.rowset, C:/Program Files/Android/Android Studio/jbr!/java.transaction.xa, C:/Program Files/Android/Android Studio/jbr!/java.xml, C:/Program Files/Android/Android Studio/jbr!/java.xml.crypto, C:/Program Files/Android/Android Studio/jbr!/jdk.accessibility, C:/Program Files/Android/Android Studio/jbr!/jdk.attach, C:/Program Files/Android/Android Studio/jbr!/jdk.charsets, C:/Program Files/Android/Android Studio/jbr!/jdk.compiler, C:/Program Files/Android/Android Studio/jbr!/jdk.crypto.cryptoki, C:/Program Files/Android/Android Studio/jbr!/jdk.crypto.ec, C:/Program Files/Android/Android Studio/jbr!/jdk.dynalink, C:/Program Files/Android/Android Studio/jbr!/jdk.hotspot.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.httpserver, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.ed, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.jvmstat, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.le, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.opt, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.ci, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.compiler, C:/Program Files/Android/Android Studio/jbr!/jdk.internal.vm.compiler.management, C:/Program Files/Android/Android Studio/jbr!/jdk.jartool, C:/Program Files/Android/Android Studio/jbr!/jdk.javadoc, C:/Program Files/Android/Android Studio/jbr!/jdk.jcmd, C:/Program Files/Android/Android Studio/jbr!/jdk.jdeps, C:/Program Files/Android/Android Studio/jbr!/jdk.jdi, C:/Program Files/Android/Android Studio/jbr!/jdk.jdwp.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.jfr, C:/Program Files/Android/Android Studio/jbr!/jdk.jlink, C:/Program Files/Android/Android Studio/jbr!/jdk.jsobject, C:/Program Files/Android/Android Studio/jbr!/jdk.localedata, C:/Program Files/Android/Android Studio/jbr!/jdk.management, C:/Program Files/Android/Android Studio/jbr!/jdk.management.agent, C:/Program Files/Android/Android Studio/jbr!/jdk.management.jfr, C:/Program Files/Android/Android Studio/jbr!/jdk.naming.dns, C:/Program Files/Android/Android Studio/jbr!/jdk.naming.rmi, C:/Program Files/Android/Android Studio/jbr!/jdk.net, C:/Program Files/Android/Android Studio/jbr!/jdk.sctp, C:/Program Files/Android/Android Studio/jbr!/jdk.security.auth, C:/Program Files/Android/Android Studio/jbr!/jdk.security.jgss, C:/Program Files/Android/Android Studio/jbr!/jdk.unsupported, C:/Program Files/Android/Android Studio/jbr!/jdk.unsupported.desktop, C:/Program Files/Android/Android Studio/jbr!/jdk.xml.dom, C:/Program Files/Android/Android Studio/jbr!/jdk.zipfs",
+      "numberOfScannedFiles" : 26202,
+      "numberOfSkippedFiles" : 0,
+      "numberOfFilesForIndexing" : 0,
+      "numberOfFilesFullyIndexedByInfrastructureExtensions" : 0,
+      "filesFullyIndexedByInfrastructureExtensions" : [ ],
+      "statusTime" : 796977300,
+      "scanningTime" : 815128200,
+      "timeProcessingUpToDateFiles" : 0,
+      "timeUpdatingContentLessIndexes" : 38635000,
+      "timeIndexingWithoutContent" : 0,
+      "roots" : [ ]
+    }, {
+      "providerName" : "Module 'TP1_DEV_MOB1' (TP)",
+      "numberOfScannedFiles" : 7,
+      "numberOfSkippedFiles" : 0,
+      "numberOfFilesForIndexing" : 1,
+      "numberOfFilesFullyIndexedByInfrastructureExtensions" : 0,
+      "filesFullyIndexedByInfrastructureExtensions" : [ ],
+      "statusTime" : 430600,
+      "scanningTime" : 1297900,
+      "timeProcessingUpToDateFiles" : 0,
+      "timeUpdatingContentLessIndexes" : 12200,
+      "timeIndexingWithoutContent" : 12000,
+      "roots" : [ ]
+    } ],
+    "fileProviderStatistics" : [ {
+      "providerName" : "Module 'TP1_DEV_MOB1' (TP)",
+      "totalNumberOfIndexedFiles" : 1,
+      "totalNumberOfFilesFullyIndexedByExtensions" : 0,
+      "totalIndexingVisibleTime" : 648200,
+      "contentLoadingVisibleTime" : 54961,
+      "numberOfTooLargeForIndexingFiles" : 0,
+      "slowIndexedFiles" : [ ],
+      "filesFullyIndexedByExtensions" : [ ],
+      "isAppliedAllValuesSeparately" : true,
+      "separateApplyingIndexesVisibleTime" : 6136
+    } ],
+    "visibleTimeToAllThreadTimeRatio" : 1.3340193455443508
+  }
+}
