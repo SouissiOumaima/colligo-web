@@ -4,7 +4,7 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Parent;
+use App\Entity\Parents;
 use Doctrine\Common\Collections\Collection;
 use App\Entity\Level;
 
@@ -16,9 +16,9 @@ class Child
     #[ORM\Column(type: "integer")]
     private int $childId;
 
-        #[ORM\ManyToOne(targetEntity: Parent::class, inversedBy: "childs")]
+    #[ORM\ManyToOne(targetEntity: Parents::class, inversedBy: "childs")]
     #[ORM\JoinColumn(name: 'parentId', referencedColumnName: 'parentId', onDelete: 'CASCADE')]
-    private Parent $parentId;
+    private Parents $parentId;
 
     #[ORM\Column(type: "integer")]
     private int $age;
@@ -95,30 +95,30 @@ class Child
     #[ORM\OneToMany(mappedBy: "childId", targetEntity: Level::class)]
     private Collection $levels;
 
-        public function getLevels(): Collection
-        {
-            return $this->levels;
+    public function getLevels(): Collection
+    {
+        return $this->levels;
+    }
+
+    public function addLevel(Level $level): self
+    {
+        if (!$this->levels->contains($level)) {
+            $this->levels[] = $level;
+            $level->setChildId($this);
         }
-    
-        public function addLevel(Level $level): self
-        {
-            if (!$this->levels->contains($level)) {
-                $this->levels[] = $level;
-                $level->setChildId($this);
+
+        return $this;
+    }
+
+    public function removeLevel(Level $level): self
+    {
+        if ($this->levels->removeElement($level)) {
+            // set the owning side to null (unless already changed)
+            if ($level->getChildId() === $this) {
+                $level->setChildId(null);
             }
-    
-            return $this;
         }
-    
-        public function removeLevel(Level $level): self
-        {
-            if ($this->levels->removeElement($level)) {
-                // set the owning side to null (unless already changed)
-                if ($level->getChildId() === $this) {
-                    $level->setChildId(null);
-                }
-            }
-    
-            return $this;
-        }
+
+        return $this;
+    }
 }
