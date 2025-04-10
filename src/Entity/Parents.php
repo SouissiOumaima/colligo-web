@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use App\Entity\Child;
 
 #[ORM\Entity]
-class Parent
+class Parents
 {
 
     #[ORM\Id]
@@ -80,30 +80,30 @@ class Parent
     #[ORM\OneToMany(mappedBy: "parentId", targetEntity: Child::class)]
     private Collection $childs;
 
-        public function getChilds(): Collection
-        {
-            return $this->childs;
+    public function getChilds(): Collection
+    {
+        return $this->childs;
+    }
+
+    public function addChild(Child $child): self
+    {
+        if (!$this->childs->contains($child)) {
+            $this->childs[] = $child;
+            $child->setParentId($this);
         }
-    
-        public function addChild(Child $child): self
-        {
-            if (!$this->childs->contains($child)) {
-                $this->childs[] = $child;
-                $child->setParentId($this);
+
+        return $this;
+    }
+
+    public function removeChild(Child $child): self
+    {
+        if ($this->childs->removeElement($child)) {
+            // set the owning side to null (unless already changed)
+            if ($child->getParentId() === $this) {
+                $child->setParentId(null);
             }
-    
-            return $this;
         }
-    
-        public function removeChild(Child $child): self
-        {
-            if ($this->childs->removeElement($child)) {
-                // set the owning side to null (unless already changed)
-                if ($child->getParentId() === $this) {
-                    $child->setParentId(null);
-                }
-            }
-    
-            return $this;
-        }
+
+        return $this;
+    }
 }
