@@ -1,0 +1,106 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة الكلمة الدخيلة{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            overflow: hidden;
+        }
+        .main-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .welcome-text {
+            color: #4682B4;
+            font-size: clamp(16px, 4vw, 36px);
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .info-text {
+            color: #4682B4;
+            font-size: clamp(14px, 3vw, 28px);
+            margin: 5px 0;
+        }
+        .gif-image {
+            width: clamp(100px, 25vw, 300px);
+            height: auto;
+            margin: 20px 0;
+        }
+        .button {
+            font-size: clamp(14px, 3vw, 24px);
+            font-weight: bold;
+            padding: 15px 30px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            width: clamp(150px, 20vw, 300px);
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        .start-button {
+            background-color: #6B8E23;
+            color: white;
+        }
+        .start-button:hover {
+            background-color: #556B2F;
+        }
+        .back-button {
+            background-color: #4682B4;
+            color: white;
+        }
+        .back-button:hover {
+            background-color: #2F4F4F;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="main-container">
+        <div class="content-box">
+            <div class="welcome-text">
+                مرحبا بيك في لعبة الكلمة الدخيلة
+            </div>
+            <div class="info-text">
+                المرحلة: {{ level|default(1) }}
+            </div>
+            <div class="info-text">
+                اللغة: {{ language|default('غير محدد') }}
+            </div>
+            <img src="{{ asset('gifs/salut.gif') | default('https://via.placeholder.com/200') }}" class="gif-image" alt="Salut GIF">
+            <a href="{{ path('child_game_play', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': 1}) }}" class="button start-button">ابدأ</a>
+            <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="button back-button">ارجع للألعاب</a>
+        </div>
+    </div>
+{% endblock %}

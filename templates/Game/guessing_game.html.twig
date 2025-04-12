@@ -1,0 +1,334 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة الكلمة الدخيلة{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            overflow: hidden;
+        }
+        .main-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url("{{ asset('images/image.jpg') }}") no-repeat center center;
+            background-size: cover;
+        }
+        .content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            max-width: 80%;
+            min-width: 300px;
+        }
+        .score-box {
+            background-color: #6B8E23;
+            color: white;
+            font-weight: bold;
+            font-size: clamp(12px, 2vw, 24px);
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .game-content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .gif-pane {
+            width: clamp(100px, 20vw, 200px);
+            height: clamp(100px, 20vw, 200px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .gif-image {
+            width: 100%;
+            height: 100%;
+            display: none;
+            object-fit: contain;
+        }
+        .word-text {
+            color: #4682B4;
+            font-size: clamp(20px, 4vw, 36px);
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .theme-label {
+            color: #4682B4;
+            font-size: clamp(16px, 3vw, 28px);
+            font-weight: bold;
+        }
+        .theme-content {
+            color: #FF7F50;
+            font-size: clamp(16px, 3vw, 28px);
+            font-weight: bold;
+        }
+        .words-box {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .word-button {
+            background-color: #FABEC0;
+            color: #4682B4;
+            font-size: clamp(12px, 2.5vw, 24px);
+            font-weight: bold;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, background-color 0.3s;
+            min-width: 120px;
+            text-align: center;
+        }
+        .word-button:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+        .word-button.correct {
+            background-color: #2ECC71;
+        }
+        .word-button.incorrect {
+            background-color: #E74C3C;
+        }
+        .word-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .next-button {
+            background-color: #6B8E23;
+            color: white;
+            font-size: clamp(14px, 3vw, 28px);
+            font-weight: bold;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+            margin-top: 20px;
+        }
+        .next-button:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+        .next-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .animate {
+            animation: bounce 0.5s ease;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.2); }
+            100% { transform: translateY(0) scale(1); }
+        }
+        .error-message {
+            color: #E74C3C;
+            font-size: clamp(14px, 3vw, 24px);
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="main-container">
+        <div class="content-box">
+            <div class="score-box" id="score-text">النقاط: {{ score|default(0) }}/25</div>
+            <div class="game-content-box">
+                <div class="gif-pane">
+                    <img src="{{ asset('gifs/success.gif') }}" class="gif-image" id="correct-gif" alt="نجاح">
+                    <img src="{{ asset('gifs/failar.gif') }}" class="gif-image" id="incorrect-gif" alt="فشل">
+                </div>
+                <div class="word-text" id="word-text">{{ word_text|default('طلّع الكلمة الدخيلة .')|e }}</div>
+                <div class="theme-label">الموضوع</div>
+                <div class="theme-content" id="theme-content">{{ theme|default('')|e }}</div>
+                <div class="error-message" id="error-message"></div>
+                <div class="words-box" id="words-box">
+                    {% for word in current_lot|default([]) %}
+                        <button class="word-button" data-word="{{ word|e('html_attr') }}">{{ word|e }}</button>
+                    {% endfor %}
+                </div>
+                <button class="next-button" id="next-button" disabled>الّي بعدو</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        (function() {
+            // Initialize game state
+            const gameState = {
+                attempts: Number("{{ attempts|default(3)|e('js') }}") || 3,
+                incorrectAttempts: Number("{{ incorrectAttempts|default(0)|e('js') }}") || 0,
+                successfulLots: Number("{{ successful_lots|default(0)|e('js') }}") || 0,
+                maxAttempts: 3
+            };
+
+            // URLs for API calls
+            const urls = {
+                check: "{{ path('guessing_game_check', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
+                nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
+                levelComplete: "{{ path('level_complete', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}"
+            };
+
+            // Attach event listeners to word buttons
+            document.querySelectorAll('.word-button').forEach(button => {
+                button.addEventListener('click', () => handleWordClick(button.dataset.word, button));
+            });
+
+            // Handle word click
+            function handleWordClick(word, button) {
+                fetch(urls.check, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: word })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    const wordText = document.getElementById('word-text');
+                    const correctGif = document.getElementById('correct-gif');
+                    const incorrectGif = document.getElementById('incorrect-gif');
+                    const nextButton = document.getElementById('next-button');
+                    const errorMessage = document.getElementById('error-message');
+
+                    errorMessage.style.display = 'none';
+
+                    if (data.error) {
+                        errorMessage.textContent = data.error;
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+
+                    if (data.isCorrect) {
+                        button.classList.add('correct');
+                        wordText.textContent = 'صحّيت !';
+                        wordText.classList.add('animate');
+                        correctGif.style.display = 'block';
+                        incorrectGif.style.display = 'none';
+                        nextButton.disabled = false;
+                        disableWordButtons();
+                        gameState.successfulLots = data.successfulLots;
+                        if (gameState.successfulLots >= 5) {
+                            setTimeout(() => {
+                                window.location.href = urls.levelComplete;
+                            }, 2000);
+                        }
+                    } else {
+                        gameState.attempts--;
+                        gameState.incorrectAttempts++;
+                        button.classList.add('incorrect');
+                        if (gameState.attempts > 0) {
+                            wordText.textContent = `ميسالش عاود المحاولة . (بقي ${gameState.attempts} محاولات)`;
+                            wordText.classList.add('animate');
+                            incorrectGif.style.display = 'block';
+                            correctGif.style.display = 'none';
+                        } else {
+                            wordText.textContent = 'كملّت محاولاتك الكل تعدّا للجملة اللي بعد.';
+                            wordText.classList.add('animate');
+                            incorrectGif.style.display = 'block';
+                            correctGif.style.display = 'none';
+                            nextButton.disabled = false;
+                            disableWordButtons();
+                        }
+                    }
+                    document.getElementById('score-text').textContent = `النقاط: ${data.score}/25`;
+                    setTimeout(() => wordText.classList.remove('animate'), 500);
+                })
+                .catch(error => {
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = 'حدث خطأ، حاول مرة أخرى.';
+                    errorMessage.style.display = 'block';
+                    console.error('Fetch error:', error);
+                });
+            }
+
+            // Handle next lot
+            document.getElementById('next-button').addEventListener('click', handleNextLot);
+
+            function handleNextLot() {
+                fetch(urls.nextLot, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        document.getElementById('error-message').textContent = data.error;
+                        document.getElementById('error-message').style.display = 'block';
+                        return;
+                    }
+
+                    gameState.attempts = gameState.maxAttempts;
+                    const wordText = document.getElementById('word-text');
+                    const themeContent = document.getElementById('theme-content');
+                    const scoreText = document.getElementById('score-text');
+                    const correctGif = document.getElementById('correct-gif');
+                    const incorrectGif = document.getElementById('incorrect-gif');
+                    const nextButton = document.getElementById('next-button');
+                    const wordsBox = document.getElementById('words-box');
+
+                    wordText.textContent = 'طلّع الكلمة الدخيلة .';
+                    themeContent.textContent = data.theme;
+                    scoreText.textContent = `النقاط: ${data.score}/25`;
+                    correctGif.style.display = 'none';
+                    incorrectGif.style.display = 'none';
+                    nextButton.disabled = true;
+                    document.getElementById('error-message').style.display = 'none';
+
+                    wordsBox.innerHTML = '';
+                    data.currentLot.forEach(word => {
+                        const button = document.createElement('button');
+                        button.className = 'word-button';
+                        button.textContent = word;
+                        button.dataset.word = word;
+                        button.addEventListener('click', () => handleWordClick(word, button));
+                        wordsBox.appendChild(button);
+                    });
+                })
+                .catch(error => {
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.textContent = 'حدث خطأ، حاول مرة أخرى.';
+                    errorMessage.style.display = 'block';
+                    console.error('Fetch error:', error);
+                });
+            }
+
+            // Disable word buttons
+            function disableWordButtons() {
+                document.querySelectorAll('.word-button').forEach(button => {
+                    button.disabled = true;
+                });
+            }
+        })();
+    </script>
+{% endblock %}

@@ -13,7 +13,7 @@ class Child
 {
 
     #[ORM\Id]
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: "integer", name: "childId")]
     private int $childId;
 
     #[ORM\ManyToOne(targetEntity: Parents::class, inversedBy: "childs")]
@@ -121,4 +121,5 @@ class Child
 
         return $this;
     }
+
 }

@@ -12,7 +12,7 @@ class Parents
 {
 
     #[ORM\Id]
-    #[ORM\Column(type: "integer")]
+    #[ORM\Column(type: "integer", name: "parentId")]
     private int $parentId;
 
     #[ORM\Column(type: "string", length: 100)]
