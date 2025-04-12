@@ -139,9 +139,17 @@
             animation: bounce 0.5s ease;
         }
         @keyframes bounce {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-20px) scale(1.2); }
-            100% { transform: translateY(0) scale(1); }
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(-20px) scale(1.2); opacity: 0.5; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-incorrect {
+            animation: shake 0.5s ease;
+        }
+        @keyframes shake {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            50% { transform: translateY(20px) scale(1.2); opacity: 0.5; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
         }
         .error-message {
             color: #E74C3C;
@@ -179,7 +187,14 @@
 
 {% block javascripts %}
     <script>
-        (function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Log pour vérifier que le DOM est chargé
+            console.log('DOM fully loaded');
+
+            // Vérifier les boutons de mots initialement présents
+            const initialWordButtons = document.querySelectorAll('.word-button');
+            console.log('Initial word buttons found:', initialWordButtons.length);
+
             // Initialize game state
             const gameState = {
                 attempts: Number("{{ attempts|default(3)|e('js') }}") || 3,
@@ -194,24 +209,46 @@
                 nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
                 levelComplete: "{{ path('level_complete', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}"
             };
+            console.log('Generated URLs:', urls);
 
             // Attach event listeners to word buttons
-            document.querySelectorAll('.word-button').forEach(button => {
-                button.addEventListener('click', () => handleWordClick(button.dataset.word, button));
-            });
+            function attachWordButtonListeners() {
+                const wordButtons = document.querySelectorAll('.word-button');
+                console.log('Attaching listeners to word buttons:', wordButtons.length);
+                wordButtons.forEach(button => {
+                    // Supprimer les anciens écouteurs pour éviter les doublons
+                    button.removeEventListener('click', handleWordClickWrapper);
+                    button.addEventListener('click', handleWordClickWrapper);
+                });
+            }
+
+            // Wrapper pour handleWordClick
+            function handleWordClickWrapper(event) {
+                const button = event.currentTarget;
+                const word = button.dataset.word;
+                handleWordClick(word, button);
+            }
+
+            // Initial attachment of listeners
+            attachWordButtonListeners();
 
             // Handle word click
             function handleWordClick(word, button) {
+                console.log('Word clicked:', word);
                 fetch(urls.check, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ word: word })
                 })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.status}`);
+                    }
                     return response.json();
                 })
                 .then(data => {
+                    console.log('Response data:', data);
                     const wordText = document.getElementById('word-text');
                     const correctGif = document.getElementById('correct-gif');
                     const incorrectGif = document.getElementById('incorrect-gif');
@@ -237,6 +274,7 @@
                         gameState.successfulLots = data.successfulLots;
                         if (gameState.successfulLots >= 5) {
                             setTimeout(() => {
+                                console.log('Redirecting to level complete');
                                 window.location.href = urls.levelComplete;
                             }, 2000);
                         }
@@ -246,12 +284,12 @@
                         button.classList.add('incorrect');
                         if (gameState.attempts > 0) {
                             wordText.textContent = `ميسالش عاود المحاولة . (بقي ${gameState.attempts} محاولات)`;
-                            wordText.classList.add('animate');
+                            wordText.classList.add('animate-incorrect');
                             incorrectGif.style.display = 'block';
                             correctGif.style.display = 'none';
                         } else {
                             wordText.textContent = 'كملّت محاولاتك الكل تعدّا للجملة اللي بعد.';
-                            wordText.classList.add('animate');
+                            wordText.classList.add('animate-incorrect');
                             incorrectGif.style.display = 'block';
                             correctGif.style.display = 'none';
                             nextButton.disabled = false;
@@ -259,7 +297,7 @@
                         }
                     }
                     document.getElementById('score-text').textContent = `النقاط: ${data.score}/25`;
-                    setTimeout(() => wordText.classList.remove('animate'), 500);
+                    setTimeout(() => wordText.classList.remove('animate', 'animate-incorrect'), 500);
                 })
                 .catch(error => {
                     const errorMessage = document.getElementById('error-message');
@@ -273,15 +311,20 @@
             document.getElementById('next-button').addEventListener('click', handleNextLot);
 
             function handleNextLot() {
+                console.log('Next lot clicked');
                 fetch(urls.nextLot, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 })
                 .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
+                    console.log('Next lot response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.status}`);
+                    }
                     return response.json();
                 })
                 .then(data => {
+                    console.log('Next lot response data:', data);
                     if (data.error) {
                         document.getElementById('error-message').textContent = data.error;
                         document.getElementById('error-message').style.display = 'block';
@@ -311,9 +354,11 @@
                         button.className = 'word-button';
                         button.textContent = word;
                         button.dataset.word = word;
-                        button.addEventListener('click', () => handleWordClick(word, button));
                         wordsBox.appendChild(button);
                     });
+
+                    // Réattacher les écouteurs aux nouveaux boutons
+                    attachWordButtonListeners();
                 })
                 .catch(error => {
                     const errorMessage = document.getElementById('error-message');
@@ -329,6 +374,6 @@
                     button.disabled = true;
                 });
             }
-        })();
+        });
     </script>
 {% endblock %}
