@@ -9,43 +9,75 @@
             padding: 0;
             font-family: Arial, sans-serif;
             direction: rtl;
-            background: #B7E4C7;
+            overflow: hidden;
         }
-        .container {
+        .main-container {
+            position: relative;
+            width: 100vw;
             height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            background: url("{{ asset('images/image.jpg') }}") no-repeat center center;
+            background-size: cover;
+        }
+        .content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: transparent;
+            transform: translateY(-50px);
+            padding: 20px;
+        }
+        .gif-image {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+        }
+        .congrats-text {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            color: #4682B4;
             text-align: center;
         }
-        h1 {
-            font-size: clamp(24px, 6vw, 48px);
-            color: #2A2A2A;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        a {
-            font-size: clamp(16px, 4vw, 24px);
-            color: #4682B4;
+        .continue-button, .another-game-button {
+            font-size: 20px;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            min-width: 160px;
+            min-height: 50px;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            color: white;
+            text-align: center;
+            transition: transform 0.3s ease;
             text-decoration: none;
-            margin: 10px 0;
+            display: inline-block;
             padding: 10px 20px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s;
         }
-        a:hover {
+        .continue-button {
+            background-color: #6B8E23;
+        }
+        .another-game-button {
+            background-color: #4682B4;
+        }
+        .continue-button:hover, .another-game-button:hover {
             transform: scale(1.1);
         }
     </style>
 {% endblock %}
 
 {% block body %}
-    <div class="container">
-        <h1>تهانينا! أكملت المرحلة {{ level }}!</h1>
-        <a href="{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': 1}) }}">العب المرحلة التالية</a>
-        <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}">العودة إلى الألعاب</a>
+    <div class="main-container">
+        <div class="content-box">
+            <img src="{{ asset('gifs/yaaaay.gif') }}" class="gif-image" alt="Félicitations">
+            <div class="congrats-text">ملاّ معلم(ة) أما تو جايك ما أصعب! حاضر؟</div>
+            <a href="{{ path('child_game_play', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': 1}) }}" class="continue-button">أي نكمّل</a>
+            <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="another-game-button">نحبّ نلعب لعبة أخرى</a>
+        </div>
     </div>
 {% endblock %}

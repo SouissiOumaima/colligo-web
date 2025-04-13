@@ -188,14 +188,11 @@
 {% block javascripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Log pour vérifier que le DOM est chargé
             console.log('DOM fully loaded');
 
-            // Vérifier les boutons de mots initialement présents
             const initialWordButtons = document.querySelectorAll('.word-button');
             console.log('Initial word buttons found:', initialWordButtons.length);
 
-            // Initialize game state
             const gameState = {
                 attempts: Number("{{ attempts|default(3)|e('js') }}") || 3,
                 incorrectAttempts: Number("{{ incorrectAttempts|default(0)|e('js') }}") || 0,
@@ -203,7 +200,6 @@
                 maxAttempts: 3
             };
 
-            // URLs for API calls
             const urls = {
                 check: "{{ path('guessing_game_check', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
                 nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
@@ -211,28 +207,23 @@
             };
             console.log('Generated URLs:', urls);
 
-            // Attach event listeners to word buttons
             function attachWordButtonListeners() {
                 const wordButtons = document.querySelectorAll('.word-button');
                 console.log('Attaching listeners to word buttons:', wordButtons.length);
                 wordButtons.forEach(button => {
-                    // Supprimer les anciens écouteurs pour éviter les doublons
                     button.removeEventListener('click', handleWordClickWrapper);
                     button.addEventListener('click', handleWordClickWrapper);
                 });
             }
 
-            // Wrapper pour handleWordClick
             function handleWordClickWrapper(event) {
                 const button = event.currentTarget;
                 const word = button.dataset.word;
                 handleWordClick(word, button);
             }
 
-            // Initial attachment of listeners
             attachWordButtonListeners();
 
-            // Handle word click
             function handleWordClick(word, button) {
                 console.log('Word clicked:', word);
                 fetch(urls.check, {
@@ -272,14 +263,14 @@
                         nextButton.disabled = false;
                         disableWordButtons();
                         gameState.successfulLots = data.successfulLots;
-                        if (gameState.successfulLots >= 5) {
+                        if (data.levelUp) {
                             setTimeout(() => {
                                 console.log('Redirecting to level complete');
                                 window.location.href = urls.levelComplete;
                             }, 2000);
                         }
                     } else {
-                        gameState.attempts--;
+                        gameState.attempts = data.attempts;
                         gameState.incorrectAttempts++;
                         button.classList.add('incorrect');
                         if (gameState.attempts > 0) {
@@ -307,7 +298,6 @@
                 });
             }
 
-            // Handle next lot
             document.getElementById('next-button').addEventListener('click', handleNextLot);
 
             function handleNextLot() {
@@ -357,7 +347,6 @@
                         wordsBox.appendChild(button);
                     });
 
-                    // Réattacher les écouteurs aux nouveaux boutons
                     attachWordButtonListeners();
                 })
                 .catch(error => {
@@ -368,7 +357,6 @@
                 });
             }
 
-            // Disable word buttons
             function disableWordButtons() {
                 document.querySelectorAll('.word-button').forEach(button => {
                     button.disabled = true;

@@ -12,6 +12,18 @@ class LevelRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Level::class);
     }
+    // src/Repository/LevelRepository.php
+
+    public function findLastLevelByChild(Child $child): ?Level
+    {
+        return $this->createQueryBuilder('l')
+            ->where('l.child = :child')
+            ->setParameter('child', $child)
+            ->orderBy('l.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 
     // Add custom methods as needed
 }

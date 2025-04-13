@@ -98,26 +98,35 @@ class ChildController extends AbstractController
                 'normalizedLanguage' => $language
             ]);
 
+            // Récupérer le dernier niveau de l'enfant depuis la table level
+            $lastLevel = $child->getLevels()->last() ? $child->getLevels()->last()->getId() : 1;
+
             // Initialize session
             $session->start();
-            $gameState = $session->get('guessing_game_state');
+            $gameState = $session->get('guessing_game_state', []);
 
-            if (!$gameState) {
-                $level = $child->getLevels()->last() ? $child->getLevels()->last()->getId() : 1;
-                $this->logger->info('Loading words', ['language' => $language, 'level' => $level]);
+            // Vérifier si gameState est vide ou si le niveau dans gameState est différent du dernier niveau
+            if (empty($gameState) || (isset($gameState['level']) && $gameState['level'] !== $lastLevel)) {
+                $this->logger->info('Initializing or re-syncing game state', [
+                    'language' => $language,
+                    'lastLevelFromDb' => $lastLevel,
+                    'gameStateLevel' => $gameState['level'] ?? 'N/A'
+                ]);
 
-                $lots = $this->loadWordLots($language, $level);
+                // Charger les lots pour le dernier niveau
+                $lots = $this->loadWordLots($language, $lastLevel);
                 if (empty($lots)) {
-                    $this->logger->error('No words found in jeudedevinette', ['language' => $language, 'level' => $level]);
-                    throw $this->createNotFoundException('No words available for language: ' . $language . ' and level: ' . $level);
+                    $this->logger->error('No words found in jeudedevinette', ['language' => $language, 'level' => $lastLevel]);
+                    throw $this->createNotFoundException('No words available for language: ' . $language . ' and level: ' . $lastLevel);
                 }
 
-                // Shuffle lots
+                // Mélanger les lots
                 shuffle($lots);
                 $themes = array_column($lots, 'theme');
 
+                // Réinitialiser gameState avec les nouveaux lots et le dernier niveau
                 $gameState = [
-                    'level' => $level,
+                    'level' => $lastLevel,
                     'score' => 0,
                     'attempts' => 3,
                     'incorrectAttempts' => 0,
@@ -130,16 +139,24 @@ class ChildController extends AbstractController
                     'startTime' => time(),
                 ];
                 $session->set('guessing_game_state', $gameState);
-                $this->logger->info('Game state initialized', ['gameState' => $gameState]);
+                $this->logger->info('Game state initialized or re-synced', ['gameState' => $gameState]);
             }
 
-            // Prepare current lot words
+            // Récupérer le thème à partir des lots pour le niveau actuel
+            $currentTheme = $gameState['themes'][$gameState['currentLotIndex']] ?? 'Aucun thème';
+
+            // Préparer les mots du lot actuel
             $currentLot = [];
             if (isset($gameState['lots'][$gameState['currentLotIndex']])) {
                 $lot = $gameState['lots'][$gameState['currentLotIndex']];
                 $correctWords = array_filter(array_map('trim', explode(',', $lot['rightword'])), fn($word) => !empty($word));
                 $currentLot = array_merge($correctWords, [$lot['wrongword']]);
                 shuffle($currentLot);
+            } else {
+                $this->logger->warning('No more lots available for the current level', [
+                    'currentLotIndex' => $gameState['currentLotIndex'],
+                    'totalLots' => count($gameState['lots'])
+                ]);
             }
 
             return $this->render('game/guessing_game.html.twig', [
@@ -150,13 +167,13 @@ class ChildController extends AbstractController
                 'incorrectAttempts' => $gameState['incorrectAttempts'],
                 'successfulLots' => $gameState['successfulLots'],
                 'current_lot' => $currentLot,
-                'theme' => $gameState['themes'][$gameState['currentLotIndex']] ?? 'Aucun thème',
+                'theme' => $currentTheme,
                 'word_text' => 'اختر الكلمة الدخيلة',
             ]);
 
         } catch (\Exception $e) {
             $this->logger->error('Play game error', ['error' => $e->getMessage(), 'trace' => $e->getTrace()]);
-            throw $this->createNotFoundException('Game initialization failed');
+            throw $this->createNotFoundException('Game initialization failed: ' . $e->getMessage());
         }
     }
 
@@ -212,28 +229,55 @@ class ChildController extends AbstractController
                 $response['isCorrect'] = true;
                 $response['successfulLots'] = $gameState['successfulLots'];
 
+                // Update level in database immediately when correct
+                $this->updateLevel($child, $gameState);
+
                 if ($gameState['successfulLots'] >= 5) {
+                    $newLevel = $gameState['level'] + 1;
+                    $this->logger->info('Level completed, moving to next level', ['currentLevel' => $gameState['level'], 'newLevel' => $newLevel]);
+
+                    $lots = $this->loadWordLots($this->normalizeLanguageForDb($child->getLanguage()), $newLevel);
+                    if (empty($lots)) {
+                        $this->logger->error('No words found for next level', ['level' => $newLevel]);
+                        return new JsonResponse(['error' => 'No words available for next level'], 400);
+                    }
+
+                    shuffle($lots);
+                    $themes = array_column($lots, 'theme');
+
+                    $gameState = [
+                        'level' => $newLevel,
+                        'score' => 0,
+                        'attempts' => 3,
+                        'incorrectAttempts' => 0,
+                        'successfulLots' => 0,
+                        'currentLotIndex' => 0,
+                        'lots' => $lots,
+                        'themes' => $themes,
+                        'intruder' => $lots[0]['wrongword'] ?? '',
+                        'theme' => $themes[0] ?? '',
+                        'startTime' => time(),
+                    ];
+
+                    // Persist the new level in the database
                     $this->updateLevel($child, $gameState);
-                    $gameState['level']++;
-                    $gameState['score'] = 0;
-                    $gameState['successfulLots'] = 0;
-                    $gameState['currentLotIndex'] = 0;
-                    $gameState['lots'] = $this->loadWordLots($this->normalizeLanguageForDb($child->getLanguage()), $gameState['level']);
-                    shuffle($gameState['lots']);
-                    $gameState['themes'] = array_column($gameState['lots'], 'theme');
-                    $gameState['intruder'] = $gameState['lots'][0]['wrongword'] ?? '';
-                    $gameState['theme'] = $gameState['themes'][0] ?? '';
-                    $gameState['startTime'] = time();
+
+                    $session->set('guessing_game_state', $gameState);
+
+                    $response['levelUp'] = true;
+                    $response['newLevel'] = $newLevel;
                 }
             } else {
                 $gameState['attempts']--;
                 $gameState['incorrectAttempts']++;
                 $response['isCorrect'] = false;
+
+                // Update level in database even on incorrect attempt to track progress
+                $this->updateLevel($child, $gameState);
             }
 
             $response['score'] = $gameState['score'];
             $response['attempts'] = $gameState['attempts'];
-            $this->updateLevel($child, $gameState);
             $session->set('guessing_game_state', $gameState);
 
             $this->logger->info('Word check response', ['response' => $response]);
@@ -241,7 +285,7 @@ class ChildController extends AbstractController
 
         } catch (\Exception $e) {
             $this->logger->error('Check word error', ['error' => $e->getMessage(), 'trace' => $e->getTrace()]);
-            return new JsonResponse(['error' => 'Server error'], 500);
+            return new JsonResponse(['error' => 'Server error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -336,44 +380,120 @@ class ChildController extends AbstractController
         }
     }
 
+    private function resetGameState(SessionInterface $session, string $language, int $level): array
+    {
+        $this->logger->info('Resetting game state for new level', ['language' => $language, 'level' => $level]);
+
+        $lots = $this->loadWordLots($language, $level);
+        if (empty($lots)) {
+            $this->logger->error('No words found in jeudedevinette during reset', ['language' => $language, 'level' => $level]);
+            throw new \Exception('No words available for language: ' . $language . ' and level: ' . $level);
+        }
+
+        shuffle($lots);
+        $themes = array_column($lots, 'theme');
+
+        $gameState = [
+            'level' => $level,
+            'score' => 0,
+            'attempts' => 3,
+            'incorrectAttempts' => 0,
+            'successfulLots' => 0,
+            'currentLotIndex' => 0,
+            'lots' => $lots,
+            'themes' => $themes,
+            'intruder' => $lots[0]['wrongword'] ?? '',
+            'theme' => $themes[0] ?? '',
+            'startTime' => time(),
+        ];
+
+        $session->set('guessing_game_state', $gameState);
+        $this->logger->info('Game state reset', ['gameState' => $gameState]);
+
+        return $gameState;
+    }
+
     private function updateLevel(Child $child, array $gameState): void
     {
         try {
+            $this->logger->info('Attempting to update level', [
+                'childId' => $child->getChildId(),
+                'gameState' => $gameState,
+            ]);
+
+            // Vérifier que gameState contient les clés nécessaires
+            if (!isset($gameState['level'])) {
+                $this->logger->error('Level not found in gameState', ['gameState' => $gameState]);
+                return;
+            }
+
             $game = $this->entityManager->getRepository(\App\Entity\Game::class)->findOneBy(['name' => 'guessing game']);
             if (!$game) {
                 $this->logger->error('Game "guessing game" not found');
                 return;
             }
 
+            // Rechercher l'entrée existante avec la clé composite (id, childId, gameId)
             $level = $this->entityManager->getRepository(Level::class)->findOneBy([
-                'child' => $child,
-                'game' => $game,
                 'id' => $gameState['level'],
+                'childId' => $child, // Correction : utiliser 'childId' au lieu de 'child'
+                'gameId' => $game,   // Correction : utiliser 'gameId' au lieu de 'game'
             ]);
 
             if (!$level) {
                 $level = new Level();
                 $level->setId($gameState['level']);
-                $level->setChild($child);
-                $level->setGame($game);
+                $level->setChildId($child);
+                $level->setGameId($game);
+                $this->logger->info('Creating new level record', [
+                    'childId' => $child->getChildId(),
+                    'level' => $gameState['level'],
+                    'gameId' => $game->getId(),
+                ]);
             }
 
-            $level->setScore($gameState['score']);
-            $level->setTime((time() - $gameState['startTime']) / 60);
-            $level->setNbTries($gameState['incorrectAttempts']);
+            // Mettre à jour les champs avec des logs pour vérifier les valeurs
+            $score = $gameState['score'] ?? 0;
+            $time = isset($gameState['startTime']) ? (time() - $gameState['startTime']) / 60 : 0;
+            $nbTries = $gameState['incorrectAttempts'] ?? 0;
+
+            $this->logger->info('Values to be persisted', [
+                'score' => $score,
+                'time' => $time,
+                'nbTries' => $nbTries,
+            ]);
+
+            $level->setScore($score);
+            $level->setTime($time);
+            $level->setNbtries($nbTries);
+
+            $this->logger->info('Before persisting level', [
+                'childId' => $child->getChildId(),
+                'levelId' => $level->getId(),
+                'score' => $level->getScore(),
+                'time' => $level->getTime(),
+                'nbTries' => $level->getNbtries(),
+            ]);
 
             $this->entityManager->persist($level);
+            $this->logger->info('Persisting level entity');
             $this->entityManager->flush();
 
-            $this->logger->info('Level updated', [
+            // Log explicite pour confirmer que la mise à jour a été effectuée
+            $this->logger->info('Level update successful', [
                 'childId' => $child->getChildId(),
                 'level' => $gameState['level'],
-                'score' => $gameState['score']
+                'score' => $level->getScore(),
+                'attempts' => $level->getNbtries(),
+                'time' => $level->getTime(),
             ]);
+
         } catch (\Exception $e) {
-            $this->logger->error('Update level error', [
+            // Log explicite pour indiquer que la mise à jour a échoué
+            $this->logger->error('Level update failed', [
                 'childId' => $child->getChildId(),
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
