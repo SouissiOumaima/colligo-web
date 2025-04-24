@@ -12,12 +12,12 @@
         }
 
         body {
-            font-family: 'Tajawal', 'Arial', sans-serif;
+            font-family: 'Bubblegum Sans', 'Tajawal', 'Arial', sans-serif;
             direction: rtl;
             overflow: hidden;
+            background: linear-gradient(135deg, #4B5563, #1F2937);
         }
 
-        /* Conteneur principal */
         .main-container {
             position: relative;
             width: 100vw;
@@ -27,21 +27,29 @@
             align-items: center;
             background: url("{{ asset('images/image.jpg') }}") no-repeat center center;
             background-size: cover;
+            overflow: hidden;
         }
 
-        /* Boîte de contenu */
+        .stars-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
         .content-box {
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-align: center;
-            padding: 30px;
-            background: rgba(245, 245, 220, 0.95); /* Beige clair pour enfants */
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            background: linear-gradient(45deg, #FECACA, #A7F3D0, #BFDBFE);
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px #A7F3D0;
             animation: slideIn 1s ease-out;
-            max-width: 90%;
-            width: clamp(300px, 80vw, 800px); /* Élargi pour l'agencement horizontal */
+            width: 1000px;
+            min-height: 700px;
             position: relative;
             z-index: 10;
         }
@@ -51,44 +59,118 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Boîte de score */
-        .score-box {
-            background: linear-gradient(45deg, #ffb347, #ffcc33); /* Couleurs chaudes pour enfants */
-            color: #333;
-            font-weight: bold;
-            font-size: clamp(12px, 2vw, 24px);
-            padding: 10px 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        .profile-box {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 25px;
+            left: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: linear-gradient(45deg, #60A5FA, #34D399);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 10px #34D399;
+            z-index: 11;
+            transition: transform 0.3s;
+        }
+
+        .profile-box:hover {
+            transform: scale(1.1);
+        }
+
+        .profile-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #FFF;
+            box-shadow: 0 0 10px #34D399;
+        }
+
+        .profile-name {
+            color: #1F2937;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .star {
+            width: 50px;
+            height: 50px;
+            fill: #D1D5DB;
+            transition: fill 0.5s, transform 0.3s;
+            cursor: pointer;
+        }
+
+        .star:hover {
+            transform: scale(1.2);
+        }
+
+        .star.active {
+            fill: #FFD700;
+            animation: sparkle 1.5s infinite;
+        }
+
+        @keyframes sparkle {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .score-box {
+            background: linear-gradient(45deg, #F472B6, #F9A8D4);
+            color: #1F2937;
+            font-weight: bold;
+            font-size: 24px;
+            padding: 12px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 10px #F472B6;
+            position: absolute;
+            top: 25px;
+            right: 25px;
             z-index: 11;
             transition: transform 0.3s;
         }
 
         .score-box:hover {
-            transform: scale(1.05);
+            transform: scale(1.1);
         }
 
-        /* Boîte de contenu du jeu */
         .game-content-box {
-            display: flex;
-            flex-direction: row; /* Agencement horizontal */
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap; /* Permet un retour à la ligne si nécessaire */
+            display: grid;
+            grid-template-areas:
+                "gif word-text theme"
+                "gif error-message theme"
+                "words-box words-box words-box"
+                "next-button next-button next-button";
+            grid-template-columns: 200px 1fr 200px;
+            grid-template-rows: auto auto 250px auto;
+            gap: 30px;
             width: 100%;
+            align-items: center;
+            justify-items: center;
         }
 
-        /* Panneau GIF */
         .gif-pane {
-            width: clamp(100px, 20vw, 200px);
-            height: clamp(100px, 20vw, 200px);
+            grid-area: gif;
+            width: 200px;
+            height: 200px;
             display: flex;
             justify-content: center;
             align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
         }
 
         .gif-image {
@@ -96,68 +178,87 @@
             height: 100%;
             display: none;
             object-fit: contain;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s;
         }
 
         .gif-image:hover {
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
-        /* Texte des mots */
         .word-text {
-            color: #ff6b6b; /* Couleur vive pour enfants */
-            font-size: clamp(20px, 4vw, 36px);
+            grid-area: word-text;
+            color: #EF4444;
+            font-size: 40px;
             font-weight: bold;
             text-align: center;
-            margin: 10px 0;
+            margin: 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .error-message {
+            grid-area: error-message;
+            color: #EC4899;
+            font-size: 24px;
+            text-align: center;
+            margin: 0;
+            display: none;
+            width: 100%;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        /* Conteneur du thème */
         .theme-container {
+            grid-area: theme;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 150px;
+            width: 200px;
         }
 
-        /* Étiquette et contenu du thème */
         .theme-label {
-            color: #4682B4;
-            font-size: clamp(14px, 2.5vw, 24px);
+            color: #1E40AF;
+            font-size: 26px;
             font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .theme-content {
-            color: #FF7F50;
-            font-size: clamp(14px, 2.5vw, 24px);
+            color: #9D174D;
+            font-size: 26px;
             font-weight: bold;
-            background: rgba(255, 245, 200, 0.7);
-            padding: 8px 15px;
-            border-radius: 10px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(45deg, #BAE6FD, #E0F2FE);
+            padding: 10px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            text-align: center;
         }
 
-        /* Boîte des mots */
         .words-box {
+            grid-area: words-box;
             position: relative;
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             justify-content: center;
-            background: rgba(255, 245, 200, 0.7); /* Fond beige clair */
-            padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            min-width: 200px;
-            max-width: 400px;
+            background: linear-gradient(45deg, #A7F3D0, #D9F99D);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 15px #A7F3D0;
+            width: 600px;
+            min-height: 200px;
             overflow: hidden;
         }
 
-        /* Canvas pour les particules dans words-box */
         #words-particles {
             position: absolute;
             top: 0;
@@ -167,35 +268,35 @@
             z-index: 1;
         }
 
-        /* Boutons de mots */
         .word-button {
-            background: linear-gradient(45deg, #ffd700, #ffa500); /* Couleurs vives pour enfants */
-            color: #333;
-            font-size: clamp(12px, 2.5vw, 20px);
+            background: linear-gradient(45deg, #60A5FA, #34D399);
+            color: #1F2937;
+            font-size: 22px;
             font-weight: bold;
-            padding: 12px 25px;
+            padding: 15px 30px;
             border: none;
             border-radius: 15px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 10px #34D399;
             transition: transform 0.3s, box-shadow 0.3s;
-            min-width: 100px;
+            min-width: 120px;
             text-align: center;
             position: relative;
-            z-index: 2; /* Au-dessus du canvas */
+            z-index: 2;
+            animation: buttonPulse 3s infinite;
         }
 
         .word-button:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); /* Effet de lueur pour enfants */
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.7);
         }
 
         .word-button.correct {
-            background: linear-gradient(45deg, #28a745, #34d058);
+            background: linear-gradient(45deg, #10B981, #6EE7B7);
         }
 
         .word-button.incorrect {
-            background: linear-gradient(45deg, #dc3545, #ff6b6b);
+            background: linear-gradient(45deg, #EF4444, #F472B6);
         }
 
         .word-button:disabled {
@@ -203,26 +304,34 @@
             opacity: 0.6;
         }
 
-        /* Bouton suivant */
+        @keyframes buttonPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
         .next-button {
-            background: linear-gradient(45deg, #28a745, #34d058);
-            color: white;
-            font-size: clamp(12px, 2.5vw, 20px);
+            grid-area: next-button;
+            background: linear-gradient(45deg, #FBBF24, #F87171);
+            color: #1F2937;
+            font-size: 22px;
             font-weight: bold;
-            padding: 12px 30px;
+            padding: 15px 35px;
             border: none;
             border-radius: 15px;
             cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 10px #FBBF24;
             transition: transform 0.3s, box-shadow 0.3s;
-            min-width: 120px;
+            min-width: 140px;
+            max-width: 200px;
             position: relative;
             z-index: 10;
+            animation: buttonPulse 3s infinite;
         }
 
         .next-button:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.7);
         }
 
         .next-button:disabled {
@@ -230,14 +339,13 @@
             opacity: 0.6;
         }
 
-        /* Animations */
         .animate {
             animation: bounce 0.5s ease;
         }
 
         @keyframes bounce {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(-20px) scale(1.2); opacity: 0.5; }
+            50% { transform: translateY(-30px) scale(1.3); opacity: 0.6; }
             100% { transform: translateY(0) scale(1); opacity: 1; }
         }
 
@@ -246,96 +354,178 @@
         }
 
         @keyframes shake {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(20px) scale(1.2); opacity: 0.5; }
-            100% { transform: translateY(0) scale(1); opacity: 1; }
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
         }
 
-        /* Message d'erreur */
-        .error-message {
-            color: #dc3545;
-            font-size: clamp(12px, 2.5vw, 20px);
-            text-align: center;
-            margin: 10px 0;
-            display: none;
-            width: 100%;
-        }
-
-        /* Responsive design */
         @media (max-width: 768px) {
             .content-box {
-                padding: 20px;
-                width: 95%;
+                padding: 30px;
+                width: 750px;
+                min-height: 550px;
             }
 
             .game-content-box {
-                flex-direction: column; /* Retour à la colonne pour petits écrans */
-                gap: 15px;
-            }
-
-            .word-text {
-                font-size: clamp(18px, 5vw, 32px);
-            }
-
-            .theme-label, .theme-content {
-                font-size: clamp(12px, 3vw, 20px);
-            }
-
-            .word-button {
-                font-size: clamp(10px, 3vw, 18px);
-                padding: 10px 20px;
-                min-width: 80px;
-            }
-
-            .next-button {
-                font-size: clamp(10px, 3vw, 18px);
-                padding: 10px 25px;
+                grid-template-columns: 160px 1fr 160px;
+                grid-template-rows: auto auto 200px auto;
+                gap: 25px;
             }
 
             .gif-pane {
-                width: clamp(80px, 25vw, 150px);
-                height: clamp(80px, 25vw, 150px);
+                width: 160px;
+                height: 160px;
+            }
+
+            .word-text {
+                font-size: 30px;
+            }
+
+            .error-message {
+                font-size: 20px;
+            }
+
+            .theme-label, .theme-content {
+                font-size: 22px;
+            }
+
+            .theme-container {
+                width: 160px;
+            }
+
+            .words-box {
+                width: 450px;
+                min-height: 160px;
+            }
+
+            .word-button {
+                font-size: 20px;
+                padding: 12px 25px;
+                min-width: 100px;
+            }
+
+            .next-button {
+                font-size: 20px;
+                padding: 12px 30px;
+                max-width: 160px;
+            }
+
+            .score-box, .profile-box {
+                font-size: 22px;
+                padding: 10px 20px;
+            }
+
+            .profile-image {
+                width: 40px;
+                height: 40px;
+            }
+
+            .progress-bar {
+                gap: 15px;
+            }
+
+            .star {
+                width: 40px;
+                height: 40px;
             }
         }
 
         @media (max-width: 480px) {
             .content-box {
-                padding: 15px;
+                padding: 20px;
+                width: 95%;
+                max-width: 450px;
+                min-height: 450px;
+            }
+
+            .game-content-box {
+                grid-template-columns: 120px 1fr 120px;
+                grid-template-rows: auto auto 180px auto;
+                gap: 20px;
+            }
+
+            .gif-pane {
+                width: 120px;
+                height: 120px;
             }
 
             .word-text {
-                font-size: clamp(16px, 6vw, 28px);
+                font-size: 24px;
+            }
+
+            .error-message {
+                font-size: 18px;
             }
 
             .theme-label, .theme-content {
-                font-size: clamp(10px, 4vw, 18px);
+                font-size: 20px;
+            }
+
+            .theme-container {
+                width: 120px;
+            }
+
+            .words-box {
+                width: 300px;
+                min-height: 140px;
             }
 
             .word-button {
-                font-size: clamp(10px, 4vw, 16px);
-                padding: 8px 15px;
-                min-width: 70px;
+                font-size: 18px;
+                padding: 10px 20px;
+                min-width: 90px;
             }
 
             .next-button {
-                font-size: clamp(10px, 4vw, 16px);
-                padding: 8px 20px;
+                font-size: 18px;
+                padding: 10px 25px;
+                max-width: 120px;
+            }
+
+            .score-box, .profile-box {
+                font-size: 20px;
+                padding: 8px 15px;
+            }
+
+            .profile-image {
+                width: 30px;
+                height: 30px;
+            }
+
+            .progress-bar {
+                gap: 10px;
+            }
+
+            .star {
+                width: 30px;
+                height: 30px;
             }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block body %}
     <div class="main-container">
+        <canvas class="stars-background" id="stars-background"></canvas>
         <div class="content-box">
+            <div class="profile-box">
+                <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') | default('https://via.placeholder.com/120') }}" class="profile-image" alt="Profile Avatar">                <span class="profile-name">{{ child.name|default('اللاعب')|e }}</span>
+            </div>
             <div class="score-box" id="score-text">النقاط: {{ score|default(0) }}/25</div>
+            <div class="progress-bar">
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.446l-7.416 3.967 1.48-8.279L0 8.306l8.332-1.151z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.446l-7.416 3.967 1.48-8.279L0 8.306l8.332-1.151z"/></svg>
+                <svg class="star" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.446l-7.416 3.967 1.48-8.279L0 8.306l8.332-1.151z"/></svg>
+            </div>
             <div class="game-content-box">
                 <div class="gif-pane">
                     <img src="{{ asset('gifs/success.gif') }}" class="gif-image" id="correct-gif" alt="نجاح">
                     <img src="{{ asset('gifs/failar.gif') }}" class="gif-image" id="incorrect-gif" alt="فشل">
                 </div>
-                <div class="word-text" id="word-text">{{ word_text|default('طلّع الكلمة الدخيلة .')|e }}</div>
+                <div class="word-text" id="word-text">{{ word_text|default('اختر الكلمة الدخيلة')|e }}</div>
                 <div class="error-message" id="error-message"></div>
                 <div class="theme-container">
                     <div class="theme-label">الموضوع</div>
@@ -356,72 +546,166 @@
 {% block javascripts %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Particules pour la boîte des mots
-            const canvas = document.getElementById('words-particles');
-            const wordsBox = document.getElementById('words-box');
-            const ctx = canvas.getContext('2d');
-
-            function resizeCanvas() {
-                canvas.width = wordsBox.offsetWidth;
-                canvas.height = wordsBox.offsetHeight;
+            // Validation des données Twig
+            const parentId = "{{ child.parentId.parentId|e('js') }}";
+            const childId = "{{ child.childId|e('js') }}";
+            const gameId = "{{ gameId|default(1)|e('js') }}"; // Ajout de gameId
+            if (!parentId || !childId || !gameId) {
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = 'خطأ في بيانات المستخدم أو اللعبة، يرجى إعادة تحميل الصفحة';
+                errorMessage.style.display = 'block';
+                console.error('Invalid parentId, childId, or gameId:', { parentId, childId, gameId });
+                return;
             }
 
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+            // Particules pour la boîte des mots
+            const wordsCanvas = document.getElementById('words-particles');
+            const wordsBox = document.getElementById('words-box');
+            const wordsCtx = wordsCanvas.getContext('2d');
 
-            const particlesArray = [];
-            const numberOfParticles = 50; // Réduit pour performances
+            function resizeWordsCanvas() {
+                wordsCanvas.width = wordsBox.offsetWidth;
+                wordsCanvas.height = wordsBox.offsetHeight;
+            }
 
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
-                    this.size = Math.random() * 3 + 1;
+            resizeWordsCanvas();
+            window.addEventListener('resize', resizeWordsCanvas);
+
+            const wordsParticlesArray = [];
+            const numberOfWordParticles = 50;
+
+            class WordParticle {
+                constructor(isStar = false) {
+                    this.x = Math.random() * wordsCanvas.width;
+                    this.y = Math.random() * wordsCanvas.height;
+                    this.size = Math.random() * (isStar ? 5 : 3) + 1;
                     this.speedX = Math.random() * 2 - 1;
                     this.speedY = Math.random() * 2 - 1;
-                    this.color = `hsl(${Math.random() * 60 + 30}, 70%, 70%)`; // Nuances beiges et chaudes
+                    this.color = isStar ? '#FFD700' : `hsl(${Math.random() * 60 + 30}, 70%, 70%)`;
+                    this.isStar = isStar;
+                    this.opacity = isStar ? 1 : Math.random() * 0.5 + 0.5;
                 }
 
                 update() {
                     this.x += this.speedX;
                     this.y += this.speedY;
-                    if (this.size > 0.2) this.size -= 0.05;
-                    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-                    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                    if (this.size > 0.2) this.size -= this.isStar ? 0.1 : 0.05;
+                    if (this.x < 0 || this.x > wordsCanvas.width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > wordsCanvas.height) this.speedY *= -1;
                 }
 
                 draw() {
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
+                    wordsCtx.fillStyle = this.isStar ? `rgba(255, 215, 0, ${this.opacity})` : this.color;
+                    wordsCtx.beginPath();
+                    if (this.isStar) {
+                        wordsCtx.moveTo(this.x, this.y - this.size);
+                        for (let i = 0; i < 5; i++) {
+                            wordsCtx.lineTo(
+                                this.x + this.size * Math.cos((18 + i * 72) * Math.PI / 180),
+                                this.y - this.size * Math.sin((18 + i * 72) * Math.PI / 180)
+                            );
+                            wordsCtx.lineTo(
+                                this.x + this.size * 0.5 * Math.cos((54 + i * 72) * Math.PI / 180),
+                                this.y - this.size * 0.5 * Math.sin((54 + i * 72) * Math.PI / 180)
+                            );
+                        }
+                        wordsCtx.closePath();
+                    } else {
+                        wordsCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    }
+                    wordsCtx.fill();
                 }
             }
 
-            function init() {
-                particlesArray.length = 0;
-                for (let i = 0; i < numberOfParticles; i++) {
-                    particlesArray.push(new Particle());
+            function initWordsParticles() {
+                wordsParticlesArray.length = 0;
+                for (let i = 0; i < numberOfWordParticles; i++) {
+                    wordsParticlesArray.push(new WordParticle());
                 }
             }
 
-            function animate() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particlesArray.forEach(particle => {
+            function addStarParticles(count = 10) {
+                for (let i = 0; i < count; i++) {
+                    wordsParticlesArray.push(new WordParticle(true));
+                }
+            }
+
+            function animateWordsParticles() {
+                wordsCtx.clearRect(0, 0, wordsCanvas.width, wordsCanvas.height);
+                wordsParticlesArray.forEach(particle => {
                     particle.update();
                     particle.draw();
                     if (particle.size <= 0.2) {
-                        particlesArray.splice(particlesArray.indexOf(particle), 1);
-                        particlesArray.push(new Particle());
+                        wordsParticlesArray.splice(wordsParticlesArray.indexOf(particle), 1);
+                        wordsParticlesArray.push(new WordParticle(particle.isStar));
                     }
                 });
-                requestAnimationFrame(animate);
+                requestAnimationFrame(animateWordsParticles);
             }
 
-            init();
-            animate();
+            initWordsParticles();
+            animateWordsParticles();
 
-            // Logique de jeu existante
+            // Étoiles flottantes en arrière-plan
+            const starsCanvas = document.getElementById('stars-background');
+            const starsCtx = starsCanvas.getContext('2d');
+
+            function resizeStarsCanvas() {
+                starsCanvas.width = window.innerWidth;
+                starsCanvas.height = window.innerHeight;
+            }
+
+            resizeStarsCanvas();
+            window.addEventListener('resize', resizeStarsCanvas);
+
+            const starsArray = [];
+            const numberOfStars = 100;
+
+            class StarParticle {
+                constructor() {
+                    this.x = Math.random() * starsCanvas.width;
+                    this.y = Math.random() * starsCanvas.height;
+                    this.size = Math.random() * 2 + 1;
+                    this.speedY = Math.random() * 0.5 + 0.2;
+                    this.opacity = Math.random() * 0.5 + 0.5;
+                }
+
+                update() {
+                    this.y += this.speedY;
+                    if (this.y > starsCanvas.height) {
+                        this.y = 0;
+                        this.x = Math.random() * starsCanvas.width;
+                    }
+                }
+
+                draw() {
+                    starsCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                    starsCtx.beginPath();
+                    starsCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    starsCtx.fill();
+                }
+            }
+
+            function initStars() {
+                starsArray.length = 0;
+                for (let i = 0; i < numberOfStars; i++) {
+                    starsArray.push(new StarParticle());
+                }
+            }
+
+            function animateStars() {
+                starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+                starsArray.forEach(star => {
+                    star.update();
+                    star.draw();
+                });
+                requestAnimationFrame(animateStars);
+            }
+
+            initStars();
+            animateStars();
+
+            // Logique de jeu
             console.log('DOM fully loaded');
 
             const initialWordButtons = document.querySelectorAll('.word-button');
@@ -431,15 +715,34 @@
                 attempts: Number("{{ attempts|default(3)|e('js') }}") || 3,
                 incorrectAttempts: Number("{{ incorrectAttempts|default(0)|e('js') }}") || 0,
                 successfulLots: Number("{{ successful_lots|default(0)|e('js') }}") || 0,
-                maxAttempts: 3
+                maxAttempts: 3,
+                level: Number("{{ level|default(1)|e('js') }}") || 1
             };
 
             const urls = {
-                check: "{{ path('guessing_game_check', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
-                nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}",
-                levelComplete: "{{ path('level_complete', {'parentId': child.parentId.parentId, 'childId': child.childId})|e('js') }}"
+                check: "{{ path('guessing_game_check', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameId': gameId|default(1)}) | e('js') }}",
+                nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameId': gameId|default(1)}) | e('js') }}",
+                levelComplete: "{{ path('level_complete', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameId': gameId|default(1)}) | e('js') }}"
             };
             console.log('Generated URLs:', urls);
+
+            // Gestion de la barre de progression
+            const stars = document.querySelectorAll('.star');
+            function updateProgressBar() {
+                const lots = gameState.successfulLots;
+                if (lots >= 5) {
+                    gameState.level = 3;
+                    stars.forEach(star => star.classList.add('active'));
+                } else if (lots >= 3) {
+                    gameState.level = 2;
+                    stars[0].classList.add('active');
+                    stars[1].classList.add('active');
+                } else if (lots >= 1) {
+                    gameState.level = 1;
+                    stars[0].classList.add('active');
+                }
+            }
+            updateProgressBar();
 
             function attachWordButtonListeners() {
                 const wordButtons = document.querySelectorAll('.word-button');
@@ -468,7 +771,9 @@
                 .then(response => {
                     console.log('Response status:', response.status);
                     if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.status}`);
+                        return response.json().then(err => {
+                            throw new Error(`Network response was not ok: ${response.status} - ${err.error || 'No error message'}`);
+                        });
                     }
                     return response.json();
                 })
@@ -483,8 +788,35 @@
                     errorMessage.style.display = 'none';
 
                     if (data.error) {
-                        errorMessage.textContent = data.error;
-                        errorMessage.style.display = 'block';
+                        if (data.error === 'No words available for next level' && gameState.level === 3) {
+                            wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
+                            correctGif.style.display = 'block';
+                            incorrectGif.style.display = 'none';
+                            nextButton.disabled = true;
+                            disableWordButtons();
+                            addStarParticles(20);
+                            setTimeout(() => {
+                                console.log('Redirecting to level complete');
+                                window.location.href = urls.levelComplete;
+                            }, 2000);
+                        } else {
+                            errorMessage.textContent = data.error;
+                            errorMessage.style.display = 'block';
+                        }
+                        return;
+                    }
+
+                    if (data.gameComplete) {
+                        wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
+                        correctGif.style.display = 'block';
+                        incorrectGif.style.display = 'none';
+                        nextButton.disabled = true;
+                        disableWordButtons();
+                        addStarParticles(20);
+                        setTimeout(() => {
+                            console.log('Redirecting to level complete');
+                            window.location.href = urls.levelComplete;
+                        }, 2000);
                         return;
                     }
 
@@ -497,7 +829,9 @@
                         nextButton.disabled = false;
                         disableWordButtons();
                         gameState.successfulLots = data.successfulLots;
-                        if (data.levelUp) {
+                        addStarParticles(10);
+                        updateProgressBar();
+                        if (data.levelUp || (gameState.level === 3 && gameState.successfulLots >= 5)) {
                             setTimeout(() => {
                                 console.log('Redirecting to level complete');
                                 window.location.href = urls.levelComplete;
@@ -526,9 +860,22 @@
                 })
                 .catch(error => {
                     const errorMessage = document.getElementById('error-message');
-                    errorMessage.textContent = 'حدث خطأ، حاول مرة أخرى.';
+                    errorMessage.textContent = `حدث خطأ: ${error.message}`;
                     errorMessage.style.display = 'block';
                     console.error('Fetch error:', error);
+                    if (error.message.includes('No words available for next level') && gameState.level === 3) {
+                        const wordText = document.getElementById('word-text');
+                        wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
+                        document.getElementById('correct-gif').style.display = 'block';
+                        document.getElementById('incorrect-gif').style.display = 'none';
+                        document.getElementById('next-button').disabled = true;
+                        disableWordButtons();
+                        addStarParticles(20);
+                        setTimeout(() => {
+                            console.log('Redirecting to level complete');
+                            window.location.href = urls.levelComplete;
+                        }, 2000);
+                    }
                 });
             }
 
@@ -543,15 +890,31 @@
                 .then(response => {
                     console.log('Next lot response status:', response.status);
                     if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.status}`);
+                        return response.json().then(err => {
+                            throw new Error(`Network response was not ok: ${response.status} - ${err.error || 'No error message'}`);
+                        });
                     }
                     return response.json();
                 })
                 .then(data => {
                     console.log('Next lot response data:', data);
                     if (data.error) {
-                        document.getElementById('error-message').textContent = data.error;
-                        document.getElementById('error-message').style.display = 'block';
+                        if (data.error === 'No words available for next level' && gameState.level === 3) {
+                            const wordText = document.getElementById('word-text');
+                            wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
+                            document.getElementById('correct-gif').style.display = 'block';
+                            document.getElementById('incorrect-gif').style.display = 'none';
+                            document.getElementById('next-button').disabled = true;
+                            disableWordButtons();
+                            addStarParticles(20);
+                            setTimeout(() => {
+                                console.log('Redirecting to level complete');
+                                window.location.href = urls.levelComplete;
+                            }, 2000);
+                        } else {
+                            document.getElementById('error-message').textContent = data.error;
+                            document.getElementById('error-message').style.display = 'block';
+                        }
                         return;
                     }
 
@@ -564,7 +927,7 @@
                     const nextButton = document.getElementById('next-button');
                     const wordsBox = document.getElementById('words-box');
 
-                    wordText.textContent = 'طلّع الكلمة الدخيلة .';
+                    wordText.textContent = 'اختر الكلمة الدخيلة';
                     themeContent.textContent = data.theme;
                     scoreText.textContent = `النقاط: ${data.score}/25`;
                     correctGif.style.display = 'none';
@@ -572,6 +935,7 @@
                     nextButton.disabled = true;
                     document.getElementById('error-message').style.display = 'none';
 
+                    wordsBox.style.opacity = '0';
                     wordsBox.innerHTML = '<canvas id="words-particles"></canvas>';
                     data.currentLot.forEach(word => {
                         const button = document.createElement('button');
@@ -581,22 +945,39 @@
                         wordsBox.appendChild(button);
                     });
 
-                    // Réinitialiser le canvas après mise à jour
+                    setTimeout(() => {
+                        wordsBox.style.transition = 'opacity 0.5s';
+                        wordsBox.style.opacity = '1';
+                    }, 100);
+
                     const newCanvas = document.getElementById('words-particles');
                     const newCtx = newCanvas.getContext('2d');
                     newCanvas.width = wordsBox.offsetWidth;
                     newCanvas.height = wordsBox.offsetHeight;
-                    particlesArray.length = 0;
-                    init();
-                    animate();
+                    wordsParticlesArray.length = 0;
+                    initWordsParticles();
+                    animateWordsParticles();
 
                     attachWordButtonListeners();
                 })
                 .catch(error => {
                     const errorMessage = document.getElementById('error-message');
-                    errorMessage.textContent = 'حدث خطأ، حاول مرة أخرى.';
+                    errorMessage.textContent = `حدث خطأ: ${error.message}`;
                     errorMessage.style.display = 'block';
                     console.error('Fetch error:', error);
+                    if (error.message.includes('No words available for next level') && gameState.level === 3) {
+                        const wordText = document.getElementById('word-text');
+                        wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
+                        document.getElementById('correct-gif').style.display = 'block';
+                        document.getElementById('incorrect-gif').style.display = 'none';
+                        document.getElementById('next-button').disabled = true;
+                        disableWordButtons();
+                        addStarParticles(20);
+                        setTimeout(() => {
+                            console.log('Redirecting to level complete');
+                            window.location.href = urls.levelComplete;
+                        }, 2000);
+                    }
                 });
             }
 

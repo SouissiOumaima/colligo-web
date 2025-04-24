@@ -1,0 +1,236 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Gestion des Mots{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #2c3e50, #3498db);
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 1100px;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 40px;
+            font-weight: bold;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-select, .form-control {
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            padding: 10px;
+        }
+        .btn {
+            font-size: 16px;
+            padding: 14px 40px;
+            border-radius: 30px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(to right, #1abc9c, #16a085);
+            border: none;
+        }
+        .btn-danger {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            border: none;
+        }
+        .btn-back {
+            background: linear-gradient(to right, #7f8c8d, #95a5a6);
+            border: none;
+        }
+        .table {
+            background-color: #fff;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .alert {
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1>Gestion des Mots - Admin</h1>
+
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('info') %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+
+        <!-- Filter Section -->
+        <form action="{{ path('admin_load_words') }}" method="get" class="mb-4">
+            <div class="input-group">
+                <select name="language" class="form-select" required>
+                    <option value="" disabled selected>Sélectionnez une langue</option>
+                    <option value="français" {{ language == 'français' ? 'selected' : '' }}>Français</option>
+                    <option value="anglais" {{ language == 'anglais' ? 'selected' : '' }}>Anglais</option>
+                    <option value="allemand" {{ language == 'allemand' ? 'selected' : '' }}>Allemand</option>
+                    <option value="espagnol" {{ language == 'espagnol' ? 'selected' : '' }}>Espagnol</option>
+                </select>
+                <select name="level" class="form-select" required>
+                    <option value="" disabled selected>Sélectionnez un niveau</option>
+                    <option value="1" {{ level == 1 ? 'selected' : '' }}>1</option>
+                    <option value="2" {{ level == 2 ? 'selected' : '' }}>2</option>
+                    <option value="3" {{ level == 3 ? 'selected' : '' }}>3</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Afficher</button>
+                <button type="button" class="btn btn-primary" onclick="generateWords()">Générer</button>
+            </div>
+        </form>
+
+        <!-- Add Words Section -->
+        <form action="{{ path('admin_add_words') }}" method="post" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="rightWords" class="form-control" placeholder="Mots corrects (séparés par des virgules)" required>
+                <input type="text" name="wrongWord" class="form-control" placeholder="Mot intrus" required>
+                <input type="text" name="theme" class="form-control" placeholder="Thème" required>
+                <input type="hidden" name="language" value="{{ language }}">
+                <input type="hidden" name="level" value="{{ language ? level : '' }}">
+                <button type="submit" class="btn btn-primary">Ajouter</button>
+            </div>
+        </form>
+
+        <!-- Words Table -->
+        <form id="deleteForm" action="{{ path('admin_delete_words') }}" method="post">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Mots Corrects</th>
+                        <th>Mot Intrus</th>
+                        <th>Thème</th>
+                        <th style="width: 50px;">Sélection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for word in words %}
+                        <tr>
+                            <td>{{ word.rightWord }}</td>
+                            <td>{{ word.wrongWord }}</td>
+                            <td>{{ word.theme }}</td>
+                            <td>
+                                <input type="checkbox" name="selectedEntries[{{ loop.index0 }}][rightWord]" value="{{ word.rightWord }}" data-wrong-word="{{ word.wrongWord }}" data-theme="{{ word.theme }}">
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <input type="hidden" name="language" value="{{ language }}">
+            <input type="hidden" name="level" value="{{ language ? level : '' }}">
+            <div class="d-flex justify-content-center gap-3 mt-3">
+                <button type="submit" class="btn btn-danger" onclick="return confirmDelete()">Supprimer</button>
+                <a href="{{ path('admin_dashboard') }}" class="btn btn-back">Retour</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Helper function to generate words via fetch
+        function fetchGenerateWords(url, language, level, redirectUrl) {
+            const formData = new URLSearchParams();
+            formData.append('language', language);
+            formData.append('level', level);
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = redirectUrl + '?language=' + encodeURIComponent(language) + '&level=' + encodeURIComponent(level);
+                } else {
+                    alert('Erreur lors de la génération des mots.');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                alert('Erreur : Impossible de générer des mots.');
+            });
+        }
+
+        // Main function to handle generate button click
+        function generateWords() {
+            const language = document.querySelector('select[name="language"]').value;
+            const level = document.querySelector('select[name="level"]').value;
+
+            if (!language || !level) {
+                alert('Veuillez sélectionner une langue et un niveau.');
+                return;
+            }
+
+            const generateUrl = "{{ path('admin_generate_words') }}";
+            const redirectUrl = "{{ path('admin_load_words') }}";
+
+            fetchGenerateWords(generateUrl, language, level, redirectUrl);
+        }
+
+        // Function to handle delete confirmation
+        function confirmDelete() {
+            const selected = document.querySelectorAll('input[name^="selectedEntries"]:checked');
+            if (selected.length === 0) {
+                alert('Veuillez sélectionner au moins une ligne à supprimer.');
+                return false;
+            }
+
+            const form = document.getElementById('deleteForm');
+            selected.forEach((checkbox, index) => {
+                const wrongWord = checkbox.dataset.wrongWord;
+                const theme = checkbox.dataset.theme;
+
+                const inputWrong = document.createElement('input');
+                inputWrong.type = 'hidden';
+                inputWrong.name = `selectedEntries[${index}][wrongWord]`;
+                inputWrong.value = wrongWord;
+                form.appendChild(inputWrong);
+
+                const inputTheme = document.createElement('input');
+                inputTheme.type = 'hidden';
+                inputTheme.name = `selectedEntries[${index}][theme]`;
+                inputTheme.value = theme;
+                form.appendChild(inputTheme);
+            });
+
+            return confirm('Confirmez-vous la suppression des mots sélectionnés ?');
+        }
+    </script>
+{% endblock %}

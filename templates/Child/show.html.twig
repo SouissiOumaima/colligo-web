@@ -1,9 +1,11 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}Child Details{% endblock %}
-
-{% block body %}
-    <h1>Child Details</h1>
-    <p>ID: {{ Child.id }}</p>
-    <!-- Ajoutez d'autres champs ici -->
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+    {% block body %}{% endblock %}
+    {% block javascripts %}{% endblock %}
+</body>
+</html>
