@@ -20,10 +20,10 @@ class JeudedevinetteRepository extends ServiceEntityRepository
      * Fetch word lots for a given language and level.
      *
      * @param string $language
-     * @param int $level
+     * @param string $level
      * @return array
      */
-    public function findByLanguageAndLevel(string $language, int $level): array
+    public function findByLanguageAndLevel(string $language, string $level): array
     {
         return $this->createQueryBuilder('j')
             ->where('j.language = :language')
@@ -41,15 +41,15 @@ class JeudedevinetteRepository extends ServiceEntityRepository
      * @param string $wrongWord
      * @param string $theme
      * @param string $language
-     * @param int $level
+     * @param string $level
      */
-    public function addLot(string $rightWord, string $wrongWord, string $theme, string $language, int $level): void
+    public function addLot(string $rightWord, string $wrongWord, string $theme, string $language, string $level): void
     {
         $entityManager = $this->getEntityManager();
         $jeuDevinette = new Jeudedevinette();
-        $jeuDevinette->setRightWord($rightWord);
-        $jeuDevinette->setWrongWord($wrongWord);
-        $jeuDevinette->setTheme($theme);
+        $jeuDevinette->setRightword($rightWord);
+        $jeuDevinette->setWrongword($wrongWord);
+        $jeuDevinette->setThème($theme);
         $jeuDevinette->setLanguage($language);
         $jeuDevinette->setLevel($level);
         $entityManager->persist($jeuDevinette);
@@ -67,8 +67,8 @@ class JeudedevinetteRepository extends ServiceEntityRepository
     {
         $entityManager = $this->getEntityManager();
         $jeuDevinette = $this->createQueryBuilder('j')
-            ->where('j.rightWord = :rightWord')
-            ->andWhere('j.wrongWord = :wrongWord')
+            ->where('j.rightword = :rightWord')
+            ->andWhere('j.wrongword = :wrongWord')
             ->andWhere('j.theme = :theme')
             ->setParameter('rightWord', $rightWord)
             ->setParameter('wrongWord', $wrongWord)
@@ -79,6 +79,33 @@ class JeudedevinetteRepository extends ServiceEntityRepository
         if ($jeuDevinette) {
             $entityManager->remove($jeuDevinette);
             $entityManager->flush();
+        }
+    }
+
+    /**
+     * Save multiple word lots.
+     *
+     * @param array $lotData
+     * @param string $language
+     * @param string $level
+     */
+    public function saveLots(array $lotData, string $language, string $level): void
+    {
+        try {
+            $entityManager = $this->getEntityManager();
+            foreach ($lotData as $lot) {
+                $entity = new Jeudedevinette();
+                $entity->setRightword($lot['rightWord']);
+                $entity->setWrongword($lot['wrongWord']);
+                $entity->setThème($lot['theme']);
+                $entity->setLanguage($language);
+                $entity->setLevel($level);
+
+                $entityManager->persist($entity);
+            }
+            $entityManager->flush();
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Erreur lors de l\'enregistrement des lots : ' . $e->getMessage());
         }
     }
 }
