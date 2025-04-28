@@ -512,7 +512,8 @@
         <canvas class="stars-background" id="stars-background"></canvas>
         <div class="content-box">
             <div class="profile-box">
-                <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') | default('https://via.placeholder.com/120') }}" class="profile-image" alt="Profile Avatar">                <span class="profile-name">{{ child.name|default('اللاعب')|e }}</span>
+                <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') | default('https://via.placeholder.com/120') }}" class="profile-image" alt="Profile Avatar">
+                <span class="profile-name">{{ child.name|default('اللاعب')|e }}</span>
             </div>
             <div class="score-box" id="score-text">النقاط: {{ score|default(0) }}/25</div>
             <div class="progress-bar">
@@ -549,7 +550,7 @@
             // Validation des données Twig
             const parentId = "{{ child.parentId.parentId|e('js') }}";
             const childId = "{{ child.childId|e('js') }}";
-            const gameId = "{{ gameId|default(1)|e('js') }}"; // Ajout de gameId
+            const gameId = "{{ gameId|default(1)|e('js') }}";
             if (!parentId || !childId || !gameId) {
                 const errorMessage = document.getElementById('error-message');
                 errorMessage.textContent = 'خطأ في بيانات المستخدم أو اللعبة، يرجى إعادة تحميل الصفحة';
@@ -557,6 +558,10 @@
                 console.error('Invalid parentId, childId, or gameId:', { parentId, childId, gameId });
                 return;
             }
+
+            // Initialisation des sons
+            const correctSound = new Audio("{{ asset('sounds/correct1.mp3') }}");
+            const incorrectSound = new Audio("{{ asset('sounds/incorrect1.mp3') }}");
 
             // Particules pour la boîte des mots
             const wordsCanvas = document.getElementById('words-particles');
@@ -720,25 +725,25 @@
             };
 
             const urls = {
-                check: "{{ path('guessing_game_check', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameId': gameId|default(1)}) | e('js') }}",
-                nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameId': gameId|default(1)}) | e('js') }}",
-                levelComplete: "{{ path('level_complete', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameId': gameId|default(1)}) | e('js') }}"
+                check: "{{ path('guessing_game_check', {'parentId': child.parentId.parentId, 'childId': child.childId}) | e('js') }}",
+                nextLot: "{{ path('guessing_game_next_lot', {'parentId': child.parentId.parentId, 'childId': child.childId}) | e('js') }}",
+                levelComplete: "{{ path('level_complete', {'parentId': child.parentId.parentId, 'childId': child.childId}) | e('js') }}",
+                allLevelsCompleted: "{{ path('all_levels_completed', {'parentId': child.parentId.parentId, 'childId': child.childId}) | e('js') }}"
             };
             console.log('Generated URLs:', urls);
 
             // Gestion de la barre de progression
             const stars = document.querySelectorAll('.star');
             function updateProgressBar() {
-                const lots = gameState.successfulLots;
-                if (lots >= 5) {
-                    gameState.level = 3;
+                const scoreText = document.getElementById('score-text').textContent;
+                const score = parseInt(scoreText.match(/\d+/)[0], 10);
+                stars.forEach(star => star.classList.remove('active'));
+                if (score >= 25) {
                     stars.forEach(star => star.classList.add('active'));
-                } else if (lots >= 3) {
-                    gameState.level = 2;
+                } else if (score >= 18) {
                     stars[0].classList.add('active');
                     stars[1].classList.add('active');
-                } else if (lots >= 1) {
-                    gameState.level = 1;
+                } else if (score >= 10) {
                     stars[0].classList.add('active');
                 }
             }
@@ -788,34 +793,22 @@
                     errorMessage.style.display = 'none';
 
                     if (data.error) {
-                        if (data.error === 'No words available for next level' && gameState.level === 3) {
-                            wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
-                            correctGif.style.display = 'block';
-                            incorrectGif.style.display = 'none';
-                            nextButton.disabled = true;
-                            disableWordButtons();
-                            addStarParticles(20);
-                            setTimeout(() => {
-                                console.log('Redirecting to level complete');
-                                window.location.href = urls.levelComplete;
-                            }, 2000);
-                        } else {
-                            errorMessage.textContent = data.error;
-                            errorMessage.style.display = 'block';
-                        }
+                        errorMessage.textContent = data.error;
+                        errorMessage.style.display = 'block';
                         return;
                     }
 
-                    if (data.gameComplete) {
+                    if (data.allLevelsCompleted) {
                         wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
                         correctGif.style.display = 'block';
                         incorrectGif.style.display = 'none';
                         nextButton.disabled = true;
                         disableWordButtons();
                         addStarParticles(20);
+                        correctSound.play().catch(e => console.error('Error playing correct sound:', e));
                         setTimeout(() => {
-                            console.log('Redirecting to level complete');
-                            window.location.href = urls.levelComplete;
+                            console.log('Redirecting to all levels completed');
+                            window.location.href = data.redirectUrl || urls.allLevelsCompleted;
                         }, 2000);
                         return;
                     }
@@ -830,8 +823,8 @@
                         disableWordButtons();
                         gameState.successfulLots = data.successfulLots;
                         addStarParticles(10);
-                        updateProgressBar();
-                        if (data.levelUp || (gameState.level === 3 && gameState.successfulLots >= 5)) {
+                        correctSound.play().catch(e => console.error('Error playing correct sound:', e));
+                        if (data.levelUp) {
                             setTimeout(() => {
                                 console.log('Redirecting to level complete');
                                 window.location.href = urls.levelComplete;
@@ -841,6 +834,7 @@
                         gameState.attempts = data.attempts;
                         gameState.incorrectAttempts++;
                         button.classList.add('incorrect');
+                        incorrectSound.play().catch(e => console.error('Error playing incorrect sound:', e));
                         if (gameState.attempts > 0) {
                             wordText.textContent = `ميسالش عاود المحاولة . (بقي ${gameState.attempts} محاولات)`;
                             wordText.classList.add('animate-incorrect');
@@ -856,6 +850,7 @@
                         }
                     }
                     document.getElementById('score-text').textContent = `النقاط: ${data.score}/25`;
+                    updateProgressBar();
                     setTimeout(() => wordText.classList.remove('animate', 'animate-incorrect'), 500);
                 })
                 .catch(error => {
@@ -863,19 +858,6 @@
                     errorMessage.textContent = `حدث خطأ: ${error.message}`;
                     errorMessage.style.display = 'block';
                     console.error('Fetch error:', error);
-                    if (error.message.includes('No words available for next level') && gameState.level === 3) {
-                        const wordText = document.getElementById('word-text');
-                        wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
-                        document.getElementById('correct-gif').style.display = 'block';
-                        document.getElementById('incorrect-gif').style.display = 'none';
-                        document.getElementById('next-button').disabled = true;
-                        disableWordButtons();
-                        addStarParticles(20);
-                        setTimeout(() => {
-                            console.log('Redirecting to level complete');
-                            window.location.href = urls.levelComplete;
-                        }, 2000);
-                    }
                 });
             }
 
@@ -899,22 +881,8 @@
                 .then(data => {
                     console.log('Next lot response data:', data);
                     if (data.error) {
-                        if (data.error === 'No words available for next level' && gameState.level === 3) {
-                            const wordText = document.getElementById('word-text');
-                            wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
-                            document.getElementById('correct-gif').style.display = 'block';
-                            document.getElementById('incorrect-gif').style.display = 'none';
-                            document.getElementById('next-button').disabled = true;
-                            disableWordButtons();
-                            addStarParticles(20);
-                            setTimeout(() => {
-                                console.log('Redirecting to level complete');
-                                window.location.href = urls.levelComplete;
-                            }, 2000);
-                        } else {
-                            document.getElementById('error-message').textContent = data.error;
-                            document.getElementById('error-message').style.display = 'block';
-                        }
+                        document.getElementById('error-message').textContent = data.error;
+                        document.getElementById('error-message').style.display = 'block';
                         return;
                     }
 
@@ -959,25 +927,13 @@
                     animateWordsParticles();
 
                     attachWordButtonListeners();
+                    updateProgressBar();
                 })
                 .catch(error => {
                     const errorMessage = document.getElementById('error-message');
                     errorMessage.textContent = `حدث خطأ: ${error.message}`;
                     errorMessage.style.display = 'block';
                     console.error('Fetch error:', error);
-                    if (error.message.includes('No words available for next level') && gameState.level === 3) {
-                        const wordText = document.getElementById('word-text');
-                        wordText.textContent = 'تهانينا! لقد أكملت اللعبة!';
-                        document.getElementById('correct-gif').style.display = 'block';
-                        document.getElementById('incorrect-gif').style.display = 'none';
-                        document.getElementById('next-button').disabled = true;
-                        disableWordButtons();
-                        addStarParticles(20);
-                        setTimeout(() => {
-                            console.log('Redirecting to level complete');
-                            window.location.href = urls.levelComplete;
-                        }, 2000);
-                    }
                 });
             }
 

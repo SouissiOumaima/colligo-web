@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}تهانينا! المرحلة كاملة{% endblock %}
+{% block title %}تهانينا! كملت كل المراحل{% endblock %}
 
 {% block stylesheets %}
     <style>
@@ -88,7 +88,7 @@
             transform: scale(1.1) rotate(5deg);
         }
 
-        /* Boutons */
+        /* Bouton */
         .button {
             font-size: clamp(14px, 2.5vw, 18px);
             font-weight: 600;
@@ -127,19 +127,11 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .continue-button {
-            background: linear-gradient(45deg, #28a745, #34d058);
-        }
-
-        .continue-button:hover {
-            background: linear-gradient(45deg, #218838, #28a745);
-        }
-
-        .another-game-button {
+        .dashboard-button {
             background: linear-gradient(45deg, #007bff, #00c4ff);
         }
 
-        .another-game-button:hover {
+        .dashboard-button:hover {
             background: linear-gradient(45deg, #0056b3, #007bff);
         }
 
@@ -198,10 +190,9 @@
     <canvas id="particles"></canvas>
     <div class="main-container">
         <div class="content-box">
-            <div class="congrats-text">ملاّ معلم(ة) أما تو جايك ما أصعب! حاضر؟</div>
-            <img src="{{ asset('gifs/yaaaay.gif') }}" class="gif-image" alt="Félicitations">
-            <a href="{{ path('child_game_play', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': 1}) }}" class="button continue-button">أي نكمّل</a>
-            <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="button another-game-button">نحبّ نلعب لعبة أخرى</a>
+            <div class="congrats-text">سايي واليت معلم في اللعبة هذي! تعدّى لعبة أخرى</div>
+            <img src="{{ asset('gifs/yaaaay.gif') }}" class="gif-image" alt="Champion">
+            <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="button dashboard-button" role="button" aria-label="Retourner au tableau de bord">ارجع للألعاب</a>
         </div>
     </div>
 {% endblock %}
@@ -215,7 +206,7 @@
             canvas.height = window.innerHeight;
 
             const particlesArray = [];
-            const numberOfParticles = 100;
+            const numberOfParticles = window.innerWidth < 768 ? 50 : 100;
 
             class Particle {
                 constructor() {
