@@ -2,29 +2,76 @@
 
 namespace App\Service;
 
+use App\Entity\Jeudedevinette;
 use App\Repository\JeudedevinetteRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class GuessingGameService
 {
-    private JeudedevinetteRepository $jeuDevinetteRepository;
+    private JeudedevinetteRepository $jeudedevinetteRepository;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(JeudedevinetteRepository $jeuDevinetteRepository)
+    public function __construct(JeudedevinetteRepository $jeudedevinetteRepository, EntityManagerInterface $entityManager)
     {
-        $this->jeuDevinetteRepository = $jeuDevinetteRepository;
+        $this->jeudedevinetteRepository = $jeudedevinetteRepository;
+        $this->entityManager = $entityManager;
     }
 
-    public function getWordsForAdmin(string $language, int $level): array
+    // src/Service/GuessingGameService.php
+
+    public function deleteLot(
+        string $rightWord,
+        string $wrongWord,
+        string $theme,
+        string $language,
+        string $level,
+        LoggerInterface $logger
+    ): void {
+        $logger->info('Attempting to delete lot', [
+            'originalRightWord' => $rightWord,
+            'normalizedRightWord' => $rightWord,
+            'originalWrongWord' => $wrongWord,
+            'normalizedWrongWord' => $wrongWord,
+            'theme' => $theme,
+            'language' => $language,
+            'level' => $level
+        ]);
+
+        $word = $this->entityManager->getRepository(Jeudedevinette::class)->findOneBy([
+            'rightword' => $rightWord,    // minuscule comme dans l'entité
+            'wrongword' => $wrongWord,   // minuscule comme dans l'entité
+            'thème' => $theme,          // accent grave comme dans l'entité
+            'language' => $language,
+            'level' => $level
+        ]);
+
+        if ($word) {
+            $this->entityManager->remove($word);
+            $this->entityManager->flush();
+        }
+    }
+    public function getWordsForAdmin(string $language, string $level): array
     {
-        return $this->jeuDevinetteRepository->findByLanguageAndLevel($language, $level);
+        return $this->jeudedevinetteRepository->findBy([
+            'language' => $language,
+            'level' => $level,
+        ]);
     }
 
-    public function addLot(string $rightWords, string $wrongWord, string $theme, string $language, int $level): void
+    public function addLot(string $rightWords, string $wrongWord, string $theme, string $language, string $level): void
     {
-        $this->jeuDevinetteRepository->addLot($rightWords, $wrongWord, $theme, $language, $level);
-    }
+        // Normalize separators for consistency when adding
+        $normalize = fn(string $input): string => trim(preg_replace('/[\s,-]+/', ' ', $input));
 
-    public function deleteLot(string $rightWord, string $wrongWord, string $theme): void
-    {
-        $this->jeuDevinetteRepository->deleteLot($rightWord, $wrongWord, $theme);
+        $lot = new Jeudedevinette();
+        $lot->setRightWord($normalize($rightWords));
+        $lot->setWrongWord($normalize($wrongWord));
+        $lot->setThème($theme);
+        $lot->setLanguage($language);
+        $lot->setLevel($level);
+
+        $this->entityManager->persist($lot);
+        $this->entityManager->flush();
     }
 }

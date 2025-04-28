@@ -65,20 +65,24 @@ class JeudedevinetteRepository extends ServiceEntityRepository
      */
     public function deleteLot(string $rightWord, string $wrongWord, string $theme): void
     {
-        $entityManager = $this->getEntityManager();
-        $jeuDevinette = $this->createQueryBuilder('j')
-            ->where('j.rightword = :rightWord')
-            ->andWhere('j.wrongword = :wrongWord')
-            ->andWhere('j.theme = :theme')
-            ->setParameter('rightWord', $rightWord)
-            ->setParameter('wrongWord', $wrongWord)
-            ->setParameter('theme', $theme)
-            ->getQuery()
-            ->getOneOrNullResult();
+        try {
+            $entityManager = $this->getEntityManager();
+            $jeuDevinette = $this->createQueryBuilder('j')
+                ->where('j.rightword = :rightWord')
+                ->andWhere('j.wrongword = :wrongWord')
+                ->andWhere('j.theme = :theme')
+                ->setParameter('rightWord', $rightWord)
+                ->setParameter('wrongWord', $wrongWord)
+                ->setParameter('theme', $theme)
+                ->getQuery()
+                ->getOneOrNullResult();
 
-        if ($jeuDevinette) {
-            $entityManager->remove($jeuDevinette);
-            $entityManager->flush();
+            if ($jeuDevinette) {
+                $entityManager->remove($jeuDevinette);
+                $entityManager->flush();
+            }
+        } catch (\Throwable $e) {
+            throw new \RuntimeException('Erreur lors de la suppression du lot : ' . $e->getMessage());
         }
     }
 
@@ -108,4 +112,5 @@ class JeudedevinetteRepository extends ServiceEntityRepository
             throw new \RuntimeException('Erreur lors de l\'enregistrement des lots : ' . $e->getMessage());
         }
     }
+
 }

@@ -120,7 +120,7 @@
                 <input type="text" name="wrongWord" class="form-control" placeholder="Mot intrus" required>
                 <input type="text" name="theme" class="form-control" placeholder="Thème" required>
                 <input type="hidden" name="language" value="{{ language }}">
-                <input type="hidden" name="level" value="{{ language ? level : '' }}">
+                <input type="hidden" name="level" value="{{ level }}">
                 <button type="submit" class="btn btn-primary">Ajouter</button>
             </div>
         </form>
@@ -143,14 +143,14 @@
                             <td>{{ word.wrongWord }}</td>
                             <td>{{ word.thème }}</td>
                             <td>
-                                <input type="checkbox" name="selectedEntries[{{ loop.index0 }}][rightWord]" value="{{ word.rightWord }}" data-wrong-word="{{ word.wrongWord }}" data-thème="{{ word.thème }}">
+                                <input type="checkbox" name="selectedEntries[{{ loop.index0 }}][rightWord]" value="{{ word.rightWord }}" data-wrong-word="{{ word.wrongWord }}" data-theme="{{ word.thème }}">
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
             <input type="hidden" name="language" value="{{ language }}">
-            <input type="hidden" name="level" value="{{ language ? level : '' }}">
+            <input type="hidden" name="level" value="{{ level }}">
             <div class="d-flex justify-content-center gap-3 mt-3">
                 <button type="submit" class="btn btn-danger" onclick="return confirmDelete()">Supprimer</button>
                 <a href="{{ path('admin_dashboard') }}" class="btn btn-back">Retour</a>
@@ -213,10 +213,20 @@
             }
 
             const form = document.getElementById('deleteForm');
-            selected.forEach((checkbox, index) => {
+            // Clear any existing hidden inputs to avoid duplicates
+            const existingInputs = form.querySelectorAll('input[name^="selectedEntries"][type="hidden"]');
+            existingInputs.forEach(input => input.remove());
+
+            selected.forEach((checkbox) => {
+                // Extract index from checkbox name (e.g., selectedEntries[0][rightWord])
+                const match = checkbox.name.match(/selectedEntries\[(\d+)\]\[rightWord\]/);
+                if (!match) return;
+                const index = match[1];
+
                 const wrongWord = checkbox.dataset.wrongWord;
                 const theme = checkbox.dataset.theme;
 
+                // Add hidden inputs with the same index
                 const inputWrong = document.createElement('input');
                 inputWrong.type = 'hidden';
                 inputWrong.name = `selectedEntries[${index}][wrongWord]`;
