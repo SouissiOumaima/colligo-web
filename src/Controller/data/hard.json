@@ -1,0 +1,150 @@
+{
+    "fr": {
+        "École": [
+            {"mot": "Professeur", "synonyme": {"ar": "مُعَلِّم"}},
+            {"mot": "Livre", "synonyme": {"ar": "كِتَاب"}},
+            {"mot": "Classe", "synonyme": {"ar": "فَصْل"}},
+            {"mot": "Crayon", "synonyme": {"ar": "قَلَم"}},
+            {"mot": "École", "synonyme": {"ar": "مَدْرَسَة"}}
+        ],
+        "Sport": [
+            {"mot": "Football", "synonyme": {"ar": "كُرَةُ القَدَم"}},
+            {"mot": "Courir", "synonyme": {"ar": "يَجْرِي"}},
+            {"mot": "Ballon", "synonyme": {"ar": "كُرَة"}},
+            {"mot": "Équipe", "synonyme": {"ar": "فَرِيق"}},
+            {"mot": "Victoire", "synonyme": {"ar": "نَصْر"}}
+        ],
+        "Amis": [
+            {"mot": "Ami", "synonyme": {"ar": "صَدِيق"}},
+            {"mot": "Copain", "synonyme": {"ar": "رَفِيق"}},
+            {"mot": "Confiance", "synonyme": {"ar": "ثِقَة"}},
+            {"mot": "Sourire", "synonyme": {"ar": "بِتْسَامَة"}},
+            {"mot": "Rencontre", "synonyme": {"ar": "لِقَاء"}}
+        ],
+        "Voyage": [
+            {"mot": "Avion", "synonyme": {"ar": "طَائِرَة"}},
+            {"mot": "Train", "synonyme": {"ar": "قِطَار"}},
+            {"mot": "Voiture", "synonyme": {"ar": "سَيَّارَة"}},
+            {"mot": "Billet", "synonyme": {"ar": "تَذْكِرَة"}},
+            {"mot": "Voyage", "synonyme": {"ar": "رِحْلَة"}}
+        ],
+        "Profession": [
+            {"mot": "Médecin", "synonyme": {"ar": "طَبِيب"}},
+            {"mot": "Avocat", "synonyme": {"ar": "مُحَامٍ"}},
+            {"mot": "Cuisinier", "synonyme": {"ar": "طَبَّاخ"}},
+            {"mot": "Ingénieur", "synonyme": {"ar": "مُهَنْدِس"}},
+            {"mot": "Artiste", "synonyme": {"ar": "فَنَّان"}}
+        ]
+    },
+    "en": {
+        "École": [
+            {"mot": "Teacher", "synonyme": {"ar": "مُعَلِّم"}},
+            {"mot": "Book", "synonyme": {"ar": "كِتَاب"}},
+            {"mot": "Class", "synonyme": {"ar": "فَصْل"}},
+            {"mot": "Pencil", "synonyme": {"ar": "قَلَم"}},
+            {"mot": "School", "synonyme": {"ar": "مَدْرَسَة"}}
+        ],
+        "Sport": [
+            {"mot": "Soccer", "synonyme": {"ar": "كُرَةُ القَدَم"}},
+            {"mot": "Run", "synonyme": {"ar": "يَجْرِي"}},
+            {"mot": "Ball", "synonyme": {"ar": "كُرَة"}},
+            {"mot": "Team", "synonyme": {"ar": "فَرِيق"}},
+            {"mot": "Victory", "synonyme": {"ar": "نَصْر"}}
+        ],
+        "Amis": [
+            {"mot": "Friend", "synonyme": {"ar": "صَدِيق"}},
+            {"mot": "Buddy", "synonyme": {"ar": "رَفِيق"}},
+            {"mot": "Trust", "synonyme": {"ar": "ثِقَة"}},
+            {"mot": "Smile", "synonyme": {"ar": "بِتْسَامَة"}},
+            {"mot": "Meeting", "synonyme": {"ar": "لِقَاء"}}
+        ],
+        "Voyage": [
+            {"mot": "Airplane", "synonyme": {"ar": "طَائِرَة"}},
+            {"mot": "Train", "synonyme": {"ar": "قِطَار"}},
+            {"mot": "Car", "synonyme": {"ar": "سَيَّارَة"}},
+            {"mot": "Ticket", "synonyme": {"ar": "تَذْكِرَة"}},
+            {"mot": "Travel", "synonyme": {"ar": "رِحْلَة"}}
+        ],
+        "Profession": [
+            {"mot": "Doctor", "synonyme": {"ar": "طَبِيب"}},
+            {"mot": "Lawyer", "synonyme": {"ar": "مُحَامٍ"}},
+            {"mot": "Chef", "synonyme": {"ar": "طَبَّاخ"}},
+            {"mot": "Engineer", "synonyme": {"ar": "مُهَنْدِس"}},
+            {"mot": "Artist", "synonyme": {"ar": "فَنَّان"}}
+        ]
+    },
+    "de": {
+        "École": [
+            {"mot": "Lehrer", "synonyme": {"ar": "مُعَلِّم"}},
+            {"mot": "Buch", "synonyme": {"ar": "كِتَاب"}},
+            {"mot": "Klasse", "synonyme": {"ar": "فَصْل"}},
+            {"mot": "Bleistift", "synonyme": {"ar": "قَلَم"}},
+            {"mot": "Schule", "synonyme": {"ar": "مَدْرَسَة"}}
+        ],
+        "Sport": [
+            {"mot": "Fußball", "synonyme": {"ar": "كُرَةُ القَدَم"}},
+            {"mot": "Laufen", "synonyme": {"ar": "يَجْرِي"}},
+            {"mot": "Ball", "synonyme": {"ar": "كُرَة"}},
+            {"mot": "Team", "synonyme": {"ar": "فَرِيق"}},
+            {"mot": "Sieg", "synonyme": {"ar": "نَصْر"}}
+        ],
+        "Amis": [
+            {"mot": "Freund", "synonyme": {"ar": "صَدِيق"}},
+            {"mot": "Kumpel", "synonyme": {"ar": "رَفِيق"}},
+            {"mot": "Vertrauen", "synonyme": {"ar": "ثِقَة"}},
+            {"mot": "Lächeln", "synonyme": {"ar": "بِتْسَامَة"}},
+            {"mot": "Treffen", "synonyme": {"ar": "لِقَاء"}}
+        ],
+        "Voyage": [
+            {"mot": "Flugzeug", "synonyme": {"ar": "طَائِرَة"}},
+            {"mot": "Zug", "synonyme": {"ar": "قِطَار"}},
+            {"mot": "Auto", "synonyme": {"ar": "سَيَّارَة"}},
+            {"mot": "Fahrkarte", "synonyme": {"ar": "تَذْكِرَة"}},
+            {"mot": "Reise", "synonyme": {"ar": "رِحْلَة"}}
+        ],
+        "Profession": [
+            {"mot": "Arzt", "synonyme": {"ar": "طَبِيب"}},
+            {"mot": "Anwalt", "synonyme": {"ar": "مُحَامٍ"}},
+            {"mot": "Koch", "synonyme": {"ar": "طَبَّاخ"}},
+            {"mot": "Ingenieur", "synonyme": {"ar": "مُهَنْدِس"}},
+            {"mot": "Künstler", "synonyme": {"ar": "فَنَّان"}}
+        ]
+    },
+    "es": {
+        "École": [
+            {"mot": "Profesor", "synonyme": {"ar": "مُعَلِّم"}},
+            {"mot": "Libro", "synonyme": {"ar": "كِتَاب"}},
+            {"mot": "Clase", "synonyme": {"ar": "فَصْل"}},
+            {"mot": "Lápiz", "synonyme": {"ar": "قَلَم"}},
+            {"mot": "Escuela", "synonyme": {"ar": "مَدْرَسَة"}}
+        ],
+        "Sport": [
+            {"mot": "Fútbol", "synonyme": {"ar": "كُرَةُ القَدَم"}},
+            {"mot": "Correr", "synonyme": {"ar": "يَجْرِي"}},
+            {"mot": "Pelota", "synonyme": {"ar": "كُرَة"}},
+            {"mot": "Equipo", "synonyme": {"ar": "فَرِيق"}},
+            {"mot": "Victoria", "synonyme": {"ar": "نَصْر"}}
+        ],
+        "Amis": [
+            {"mot": "Amigo", "synonyme": {"ar": "صَدِيق"}},
+            {"mot": "Compañero", "synonyme": {"ar": "رَفِيق"}},
+            {"mot": "Confianza", "synonyme": {"ar": "ثِقَة"}},
+            {"mot": "Sonrisa", "synonyme": {"ar": "بِتْسَامَة"}},
+            {"mot": "Encuentro", "synonyme": {"ar": "لِقَاء"}}
+        ],
+        "Voyage": [
+            {"mot": "Avión", "synonyme": {"ar": "طَائِرَة"}},
+            {"mot": "Tren", "synonyme": {"ar": "قِطَار"}},
+            {"mot": "Coche", "synonyme": {"ar": "سَيَّارَة"}},
+            {"mot": "Billete", "synonyme": {"ar": "تَذْكِرَة"}},
+            {"mot": "Viaje", "synonyme": {"ar": "رِحْلَة"}}
+        ],
+        "Profession": [
+            {"mot": "Médico", "synonyme": {"ar": "طَبِيب"}},
+            {"mot": "Abogado", "synonyme": {"ar": "مُحَامٍ"}},
+            {"mot": "Cocinero", "synonyme": {"ar": "طَبَّاخ"}},
+            {"mot": "Ingeniero", "synonyme": {"ar": "مُهَنْدِس"}},
+            {"mot": "Artista", "synonyme": {"ar": "فَنَّان"}}
+        ]
+    }
+}

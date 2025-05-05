@@ -1,0 +1,150 @@
+{
+    "fr": {
+        "Animaux": [
+            {"mot": "Chien", "synonyme": {"ar": "كَلْب"}},
+            {"mot": "Chat", "synonyme": {"ar": "قِطّ"}},
+            {"mot": "Oiseau", "synonyme": {"ar": "طَائِر"}},
+            {"mot": "Poisson", "synonyme": {"ar": "سَمَكَة"}},
+            {"mot": "Cheval", "synonyme": {"ar": "حِصَان"}}
+        ],
+        "Fruits": [
+            {"mot": "Pomme", "synonyme": {"ar": "تُفَّاحَة"}},
+            {"mot": "Banane", "synonyme": {"ar": "مَوْزَة"}},
+            {"mot": "Orange", "synonyme": {"ar": "بُرْتُقَالَة"}},
+            {"mot": "Fraise", "synonyme": {"ar": "فَرَاوْلَة"}},
+            {"mot": "Raisin", "synonyme": {"ar": "عِنَب"}}
+        ],
+        "Légumes": [
+            {"mot": "Carotte", "synonyme": {"ar": "جَزَرَة"}},
+            {"mot": "Tomate", "synonyme": {"ar": "طَمَاطِم"}},
+            {"mot": "Pomme de terre", "synonyme": {"ar": "بَطَاطَا"}},
+            {"mot": "Oignon", "synonyme": {"ar": "بَصَل"}},
+            {"mot": "Salade", "synonyme": {"ar": "خَسّ"}}
+        ],
+        "Vêtements": [
+            {"mot": "Pantalon", "synonyme": {"ar": "بَنْطَلُون"}},
+            {"mot": "Chemise", "synonyme": {"ar": "قَمِيص"}},
+            {"mot": "Chaussure", "synonyme": {"ar": "حِذَاء"}},
+            {"mot": "Chapeau", "synonyme": {"ar": "قُبَّعَة"}},
+            {"mot": "Manteau", "synonyme": {"ar": "مِعْطَف"}}
+        ],
+        "Maison": [
+            {"mot": "Table", "synonyme": {"ar": "طَاوِلَة"}},
+            {"mot": "Chaise", "synonyme": {"ar": "كُرْسِي"}},
+            {"mot": "Lit", "synonyme": {"ar": "سَرِير"}},
+            {"mot": "Fenêtre", "synonyme": {"ar": "نَافِذَة"}},
+            {"mot": "Porte", "synonyme": {"ar": "بَاب"}}
+        ]
+    },
+    "en": {
+        "Animaux": [
+            {"mot": "Dog", "synonyme": {"ar": "كَلْب"}},
+            {"mot": "Cat", "synonyme": {"ar": "قِطّ"}},
+            {"mot": "Bird", "synonyme": {"ar": "طَائِر"}},
+            {"mot": "Fish", "synonyme": {"ar": "سَمَكَة"}},
+            {"mot": "Horse", "synonyme": {"ar": "حِصَان"}}
+        ],
+        "Fruits": [
+            {"mot": "Apple", "synonyme": {"ar": "تُفَّاحَة"}},
+            {"mot": "Banana", "synonyme": {"ar": "مَوْزَة"}},
+            {"mot": "Orange", "synonyme": {"ar": "بُرْتُقَالَة"}},
+            {"mot": "Strawberry", "synonyme": {"ar": "فَرَاوْلَة"}},
+            {"mot": "Grape", "synonyme": {"ar": "عِنَب"}}
+        ],
+        "Légumes": [
+            {"mot": "Carrot", "synonyme": {"ar": "جَزَرَة"}},
+            {"mot": "Tomato", "synonyme": {"ar": "طَمَاطِم"}},
+            {"mot": "Potato", "synonyme": {"ar": "بَطَاطَا"}},
+            {"mot": "Onion", "synonyme": {"ar": "بَصَل"}},
+            {"mot": "Lettuce", "synonyme": {"ar": "خَسّ"}}
+        ],
+        "Vêtements": [
+            {"mot": "Pants", "synonyme": {"ar": "بَنْطَلُون"}},
+            {"mot": "Shirt", "synonyme": {"ar": "قَمِيص"}},
+            {"mot": "Shoe", "synonyme": {"ar": "حِذَاء"}},
+            {"mot": "Hat", "synonyme": {"ar": "قُبَّعَة"}},
+            {"mot": "Coat", "synonyme": {"ar": "مِعْطَف"}}
+        ],
+        "Maison": [
+            {"mot": "Table", "synonyme": {"ar": "طَاوِلَة"}},
+            {"mot": "Chair", "synonyme": {"ar": "كُرْسِي"}},
+            {"mot": "Bed", "synonyme": {"ar": "سَرِير"}},
+            {"mot": "Window", "synonyme": {"ar": "نَافِذَة"}},
+            {"mot": "Door", "synonyme": {"ar": "بَاب"}}
+        ]
+    },
+    "de": {
+        "Animaux": [
+            {"mot": "Hund", "synonyme": {"ar": "كَلْب"}},
+            {"mot": "Katze", "synonyme": {"ar": "قِطّ"}},
+            {"mot": "Vogel", "synonyme": {"ar": "طَائِر"}},
+            {"mot": "Fisch", "synonyme": {"ar": "سَمَكَة"}},
+            {"mot": "Pferd", "synonyme": {"ar": "حِصَان"}}
+        ],
+        "Fruits": [
+            {"mot": "Apfel", "synonyme": {"ar": "تُفَّاحَة"}},
+            {"mot": "Banane", "synonyme": {"ar": "مَوْزَة"}},
+            {"mot": "Orange", "synonyme": {"ar": "بُرْتُقَالَة"}},
+            {"mot": "Erdbeere", "synonyme": {"ar": "فَرَاوْلَة"}},
+            {"mot": "Traube", "synonyme": {"ar": "عِنَب"}}
+        ],
+        "Légumes": [
+            {"mot": "Karotte", "synonyme": {"ar": "جَزَرَة"}},
+            {"mot": "Tomate", "synonyme": {"ar": "طَمَاطِم"}},
+            {"mot": "Kartoffel", "synonyme": {"ar": "بَطَاطَا"}},
+            {"mot": "Zwiebel", "synonyme": {"ar": "بَصَل"}},
+            {"mot": "Salat", "synonyme": {"ar": "خَسّ"}}
+        ],
+        "Vêtements": [
+            {"mot": "Hose", "synonyme": {"ar": "بَنْطَلُون"}},
+            {"mot": "Hemd", "synonyme": {"ar": "قَمِيص"}},
+            {"mot": "Schuh", "synonyme": {"ar": "حِذَاء"}},
+            {"mot": "Hut", "synonyme": {"ar": "قُبَّعَة"}},
+            {"mot": "Mantel", "synonyme": {"ar": "مِعْطَف"}}
+        ],
+        "Maison": [
+            {"mot": "Tisch", "synonyme": {"ar": "طَاوِلَة"}},
+            {"mot": "Stuhl", "synonyme": {"ar": "كُرْسِي"}},
+            {"mot": "Bett", "synonyme": {"ar": "سَرِير"}},
+            {"mot": "Fenster", "synonyme": {"ar": "نَافِذَة"}},
+            {"mot": "Tür", "synonyme": {"ar": "بَاب"}}
+        ]
+    },
+    "es": {
+        "Animaux": [
+            {"mot": "Perro", "synonyme": {"ar": "كَلْب"}},
+            {"mot": "Gato", "synonyme": {"ar": "قِطّ"}},
+            {"mot": "Pájaro", "synonyme": {"ar": "طَائِر"}},
+            {"mot": "Pez", "synonyme": {"ar": "سَمَكَة"}},
+            {"mot": "Caballo", "synonyme": {"ar": "حِصَان"}}
+        ],
+        "Fruits": [
+            {"mot": "Manzana", "synonyme": {"ar": "تُفَّاحَة"}},
+            {"mot": "Plátano", "synonyme": {"ar": "مَوْزَة"}},
+            {"mot": "Naranja", "synonyme": {"ar": "بُرْتُقَالَة"}},
+            {"mot": "Fresa", "synonyme": {"ar": "فَرَاوْلَة"}},
+            {"mot": "Uva", "synonyme": {"ar": "عِنَب"}}
+        ],
+        "Légumes": [
+            {"mot": "Zanahoria", "synonyme": {"ar": "جَزَرَة"}},
+            {"mot": "Tomate", "synonyme": {"ar": "طَمَاطِم"}},
+            {"mot": "Patata", "synonyme": {"ar": "بَطَاطَا"}},
+            {"mot": "Cebolla", "synonyme": {"ar": "بَصَل"}},
+            {"mot": "Lechuga", "synonyme": {"ar": "خَسّ"}}
+        ],
+        "Vêtements": [
+            {"mot": "Pantalón", "synonyme": {"ar": "بَنْطَلُون"}},
+            {"mot": "Camisa", "synonyme": {"ar": "قَمِيص"}},
+            {"mot": "Zapato", "synonyme": {"ar": "حِذَاء"}},
+            {"mot": "Sombrero", "synonyme": {"ar": "قُبَّعَة"}},
+            {"mot": "Abrigo", "synonyme": {"ar": "مِعْطَف"}}
+        ],
+        "Maison": [
+            {"mot": "Mesa", "synonyme": {"ar": "طَاوِلَة"}},
+            {"mot": "Silla", "synonyme": {"ar": "كُرْسِي"}},
+            {"mot": "Cama", "synonyme": {"ar": "سَرِير"}},
+            {"mot": "Ventana", "synonyme": {"ar": "نَافِذَة"}},
+            {"mot": "Puerta", "synonyme": {"ar": "بَاب"}}
+        ]
+    }
+}

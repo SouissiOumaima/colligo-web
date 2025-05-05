@@ -1,0 +1,150 @@
+{
+    "fr": {
+        "Basique": [
+            {"mot": "Oui", "synonyme": {"ar": "نعم"}},
+            {"mot": "Non", "synonyme": {"ar": "لا"}},
+            {"mot": "Toi", "synonyme": {"ar": "أنت"}},
+            {"mot": "Moi", "synonyme": {"ar": "أنا"}},
+            {"mot": "Bon", "synonyme": {"ar": "جيد"}}
+        ],
+        "Pronoms": [
+            {"mot": "Je", "synonyme": {"ar": "أنا"}},
+            {"mot": "Elle", "synonyme": {"ar": "هي"}},
+            {"mot": "Ils", "synonyme": {"ar": "هم"}},
+            {"mot": "Nous", "synonyme": {"ar": "نحن"}},
+            {"mot": "Vous", "synonyme": {"ar": "أنتم"}}
+        ],
+        "Famille": [
+            {"mot": "Père", "synonyme": {"ar": "أب"}},
+            {"mot": "Mère", "synonyme": {"ar": "أم"}},
+            {"mot": "Frère", "synonyme": {"ar": "أخ"}},
+            {"mot": "Sœur", "synonyme": {"ar": "أخت"}},
+            {"mot": "Oncle", "synonyme": {"ar": "عم"}}
+        ],
+        "Couleurs": [
+            {"mot": "Rouge", "synonyme": {"ar": "أحمر"}},
+            {"mot": "Bleu", "synonyme": {"ar": "أزرق"}},
+            {"mot": "Vert", "synonyme": {"ar": "أخضر"}},
+            {"mot": "Jaune", "synonyme": {"ar": "أصفر"}},
+            {"mot": "Blanc", "synonyme": {"ar": "أبيض"}}
+        ],
+        "Nombres": [
+            {"mot": "Un", "synonyme": {"ar": "واحد"}},
+            {"mot": "Deux", "synonyme": {"ar": "اثنان"}},
+            {"mot": "Trois", "synonyme": {"ar": "ثلاثة"}},
+            {"mot": "Quatre", "synonyme": {"ar": "أربعة"}},
+            {"mot": "Cinq", "synonyme": {"ar": "خمسة"}}
+        ]
+    },
+    "en": {
+        "Basique": [
+            {"mot": "Yes", "synonyme": {"ar": "نعم"}},
+            {"mot": "No", "synonyme": {"ar": "لا"}},
+            {"mot": "You", "synonyme": {"ar": "أنت"}},
+            {"mot": "Me", "synonyme": {"ar": "أنا"}},
+            {"mot": "Good", "synonyme": {"ar": "جيد"}}
+        ],
+        "Pronoms": [
+            {"mot": "I", "synonyme": {"ar": "أنا"}},
+            {"mot": "She", "synonyme": {"ar": "هي"}},
+            {"mot": "They", "synonyme": {"ar": "هم"}},
+            {"mot": "We", "synonyme": {"ar": "نحن"}},
+            {"mot": "You", "synonyme": {"ar": "أنتم"}}
+        ],
+        "Famille": [
+            {"mot": "Father", "synonyme": {"ar": "أب"}},
+            {"mot": "Mother", "synonyme": {"ar": "أم"}},
+            {"mot": "Brother", "synonyme": {"ar": "أخ"}},
+            {"mot": "Sister", "synonyme": {"ar": "أخت"}},
+            {"mot": "Uncle", "synonyme": {"ar": "عم"}}
+        ],
+        "Couleurs": [
+            {"mot": "Red", "synonyme": {"ar": "أحمر"}},
+            {"mot": "Blue", "synonyme": {"ar": "أزرق"}},
+            {"mot": "Green", "synonyme": {"ar": "أخضر"}},
+            {"mot": "Yellow", "synonyme": {"ar": "أصفر"}},
+            {"mot": "White", "synonyme": {"ar": "أبيض"}}
+        ],
+        "Nombres": [
+            {"mot": "One", "synonyme": {"ar": "واحد"}},
+            {"mot": "Two", "synonyme": {"ar": "اثنان"}},
+            {"mot": "Three", "synonyme": {"ar": "ثلاثة"}},
+            {"mot": "Four", "synonyme": {"ar": "أربعة"}},
+            {"mot": "Five", "synonyme": {"ar": "خمسة"}}
+        ]
+    },
+    "de": {
+        "Basique": [
+            {"mot": "Ja", "synonyme": {"ar": "نعم"}},
+            {"mot": "Nein", "synonyme": {"ar": "لا"}},
+            {"mot": "Du", "synonyme": {"ar": "أنت"}},
+            {"mot": "Ich", "synonyme": {"ar": "أنا"}},
+            {"mot": "Gut", "synonyme": {"ar": "جيد"}}
+        ],
+        "Pronoms": [
+            {"mot": "Ich", "synonyme": {"ar": "أنا"}},
+            {"mot": "Sie", "synonyme": {"ar": "هي"}},
+            {"mot": "Sie", "synonyme": {"ar": "هم"}},
+            {"mot": "Wir", "synonyme": {"ar": "نحن"}},
+            {"mot": "Ihr", "synonyme": {"ar": "أنتم"}}
+        ],
+        "Famille": [
+            {"mot": "Vater", "synonyme": {"ar": "أب"}},
+            {"mot": "Mutter", "synonyme": {"ar": "أم"}},
+            {"mot": "Bruder", "synonyme": {"ar": "أخ"}},
+            {"mot": "Schwester", "synonyme": {"ar": "أخت"}},
+            {"mot": "Onkel", "synonyme": {"ar": "عم"}}
+        ],
+        "Couleurs": [
+            {"mot": "Rot", "synonyme": {"ar": "أحمر"}},
+            {"mot": "Blau", "synonyme": {"ar": "أزرق"}},
+            {"mot": "Grün", "synonyme": {"ar": "أخضر"}},
+            {"mot": "Gelb", "synonyme": {"ar": "أصفر"}},
+            {"mot": "Weiß", "synonyme": {"ar": "أبيض"}}
+        ],
+        "Nombres": [
+            {"mot": "Eins", "synonyme": {"ar": "واحد"}},
+            {"mot": "Zwei", "synonyme": {"ar": "اثنان"}},
+            {"mot": "Drei", "synonyme": {"ar": "ثلاثة"}},
+            {"mot": "Vier", "synonyme": {"ar": "أربعة"}},
+            {"mot": "Fünf", "synonyme": {"ar": "خمسة"}}
+        ]
+    },
+    "es": {
+        "Basique": [
+            {"mot": "Sí", "synonyme": {"ar": "نعم"}},
+            {"mot": "No", "synonyme": {"ar": "لا"}},
+            {"mot": "Tú", "synonyme": {"ar": "أنت"}},
+            {"mot": "Yo", "synonyme": {"ar": "أنا"}},
+            {"mot": "Bueno", "synonyme": {"ar": "جيد"}}
+        ],
+        "Pronoms": [
+            {"mot": "Yo", "synonyme": {"ar": "أنا"}},
+            {"mot": "Ella", "synonyme": {"ar": "هي"}},
+            {"mot": "Ellos", "synonyme": {"ar": "هم"}},
+            {"mot": "Nosotros", "synonyme": {"ar": "نحن"}},
+            {"mot": "Vosotros", "synonyme": {"ar": "أنتم"}}
+        ],
+        "Famille": [
+            {"mot": "Padre", "synonyme": {"ar": "أب"}},
+            {"mot": "Madre", "synonyme": {"ar": "أم"}},
+            {"mot": "Hermano", "synonyme": {"ar": "أخ"}},
+            {"mot": "Hermana", "synonyme": {"ar": "أخت"}},
+            {"mot": "Tío", "synonyme": {"ar": "عم"}}
+        ],
+        "Couleurs": [
+            {"mot": "Rojo", "synonyme": {"ar": "أحمر"}},
+            {"mot": "Azul", "synonyme": {"ar": "أزرق"}},
+            {"mot": "Verde", "synonyme": {"ar": "أخضر"}},
+            {"mot": "Amarillo", "synonyme": {"ar": "أصفر"}},
+            {"mot": "Blanco", "synonyme": {"ar": "أبيض"}}
+        ],
+        "Nombres": [
+            {"mot": "Uno", "synonyme": {"ar": "واحد"}},
+            {"mot": "Dos", "synonyme": {"ar": "اثنان"}},
+            {"mot": "Tres", "synonyme": {"ar": "ثلاثة"}},
+            {"mot": "Cuatro", "synonyme": {"ar": "أربعة"}},
+            {"mot": "Cinco", "synonyme": {"ar": "خمسة"}}
+        ]
+    }
+}

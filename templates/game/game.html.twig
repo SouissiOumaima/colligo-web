@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>Jeu de correspondance magique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5efe6 0%, #D9CFC1 100%); /* Dégradé basé sur #EEE6D8 */
+            font-family: 'Comic Neue', cursive;
+            overflow-x: hidden;
+        }
+        .game-container {
+            background: url('https://www.transparenttextures.com/patterns/rice-paper.png'), rgba(255, 255, 255, 0.95);
+            border: 5px solid #E8E8F5; /* Mauve pastel remplace le jaune pastel */
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            animation: bounceIn 0.5s ease;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .word-button, .synonym-button {
+            background-color: #FFFFFF; /* Blanc pour les boutons word et synonym */
+            color: #5A4B6B; /* Violet doux pour le texte */
+            min-width: 120px;
+            min-height: 60px;
+            font-size: 20px;
+            border-radius: 15px;
+            border: 3px solid #D4E4D7; /* Vert menthe pastel pour la bordure */
+            transition: transform 0.3s, background-color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .word-button::before, .synonym-button::before {
+            content: '🌟'; /* Étoile douce */
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            font-size: 30px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .word-button:hover, .synonym-button:hover {
+            transform: scale(1.1);
+            background-color: #F5F5F5; /* Blanc légèrement grisé au survol */
+        }
+        .word-button:hover::before, .synonym-button:hover::before {
+            opacity: 0.5;
+        }
+        .selected {
+            background-color: #C9E4F5 !important; /* Bleu pastel clair */
+            transform: scale(1.05) !important;
+        }
+        .matched {
+            background-color: #E8E8F5 !important; /* Mauve pastel remplace le jaune pastel */
+            color: #5A4B6B;
+            transform: scale(1.1) !important;
+            animation: sparkle 1s infinite;
+        }
+        @keyframes sparkle {
+            0% { box-shadow: 0 0 5px #D4E4D7; }
+            50% { box-shadow: 0 0 15px #D4E4D7; }
+            100% { box-shadow: 0 0 5px #D4E4D7; }
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        .word-column, .synonym-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: #F5F5DC; /* Beige pastel */
+            padding: 25px;
+            border-radius: 20px;
+            border: 5px solid #D4E4D7; /* Vert menthe pastel */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            animation: popIn 0.5s ease;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #modal-message {
+            font-size: 24px;
+            color: #A89EBF; /* Violet pastel */
+            margin-bottom: 15px;
+        }
+        #modal-gif {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+        }
+        #modal-close {
+            background-color: #C9E4F5; /* Bleu pastel */
+            color: #5A4B6B;
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #modal-close:hover {
+            background-color: #AED9F0; /* Bleu pastel un peu plus foncé */
+        }
+        .alert {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+        .alert-success {
+            background-color: #D4E4D7; /* Vert menthe pastel */
+            color: #5A4B6B;
+            border: 2px solid #B7D4BB;
+        }
+        .alert-danger {
+            background-color: #F9E4E8; /* Rose pâle */
+            color: #A89EBF;
+            border: 2px solid #E8C7D2;
+        }
+        .stats-button {
+            background-color: #E8E8F5; /* Lavande pastel */
+            color: #5A4B6B;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 2px solid #C9E4F5;
+            transition: transform 0.3s;
+        }
+        .stats-button:hover {
+            transform: scale(1.1);
+            background-color: #D4D4F0; /* Lavande un peu plus foncée */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="game-container max-w-4xl w-full">
+        <h1 id="theme" class="text-4xl font-bold text-[#A89EBF] bg-[#C9E4F5] p-4 rounded-lg shadow-md">Thème : {{ theme }}</h1>
+        <p id="instruction" class="text-2xl text-[#A89EBF] mb-6">قم بمطابقة الكلمات مع مرادفاتها !</p>
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% endfor %}
+        <div class="flex justify-center space-x-6 mb-6">
+            <button id="attempts" class="stats-button">Tentatives : {{ attemptsLeft }}</button>
+            <button id="time" class="stats-button">Temps : {{ timeLeft }}s</button>
+            <button id="score" class="stats-button">Score : {{ score }}</button>
+        </div>
+        <div class="button-container">
+            <div class="word-column">
+                {% for word in words %}
+                    <button class="word-button" data-word="{{ word }}">{{ word }}</button>
+                {% endfor %}
+            </div>
+            <div class="synonym-column">
+                {% for synonym in synonyms %}
+                    <button class="synonym-button" data-synonym="{{ synonym }}">{{ synonym }}</button>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="mt-6">
+            <a href="{{ path('language_selection') }}" class="bg-[#D4E4D7] text-[#5A4B6B] px-6 py-3 rounded-full hover:bg-[#B7D4BB] text-xl font-bold transition duration-300">Retour </a>
+        </div>
+    </div>
+    <div id="modal">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <img id="modal-gif" src="/images/no.gif" class="w-64 h-64">
+            <audio id="modal-audio" src="" style="display: none;"></audio>
+            <button id="modal-close" class="bg-blue-300 px-4 py-2 mt-4 rounded">Fermer</button>
+        </div>
+    </div>
+    <script>
+        let firstSelected = null;
+        let firstWord = null;
+        let attemptsLeft = {{ attemptsLeft }};
+        let timeLeft = {{ timeLeft }};
+        let initialTime = {{ timeLeft }};
+        let attemptsUsedInStage = 3 - attemptsLeft;
+        let timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('time').textContent = `Temps : ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                attemptsLeft--;
+                attemptsUsedInStage++;
+                document.getElementById('attempts').textContent = `Tentatives : ${attemptsLeft}`;
+                submitMatch(null, null, false);
+            }
+        }, 1000);
+
+        document.querySelectorAll('.word-button, .synonym-button').forEach(button => {
+            button.addEventListener('click', () => {
+                if (firstSelected === null) {
+                    firstSelected = button;
+                    firstWord = button.dataset.word || button.dataset.synonym;
+                    button.classList.add('selected');
+                } else {
+                    const secondWord = button.dataset.word || button.dataset.synonym;
+                    const isWord = button.classList.contains('word-button');
+                    submitMatch(firstWord, secondWord, isWord, button);
+                }
+            });
+        });
+
+        function submitMatch(firstWord, secondWord, isWord, secondButton) {
+            const timeSpent = initialTime - timeLeft;
+            fetch('{{ path('game_action') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `action=match&firstWord=${encodeURIComponent(firstWord || '')}&secondWord=${encodeURIComponent(secondWord || '')}&isWord=${isWord}&attemptsLeft=${attemptsLeft}&attemptsUsedInStage=${attemptsUsedInStage}&timeSpent=${timeSpent}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response from server:', data); // Débogage
+                if (firstSelected) {
+                    firstSelected.classList.remove('selected');
+                }
+                if (data.status === 'continue' || data.status === 'next_theme') {
+                    attemptsLeft = data.attemptsLeft;
+                    timeLeft = data.timeLeft;
+                    document.getElementById('attempts').textContent = `Tentatives : ${attemptsLeft}`;
+                    document.getElementById('time').textContent = `Temps : ${timeLeft}s`;
+                    document.getElementById('score').textContent = `Score : ${data.score}`;
+                    if (data.status === 'next_theme') {
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else if (!data.correctMatch) {
+                        attemptsUsedInStage++;
+                        showModal(data.message, data.gif, '/audio/incorrect.mp3');
+                    }
+                } else if (data.status === 'next_level') {
+                    showModal(data.message, data.gif, '/audio/correct.mp3');
+                    setTimeout(() => window.location.reload(), 2000);
+                } else if (data.status === 'game_over') {
+                    showModal(data.message, data.gif, '/audio/correct.mp3');
+                    setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
+                } else if (data.status === 'error') {
+                    showModal(data.message || 'Une erreur est survenue.', '/images/no.gif', '/audio/incorrect.mp3');
+                    setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
+                }
+                if (data.correctMatch) {
+                    firstSelected.classList.add('matched');
+                    secondButton.classList.add('matched');
+                    firstSelected.disabled = true;
+                    secondButton.disabled = true;
+                    showModal(data.message, data.gif, '/audio/correct.mp3');
+                }
+                firstSelected = null;
+                firstWord = null;
+                // Mettre à jour les listes avec les nouvelles données si elles changent, en préservant les paires matched
+                if (data.words && data.synonyms) {
+                    const wordButtons = document.querySelectorAll('.word-button');
+                    const synonymButtons = document.querySelectorAll('.synonym-button');
+                    wordButtons.forEach((btn, index) => {
+                        const isMatched = btn.classList.contains('matched');
+                        btn.textContent = data.words[index];
+                        btn.dataset.word = data.words[index];
+                        if (!isMatched) {
+                            btn.classList.remove('matched', 'selected');
+                            btn.disabled = false;
+                        }
+                    });
+                    synonymButtons.forEach((btn, index) => {
+                        const isMatched = btn.classList.contains('matched');
+                        btn.textContent = data.synonyms[index];
+                        btn.dataset.synonym = data.synonyms[index];
+                        if (!isMatched) {
+                            btn.classList.remove('matched', 'selected');
+                            btn.disabled = false;
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showModal('Une erreur réseau est survenue.', '/images/no.gif', '/audio/incorrect.mp3');
+                setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
+            });
+        }
+
+        function showModal(message, gif, audioSrc) {
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal-gif').src = gif;
+            const audio = document.getElementById('modal-audio');
+            audio.src = audioSrc;
+            audio.play();
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('modal-audio').pause();
+            document.getElementById('modal-audio').currentTime = 0;
+        });
+    </script>
+</body>
+</html>
