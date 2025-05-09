@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\GameResult;
 use App\Entity\Theme;
-use App\Entity\Word;
 use App\Service\GameService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\VarDumper\VarDumper;
 
 class GameController extends AbstractController
 {
@@ -27,7 +26,7 @@ class GameController extends AbstractController
             }
 
             $session->set('language', $language);
-            $session->set('difficulty', '1'); // Définir le niveau Facile par défaut
+            $session->set('difficulty', '1');
 
             return $this->redirectToRoute('start_game');
         }
@@ -36,9 +35,9 @@ class GameController extends AbstractController
     }
 
     #[Route('/start-game', name: 'start_game', methods: ['GET', 'POST'])]
-    public function startGame(Request $request, SessionInterface $session, GameService $gameService): Response
+    public function startGame(Request $request, SessionInterface $session, GameService $gameService, EntityManagerInterface $entityManager): Response
     {
-        $difficulty = $session->get('difficulty', '1'); // Par défaut à 1 (Facile) si non défini
+        $difficulty = $session->get('difficulty', '1');
         $language = $session->get('language');
         $validLanguages = ['fr', 'en', 'de', 'es'];
         if (!$language || !in_array($language, $validLanguages)) {
@@ -55,16 +54,38 @@ class GameController extends AbstractController
         $session->set('totalAttemptsUsed', 0);
         $session->set('totalTimeSpent', 0);
         $session->set('usedThemes', []);
-        $session->set('successfulThemes', []); // Ajout pour suivre les thèmes réussis
+        $session->set('successfulThemes', []);
         $session->set('failedThemes', []);
         $session->set('selectedThemes', []);
 
         $levelName = $this->getLevelName($difficulty);
-        $themes = $gameService->getThemes($language, $levelName);
+
+        $queryBuilder = $entityManager->getRepository(Theme::class)->createQueryBuilder('t')
+            ->where('t.language = :language')
+            ->andWhere('t.level = :level')
+            ->andWhere('t.isValidated = :isValidated')
+            ->setParameter('language', $language)
+            ->setParameter('level', $levelName)
+            ->setParameter('isValidated', true)
+            ->leftJoin('t.words', 'w')
+            ->addSelect('w');
+        $themesEntities = $queryBuilder->getQuery()->getResult();
+
+        $themes = [];
+        foreach ($themesEntities as $theme) {
+            $words = [];
+            foreach ($theme->getWords() as $word) {
+                $words[$word->getWord()] = $word->getSynonym();
+            }
+            $themes[$theme->getName()] = $words;
+        }
+
         $availableThemes = array_keys($themes);
+        $successfulThemes = $session->get('successfulThemes', []);
+        $availableThemes = array_diff($availableThemes, $successfulThemes);
 
         if (count($availableThemes) < 5) {
-            $this->addFlash('error', "Pas assez de thèmes disponibles pour le niveau '$levelName' en langue '$language'. Veuillez ajouter des données dans la base de données.");
+            $this->addFlash('error', "Pas assez de thèmes validés non complétés pour le niveau '$levelName' en langue '$language'. Veuillez demander à l'admin de valider des thèmes.");
             return $this->redirectToRoute('language_selection');
         }
 
@@ -107,7 +128,7 @@ class GameController extends AbstractController
     }
 
     #[Route('/game-action', name: 'game_action', methods: ['POST'])]
-    public function gameAction(Request $request, SessionInterface $session, GameService $gameService): Response
+    public function gameAction(Request $request, SessionInterface $session, GameService $gameService, EntityManagerInterface $entityManager): Response
     {
         $action = $request->request->get('action');
         $language = $session->get('language');
@@ -121,7 +142,7 @@ class GameController extends AbstractController
         $totalAttemptsUsed = $session->get('totalAttemptsUsed', 0);
         $totalTimeSpent = $session->get('totalTimeSpent', 0);
         $usedThemes = $session->get('usedThemes', []);
-        $successfulThemes = $session->get('successfulThemes', []); // Ajout pour suivre les thèmes réussis
+        $successfulThemes = $session->get('successfulThemes', []);
         $failedThemes = $session->get('failedThemes', []);
         $selectedThemes = $session->get('selectedThemes', []);
         $attemptsLeft = (int)$request->request->get('attemptsLeft', 3);
@@ -131,11 +152,106 @@ class GameController extends AbstractController
         $shuffledWords = $session->get('shuffledWords', []);
         $shuffledSynonyms = $session->get('shuffledSynonyms', []);
 
+        if ($action === 'next') {
+            $timeSpent = (int)$request->request->get('timeSpent', 0);
+            $failedThemes[] = $currentTheme;
+            $session->set('failedThemes', $failedThemes);
+            $totalAttemptsUsed += $attemptsUsedInStage;
+            $totalTimeSpent += $timeSpent;
+            $stagesCompleted++;
+            $session->set('stagesCompleted', $stagesCompleted);
+            $session->set('totalAttemptsUsed', $totalAttemptsUsed);
+            $session->set('totalTimeSpent', $totalTimeSpent);
+
+            $this->saveStageResult($entityManager, $childId, $gameId, 0, $attemptsUsedInStage, $timeSpent, $language, $this->getLevelName($difficulty), $currentTheme, false);
+
+            if ($stagesCompleted < count($selectedThemes)) {
+                $nextTheme = null;
+                foreach ($selectedThemes as $theme) {
+                    if (!in_array($theme, $successfulThemes) && !in_array($theme, $usedThemes)) {
+                        $nextTheme = $theme;
+                        break;
+                    }
+                }
+
+                if ($nextTheme) {
+                    $usedThemes[] = $nextTheme;
+                    $session->set('usedThemes', $usedThemes);
+                    $session->set('currentTheme', $nextTheme);
+                    $session->set('matchedWords', []);
+
+                    $queryBuilder = $entityManager->getRepository(Theme::class)->createQueryBuilder('t')
+                        ->where('t.language = :language')
+                        ->andWhere('t.level = :level')
+                        ->andWhere('t.isValidated = :isValidated')
+                        ->andWhere('t.name = :name')
+                        ->setParameter('language', $language)
+                        ->setParameter('level', $this->getLevelName($difficulty))
+                        ->setParameter('isValidated', true)
+                        ->setParameter('name', $nextTheme)
+                        ->leftJoin('t.words', 'w')
+                        ->addSelect('w');
+                    $themeEntity = $queryBuilder->getQuery()->getOneOrNullResult();
+
+                    $nextWords = [];
+                    foreach ($themeEntity->getWords() as $word) {
+                        $nextWords[$word->getWord()] = $word->getSynonym();
+                    }
+
+                    $newShuffledWords = array_keys($nextWords);
+                    $newShuffledSynonyms = array_values($nextWords);
+                    shuffle($newShuffledWords);
+                    shuffle($newShuffledSynonyms);
+
+                    $session->set('shuffledWords', $newShuffledWords);
+                    $session->set('shuffledSynonyms', $newShuffledSynonyms);
+
+                    return $this->json([
+                        'status' => 'next_theme',
+                        'theme' => $nextTheme,
+                        'words' => $newShuffledWords,
+                        'synonyms' => $newShuffledSynonyms,
+                        'timeLeft' => $timeLeft,
+                        'attemptsLeft' => 3,
+                        'score' => $totalScore,
+                        'correctMatch' => false
+                    ]);
+                }
+            }
+
+            $this->saveLevelResult($entityManager, $childId, $gameId, $totalScore, $totalAttemptsUsed, $totalTimeSpent, $language, $this->getLevelName($difficulty));
+            return $this->json([
+                'status' => 'game_over',
+                'score' => $totalScore,
+                'message' => 'اللعبة انتهت! النتيجة النهائية: ' . $totalScore,
+                'gif' => '/images/fun.gif'
+            ]);
+        }
+
         if ($action !== 'match') {
             return $this->json(['error' => 'Invalid action']);
         }
 
-        $themes = $gameService->getThemes($language, $this->getLevelName($difficulty));
+        $queryBuilder = $entityManager->getRepository(Theme::class)->createQueryBuilder('t')
+            ->where('t.language = :language')
+            ->andWhere('t.level = :level')
+            ->andWhere('t.isValidated = :isValidated')
+            ->setParameter('language', $language)
+            ->setParameter('level', $this->getLevelName($difficulty))
+            ->setParameter('isValidated', true)
+            ->leftJoin('t.words', 'w')
+            ->addSelect('w');
+        $themesEntities = $queryBuilder->getQuery()->getResult();
+
+        $themes = [];
+        foreach ($themesEntities as $theme) {
+            $words = [];
+            foreach ($theme->getWords() as $word) {
+                $words[$word->getWord()] = $word->getSynonym();
+            }
+            $themes[$theme->getName()] = $words;
+        }
+
         $words = $themes[$currentTheme];
 
         $firstWord = $request->request->get('firstWord');
@@ -160,10 +276,8 @@ class GameController extends AbstractController
             $matchedWords[] = $isWord ? $secondWord : $firstWord;
             $session->set('matchedWords', $matchedWords);
 
-            VarDumper::dump(['matchedWords' => $matchedWords, 'totalWords' => count($words)]); // Débogage
-
             if (count($matchedWords) >= count($words)) {
-                $score = $gameService->calculateScore($attemptsUsedInStage);
+                $score = $this->calculateStageScore($attemptsUsedInStage);
                 $totalScore += $score;
                 $totalAttemptsUsed += $attemptsUsedInStage;
                 $totalTimeSpent += $timeSpent;
@@ -172,7 +286,6 @@ class GameController extends AbstractController
                 $session->set('totalAttemptsUsed', $totalAttemptsUsed);
                 $session->set('totalTimeSpent', $totalTimeSpent);
 
-                // Marquer le thème comme réussi et passer au suivant
                 $successfulThemes[] = $currentTheme;
                 $session->set('successfulThemes', $successfulThemes);
                 $successfulStagesCompleted++;
@@ -180,8 +293,9 @@ class GameController extends AbstractController
                 $stagesCompleted++;
                 $session->set('stagesCompleted', $stagesCompleted);
 
+                $this->saveStageResult($entityManager, $childId, $gameId, $score, $attemptsUsedInStage, $timeSpent, $language, $this->getLevelName($difficulty), $currentTheme, true);
+
                 if ($stagesCompleted < count($selectedThemes)) {
-                    // Trouver le prochain thème non encore réussi
                     $nextTheme = null;
                     foreach ($selectedThemes as $theme) {
                         if (!in_array($theme, $successfulThemes)) {
@@ -213,25 +327,48 @@ class GameController extends AbstractController
                             'timeLeft' => $timeLeft - $timeSpent,
                             'attemptsLeft' => 3,
                             'score' => $totalScore,
-                            'correctMatch' => true
+                            'correctMatch' => true,
+                            'message' => 'تم اجتياز المرحلة بنجاح!',
+                            'gif' => '/images/fun.gif',
+                            'audio' => '/audio/correct.mp3'
                         ]);
                     }
                 }
 
-                // Si tous les stages sont terminés avec succès
                 if ($successfulStagesCompleted === count($selectedThemes) && (int)$difficulty < 3) {
                     $nextDifficulty = (int)$difficulty + 1;
                     $session->set('difficulty', $nextDifficulty);
                     $session->set('stagesCompleted', 0);
                     $session->set('successfulStagesCompleted', 0);
                     $session->set('usedThemes', []);
-                    $session->set('successfulThemes', []);
+                    $session->set('successfulThemes', $successfulThemes);
                     $session->set('failedThemes', []);
                     $session->set('selectedThemes', []);
 
                     $newLevelName = $this->getLevelName((string)$nextDifficulty);
-                    $newThemes = $gameService->getThemes($language, $newLevelName);
+
+                    $queryBuilder = $entityManager->getRepository(Theme::class)->createQueryBuilder('t')
+                        ->where('t.language = :language')
+                        ->andWhere('t.level = :level')
+                        ->andWhere('t.isValidated = :isValidated')
+                        ->setParameter('language', $language)
+                        ->setParameter('level', $newLevelName)
+                        ->setParameter('isValidated', true)
+                        ->leftJoin('t.words', 'w')
+                        ->addSelect('w');
+                    $newThemesEntities = $queryBuilder->getQuery()->getResult();
+
+                    $newThemes = [];
+                    foreach ($newThemesEntities as $theme) {
+                        $words = [];
+                        foreach ($theme->getWords() as $word) {
+                            $words[$word->getWord()] = $word->getSynonym();
+                        }
+                        $newThemes[$theme->getName()] = $words;
+                    }
+
                     $newAvailableThemes = array_keys($newThemes);
+                    $newAvailableThemes = array_diff($newAvailableThemes, $successfulThemes);
                     shuffle($newAvailableThemes);
                     $newSelectedThemes = array_slice($newAvailableThemes, 0, 5);
                     $session->set('selectedThemes', $newSelectedThemes);
@@ -248,9 +385,9 @@ class GameController extends AbstractController
                     shuffle($newShuffledSynonyms);
 
                     $newTimeLeft = match ($nextDifficulty) {
-                        1 => 60,
-                        2 => 45,
-                        3 => 30,
+                        '1' => 60,
+                        '2' => 45,
+                        '3' => 30,
                         default => 60,
                     };
 
@@ -258,7 +395,7 @@ class GameController extends AbstractController
                     $session->set('shuffledWords', $newShuffledWords);
                     $session->set('shuffledSynonyms', $newShuffledSynonyms);
 
-                    $this->addFlash('success', "Félicitations ! Vous avez complété le niveau '" . $this->getLevelName($difficulty) . "' avec succès. Passage au niveau '" . $this->getLevelName((string)$nextDifficulty) . "' !");
+                    $this->saveLevelResult($entityManager, $childId, $gameId, $totalScore, $totalAttemptsUsed, $totalTimeSpent, $language, $this->getLevelName($difficulty));
 
                     return $this->json([
                         'status' => 'next_level',
@@ -268,16 +405,17 @@ class GameController extends AbstractController
                         'timeLeft' => $newTimeLeft,
                         'attemptsLeft' => 3,
                         'score' => $totalScore,
-                        'message' => "Félicitations ! Passage au niveau '" . $this->getLevelName((string)$nextDifficulty) . "' !",
-                        'gif' => '/images/fun.gif'
+                        'message' => 'المستوى ' . $difficulty . ' --> المستوى ' . $nextDifficulty,
+                        'gif' => '/images/fun.gif',
+                        'audio' => '/audio/correct.mp3'
                     ]);
                 }
 
-                $gameService->saveLevelResult($childId, $gameId, $totalScore, $totalAttemptsUsed, $totalTimeSpent);
+                $this->saveLevelResult($entityManager, $childId, $gameId, $totalScore, $totalAttemptsUsed, $totalTimeSpent, $language, $this->getLevelName($difficulty));
                 return $this->json([
                     'status' => 'game_over',
                     'score' => $totalScore,
-                    'message' => 'Jeu terminé ! Score final : ' . $totalScore,
+                    'message' => 'اللعبة انتهت! النتيجة النهائية: ' . $totalScore,
                     'gif' => '/images/fun.gif'
                 ]);
             } else {
@@ -289,8 +427,9 @@ class GameController extends AbstractController
                     'attemptsLeft' => $attemptsLeft,
                     'score' => $totalScore,
                     'correctMatch' => true,
-                    'message' => 'Bonne correspondance !',
-                    'gif' => '/images/fun.gif'
+                    'message' => 'تطابق جيد!',
+                    'gif' => '/images/fun.gif',
+                    'audio' => '/audio/correct.mp3'
                 ]);
             }
         } else {
@@ -300,8 +439,7 @@ class GameController extends AbstractController
 
             if ($attemptsLeft <= 0 || $timeLeft <= 0) {
                 if ($timeLeft <= 0) {
-                    // Temps écoulé : rester dans le même stage
-                    $this->addFlash('error', 'Temps écoulé ! Le stage recommence.');
+                    $this->addFlash('error', 'انتهى الوقت! المرحلة ستعاد.');
                     $words = $themes[$currentTheme];
                     $shuffledWords = array_keys($words);
                     $shuffledSynonyms = array_values($words);
@@ -309,30 +447,30 @@ class GameController extends AbstractController
                     shuffle($shuffledSynonyms);
                     $session->set('shuffledWords', $shuffledWords);
                     $session->set('shuffledSynonyms', $shuffledSynonyms);
-                    $session->set('matchedWords', []); // Réinitialiser les paires associées
+                    $session->set('matchedWords', []);
                     $timeLeft = match ($difficulty) {
                         '1' => 60,
                         '2' => 45,
                         '3' => 30,
                         default => 60,
-                    }; // Réinitialiser le temps
+                    };
                     return $this->json([
                         'status' => 'continue',
                         'words' => $shuffledWords,
                         'synonyms' => $shuffledSynonyms,
                         'timeLeft' => $timeLeft,
-                        'attemptsLeft' => 3, // Réinitialiser les tentatives
-                        'score' => $totalScore,
+                        'attemptsLeft' => 3,
+                        'showNextButton' => true,
                         'correctMatch' => false,
-                        'message' => 'Temps écoulé ! Le stage recommence.',
-                        'gif' => '/images/no.gif'
+                        'message' => 'انتهى الوقت! يمكنك إعادة المحاولة أو الانتقال إلى المرحلة التالية.',
+                        'gif' => '/images/no.gif',
+                        'audio' => '/audio/incorrect.mp3'
                     ]);
                 } elseif ($attemptsLeft <= 0) {
-                    // Plus de tentatives : rester dans le même stage
                     $failedThemes[] = $currentTheme;
                     $session->set('failedThemes', $failedThemes);
 
-                    $this->addFlash('error', 'Échec du stage : plus de tentatives. Le stage recommence.');
+                    $this->addFlash('error', 'فشل المرحلة: لا توجد محاولات متبقية. المرحلة ستعاد.');
                     $words = $themes[$currentTheme];
                     $shuffledWords = array_keys($words);
                     $shuffledSynonyms = array_values($words);
@@ -340,23 +478,24 @@ class GameController extends AbstractController
                     shuffle($shuffledSynonyms);
                     $session->set('shuffledWords', $shuffledWords);
                     $session->set('shuffledSynonyms', $shuffledSynonyms);
-                    $session->set('matchedWords', []); // Réinitialiser les paires associées
+                    $session->set('matchedWords', []);
                     $timeLeft = match ($difficulty) {
                         '1' => 60,
                         '2' => 45,
                         '3' => 30,
                         default => 60,
-                    }; // Réinitialiser le temps
+                    };
                     return $this->json([
                         'status' => 'continue',
                         'words' => $shuffledWords,
                         'synonyms' => $shuffledSynonyms,
                         'timeLeft' => $timeLeft,
-                        'attemptsLeft' => 3, // Réinitialiser les tentatives
-                        'score' => $totalScore,
+                        'attemptsLeft' => 3,
+                        'showNextButton' => true,
                         'correctMatch' => false,
-                        'message' => 'Échec du stage : plus de tentatives. Le stage recommence.',
-                        'gif' => '/images/no.gif'
+                        'message' => 'لا توجد محاولات متبقية! يمكنك إعادة المحاولة أو الانتقال إلى المرحلة التالية.',
+                        'gif' => '/images/no.gif',
+                        'audio' => '/audio/incorrect.mp3'
                     ]);
                 }
             } else {
@@ -365,113 +504,65 @@ class GameController extends AbstractController
                     'words' => $shuffledWords,
                     'synonyms' => $shuffledSynonyms,
                     'timeLeft' => $timeLeft,
-                    'attemptsLeft' => $attemptsLeft,
                     'score' => $totalScore,
+                    'attemptsLeft' => $attemptsLeft,
                     'correctMatch' => false,
-                    'message' => 'Mauvaise correspondance !',
-                    'gif' => '/images/no.gif'
+                    'message' => 'تطابق خاطئ!',
+                    'gif' => '/images/no.gif',
+                    'audio' => '/audio/incorrect.mp3'
                 ]);
             }
         }
-        return $this->json(['status' => 'error', 'message' => 'Une erreur inattendue s\'est produite.']);
+        return $this->json(['status' => 'error', 'message' => 'حدث خطأ غير متوقع.']);
     }
 
-    #[Route('/load-data', name: 'load_data')]
-    public function loadData(EntityManagerInterface $entityManager): Response
+    #[Route('/generate-themes', name: 'generate_themes', methods: ['GET', 'POST'])]
+    public function generateThemes(Request $request, GameService $gameService): Response
     {
-        $jsonFiles = [
-            'Facile' => $this->getParameter('kernel.project_dir') . '/src/Controller/data/easy.json',
-            'Moyen' => $this->getParameter('kernel.project_dir') . '/src/Controller/data/medium.json',
-            'Difficile' => $this->getParameter('kernel.project_dir') . '/src/Controller/data/hard.json',
-        ];
+        $language = $request->query->get('language', $request->request->get('language', 'fr'));
+        $level = $request->query->get('level', $request->request->get('level', 'Facile'));
+        $themeCount = (int) $request->query->get('themeCount', $request->request->get('themeCount', 5));
+        $wordsPerTheme = (int) $request->query->get('wordsPerTheme', $request->request->get('wordsPerTheme', 5));
 
         $validLanguages = ['fr', 'en', 'de', 'es'];
         $validLevels = ['Facile', 'Moyen', 'Difficile'];
-
-        foreach ($jsonFiles as $level => $jsonFile) {
-            if (!file_exists($jsonFile)) {
-                return $this->json(['error' => "Fichier JSON $jsonFile non trouvé."], 404);
-            }
-
-            $jsonData = file_get_contents($jsonFile);
-            $data = json_decode($jsonData, true);
-
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                return $this->json(['error' => "Erreur lors du décodage du JSON pour $jsonFile."], 500);
-            }
-
-            if (empty($data)) {
-                return $this->json(['error' => "Aucune donnée trouvée dans $jsonFile."], 400);
-            }
-
-            foreach ($data as $language => $themes) {
-                if (!in_array($language, $validLanguages)) {
-                    continue; // Ignorer les langues non valides
-                }
-
-                if (!in_array($level, $validLevels)) {
-                    continue; // Ignorer les niveaux non valides
-                }
-
-                $themesArray = array_keys($themes);
-                shuffle($themesArray);
-                $themesPerStage = array_chunk($themesArray, ceil(count($themesArray) / 5));
-
-                foreach ($themesPerStage as $index => $stageThemes) {
-                    $stage = $index + 1;
-                    foreach ($stageThemes as $themeName) {
-                        $theme = $entityManager->getRepository(Theme::class)->findOneBy([
-                            'name' => $themeName,
-                            'language' => $language,
-                            'level' => $level,
-                        ]);
-
-                        if (!$theme) {
-                            $theme = new Theme();
-                            $theme->setName($themeName);
-                            $theme->setLanguage($language);
-                            $theme->setLevel($level);
-                            $theme->setStage($stage);
-                            $entityManager->persist($theme);
-                        } else {
-                            $theme->setStage($stage);
-                        }
-
-                        $words = $themes[$themeName];
-                        foreach ($words as $wordData) {
-                            if (!isset($wordData['mot']) || !isset($wordData['synonyme'])) {
-                                continue; // Ignorer les entrées invalides
-                            }
-
-                            $word = $wordData['mot'];
-                            $synonym = isset($wordData['synonyme']['ar']) ? $wordData['synonyme']['ar'] : (isset($wordData['synonyme']['Arabe']) ? $wordData['synonyme']['Arabe'] : null);
-
-                            if (!$synonym) {
-                                continue; // Ignorer si aucun synonyme valide
-                            }
-
-                            $existingWord = $entityManager->getRepository(Word::class)->findOneBy([
-                                'word' => $word,
-                                'synonym' => $synonym,
-                                'theme' => $theme,
-                            ]);
-
-                            if (!$existingWord) {
-                                $wordEntity = new Word();
-                                $wordEntity->setWord($word);
-                                $wordEntity->setSynonym($synonym);
-                                $wordEntity->setTheme($theme);
-                                $entityManager->persist($wordEntity);
-                            }
-                        }
-                    }
-                }
-            }
+        if (!in_array($language, $validLanguages)) {
+            return $this->json(['error' => 'Langue invalide'], Response::HTTP_BAD_REQUEST);
+        }
+        if (!in_array($level, $validLevels)) {
+            return $this->json(['error' => 'Niveau invalide'], Response::HTTP_BAD_REQUEST);
+        }
+        if ($themeCount < 1 || $wordsPerTheme < 1) {
+            return $this->json(['error' => 'Nombre de thèmes ou de mots par thème invalide'], Response::HTTP_BAD_REQUEST);
         }
 
-        $entityManager->flush();
+        try {
+            $generatedThemes = $gameService->generateThemes($language, $level, $themeCount, $wordsPerTheme);
 
-        return $this->json(['message' => 'Données importées avec succès dans la base de données avec stages.']);
+            $themesData = [];
+            foreach ($generatedThemes as $theme) {
+                $themesData[] = [
+                    'name' => $theme->getName(),
+                    'language' => $theme->getLanguage(),
+                    'level' => $theme->getLevel(),
+                    'stage' => $theme->getStage(),
+                    'isValidated' => $theme->isValidated(),
+                    'words' => array_map(fn($word) => [
+                        'word' => $word->getWord(),
+                        'synonym' => $word->getSynonym(),
+                    ], $theme->getWords()->toArray()),
+                ];
+            }
+
+            return $this->json([
+                'message' => 'Thèmes générés avec succès',
+                'themes' => $themesData,
+            ], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return $this->json([
+                'error' => 'Erreur lors de la génération des thèmes : ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     private function getLevelName(string $difficulty): string
@@ -482,5 +573,47 @@ class GameController extends AbstractController
             '3' => 'Difficile',
             default => 'Facile',
         };
+    }
+
+    private function calculateStageScore(int $attemptsUsed): int
+    {
+        return match ($attemptsUsed) {
+            0 => 5,
+            1 => 3,
+            2 => 1,
+            default => 1,
+        };
+    }
+
+    private function saveStageResult(EntityManagerInterface $entityManager, int $childId, int $gameId, int $score, int $attemptsUsed, int $timeSpent, string $language, string $level, string $theme, bool $success): void
+    {
+        $gameResult = new GameResult();
+        $gameResult->setChildId($childId);
+        $gameResult->setGameId($gameId);
+        $gameResult->setTotalScore($score);
+        $gameResult->setTotalAttemptsUsed($attemptsUsed);
+        $gameResult->setTotalTimeSpent($timeSpent);
+        $gameResult->setLanguage($language);
+        $gameResult->setLevel($level);
+        $gameResult->setPlayedAt(new \DateTime());
+
+        $entityManager->persist($gameResult);
+        $entityManager->flush();
+    }
+
+    private function saveLevelResult(EntityManagerInterface $entityManager, int $childId, int $gameId, int $totalScore, int $totalAttemptsUsed, int $totalTimeSpent, string $language, string $level): void
+    {
+        $gameResult = new GameResult();
+        $gameResult->setChildId($childId);
+        $gameResult->setGameId($gameId);
+        $gameResult->setTotalScore($totalScore);
+        $gameResult->setTotalAttemptsUsed($totalAttemptsUsed);
+        $gameResult->setTotalTimeSpent($totalTimeSpent);
+        $gameResult->setLanguage($language);
+        $gameResult->setLevel($level);
+        $gameResult->setPlayedAt(new \DateTime());
+
+        $entityManager->persist($gameResult);
+        $entityManager->flush();
     }
 }

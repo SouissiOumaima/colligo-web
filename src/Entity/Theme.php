@@ -2,37 +2,41 @@
 
 namespace App\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'themes')]
+#[ORM\Table(name: "themes")]
 class Theme
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
-    private ?int $id = null;
+    #[ORM\Column(type: "integer")]
+    private $id;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    private ?string $name = null;
+    #[ORM\Column(type: "string", length: 255)]
+    private $name;
 
-    #[ORM\Column(type: 'string', length: 10)]
-    private ?string $language = null;
+    #[ORM\Column(type: "string", length: 2)]
+    private $language;
 
-    #[ORM\Column(type: 'string', length: 50)]
-    private ?string $level = null;
+    #[ORM\Column(type: "string", length: 50)]
+    private $level;
 
-    #[ORM\Column(type: 'smallint', options: ['unsigned' => true, 'default' => 1])]
-    private ?int $stage = 1;
+    #[ORM\Column(type: "integer")]
+    private $stage;
 
-    #[ORM\OneToMany(mappedBy: 'theme', targetEntity: Word::class, cascade: ['persist', 'remove'])]
-    private Collection $words;
+    #[ORM\Column(type: "boolean")]
+    private $isValidated;
+
+    #[ORM\OneToMany(mappedBy: "theme", targetEntity: Word::class, cascade: ["persist", "remove"])]
+    private $words;
 
     public function __construct()
     {
         $this->words = new ArrayCollection();
+        $this->isValidated = false; // Default to false as per GameService logic
     }
 
     public function getId(): ?int
@@ -80,10 +84,18 @@ class Theme
 
     public function setStage(int $stage): self
     {
-        if ($stage < 1 || $stage > 5) {
-            throw new \InvalidArgumentException('Le stage doit être compris entre 1 et 5.');
-        }
         $this->stage = $stage;
+        return $this;
+    }
+
+    public function isValidated(): bool
+    {
+        return $this->isValidated;
+    }
+
+    public function setIsValidated(bool $isValidated): self
+    {
+        $this->isValidated = $isValidated;
         return $this;
     }
 
@@ -107,6 +119,7 @@ class Theme
     public function removeWord(Word $word): self
     {
         if ($this->words->removeElement($word)) {
+            // set the owning side to null (unless already changed)
             if ($word->getTheme() === $this) {
                 $word->setTheme(null);
             }
