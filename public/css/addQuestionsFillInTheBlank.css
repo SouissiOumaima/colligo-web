@@ -1,0 +1,501 @@
+/* Reset and Global Styles */
+html, body {
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #f7f5fa !important;
+    font-family: 'Poppins', sans-serif !important;
+    overflow-x: hidden !important;
+    color: #2d3748 !important;
+}
+
+/* Dashboard Wrapper */
+.dashboard-wrapper {
+    display: flex !important;
+    min-height: 100vh !important;
+}
+
+/* Main Content Styling */
+.main-content {
+    margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
+    padding: 20px !important;
+    transition: all 0.3s ease !important;
+}
+
+.main-content.expanded {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+}
+
+/* Dashboard Title */
+.dashboard-title {
+    font-size: 48px !important;
+    font-weight: 700 !important;
+    color: #2d3748 !important;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    text-align: left !important;
+    margin-bottom: 40px !important;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 15px !important;
+    padding: 20px !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Overview Cards Base Styling */
+.card-overview1, .card-overview2, .card-overview3 {
+    text-align: center !important;
+    border-radius: 15px !important;
+    padding: 20px !important;
+    color: #ffffff !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-overview1::before, .card-overview2::before, .card-overview3::before {
+    content: '' !important;
+    position: absolute !important;
+    width: 200px !important;
+    height: 200px !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    top: -100px !important;
+    left: -100px !important;
+    z-index: 0 !important;
+}
+
+.card-overview1::after, .card-overview2::after, .card-overview3::after {
+    content: '' !important;
+    position: absolute !important;
+    width: 150px !important;
+    height: 150px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 50% !important;
+    bottom: -75px !important;
+    right: -75px !important;
+    z-index: 0 !important;
+}
+
+.card-overview1 h4, .card-overview2 h4, .card-overview3 h4 {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin-bottom: 10px !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+.card-overview1 h2, .card-overview2 h2, .card-overview3 h2 {
+    font-size: 36px !important;
+    font-weight: 700 !important;
+    position: relative !important;
+    z-index: 1 !important;
+}
+
+/* Specific Card Gradients */
+.card-overview1 {
+    background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+}
+
+.card-overview2 {
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important;
+}
+
+.card-overview3 {
+    background: linear-gradient(135deg, #1abc9c, #98ff98) !important;
+}
+
+/* Chart Card */
+.chart-card {
+    height: 400px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    background: #f7f5fa !important;
+    color: #333 !important;
+    border-radius: 10px !important;
+    padding: 20px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.chart-card.glass-card {
+    background: #f7f5fa !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.chart-card h4 {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    margin-bottom: 15px !important;
+    color: #333 !important;
+    text-align: center !important;
+    width: 100%; 
+}
+
+.chart-card canvas {
+    max-width: 100 !important;
+    height: 300px !important;
+}
+
+/* Table Card */
+.table-card {
+    padding: 20px !important;
+    background: #f7f5fa !important;
+    color: #2d3748 !important; /* Darker text color for readability */
+    border-radius: 10px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.table-card.glass-card {
+    background: #f7f5fa !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.table-card h4 {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    margin-bottom: 15px !important;
+    color: #333 !important; /* Match chart title color */
+}
+
+/* Glass Table */
+.glass-table {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    color: #2d3748 !important;
+}
+
+.glass-table thead {
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.glass-table th {
+    background: transparent !important;
+    color: #2d3748 !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.glass-table tbody {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.glass-table td {
+    vertical-align: middle !important;
+    color: #2d3748 !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    background: transparent !important;
+}
+
+.glass-table tr:last-child td {
+    border-bottom: none !important;
+}
+
+.glass-table.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Table for Main Dashboard */
+.table {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    color: #2d3748 !important;
+}
+
+.table thead {
+    background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.table th {
+    background: transparent !important;
+    color: #2d3748 !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.table tbody {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.table td {
+    vertical-align: middle !important;
+    color: #2d3748 !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    background: transparent !important;
+}
+
+.table tr:last-child td {
+    border-bottom: none !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.toggle-children-btn {
+    background: none !important;
+    border: none !important;
+    color: #1abc9c !important;
+    font-size: 16px !important;
+    cursor: pointer !important;
+    transition: color 0.3s ease !important;
+    margin-left: 8px !important;
+    vertical-align: middle !important;
+}
+
+.toggle-children-btn:hover {
+    color: #16a085 !important;
+}
+
+.children-sublist {
+    padding: 10px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 5px !important;
+    color: #2d3748 !important;
+}
+
+.children-sublist ul {
+    list-style-type: none !important;
+    padding-left: 20px !important;
+    margin: 0 !important;
+}
+
+.children-sublist li {
+    font-size: 13px !important;
+    margin: 5px 0 !important;
+}
+
+/* Creative Button */
+.creative-button {
+    background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    border-radius: 25px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.creative-button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+}
+
+.creative-button:active {
+    transform: scale(0.95) !important;
+}
+
+/* Cancel Button */
+.cancel-button {
+    background: linear-gradient(135deg, #6c757d, #adb5bd) !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    border-radius: 25px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.cancel-button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    background: linear-gradient(135deg, #5c636a, #9ea7af) !important;
+}
+
+.cancel-button:active {
+    transform: scale(0.95) !important;
+}
+
+/* Game Cards Container */
+.game-cards-container {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
+    margin-left: 180px !important;
+    overflow-x: auto !important;
+    padding-bottom: 10px !important;
+}
+
+/* Game Card */
+.game-card {
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    width: 100 !important;
+    height: 150px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-decoration: none !important;
+    border-radius: 10px !important;
+    padding: 10px !important;
+    color: #2d3748 !important;
+}
+
+.game-card i {
+    font-size: 40px !important;
+    color: #2d3748 !important;
+    margin-bottom: 10px !important;
+    transition: transform 0.3s ease !important;
+}
+
+.game-card .card-label {
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    color: #2d3748 !important;
+    margin: 0 !important;
+    white-space: normal !important;
+    text-align: center !important;
+}
+
+.game-card:hover i {
+    transform: scale(1.2) !important;
+}
+
+/* Glass Input (for Filters and Form Inputs) */
+.glass-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #2d3748 !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+    outline: none !important;
+}
+
+.glass-input::placeholder {
+    color: rgba(45, 55, 72, 0.5) !important;
+}
+
+/* Form Labels */
+.form-label {
+    color: #2d3748 !important;
+    font-weight: 500 !important;
+    margin-bottom: 5px !important;
+}
+
+/* Action Icons */
+.action-icon {
+    font-size: 18px !important;
+    color: #1abc9c !important;
+    transition: color 0.3s ease !important;
+}
+
+.action-icon:hover {
+    color: #16a085 !important;
+}
+
+.action-icon.text-danger {
+    color: #fc8181 !important;
+}
+
+.action-icon.text-danger:hover {
+    color: #e53e3e !important;
+}
+
+/* Filter Section */
+.filter-section {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    color: #2d3748 !important;
+}
+
+/* List Group Item (for Add Question Form) */
+.list-group-item {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: none !important;
+    padding: 10px !important;
+    color: #2d3748 !important;
+}
+
+/* Form Text Area and Field */
+.form-text-area,
+.form-text-field {
+    width: 100 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #2d3748 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 60px !important;
+        width: calc(100% - 60px) !important;
+    }
+
+    .dashboard-title {
+        font-size: 32px !important;
+    }
+
+    .card-overview1 h2, .card-overview2 h2, .card-overview3 h2 {
+        font-size: 28px !important;
+    }
+
+    .chart-card {
+        height: 300px !important;
+    }
+
+    .chart-card canvas {
+        height: 200px !important;
+    }
+
+    .game-card {
+        width: 100 !important;
+        height: 120px !important;
+    }
+
+    .game-card i {
+        font-size: 30px !important;
+    }
+
+    .game-card .card-label {
+        font-size: 14px !important;
+    }
+}

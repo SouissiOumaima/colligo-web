@@ -1,0 +1,418 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Questions dans la Base de Données - Remplir les Blancs{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/fill_in_the_blank_database.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="container py-5">
+                <h1 class="dashboard-title">Base de données Remplir les Blancs </h1>
+
+                <div class="dashboard-container glass-card">
+                    <!-- Add Question Button -->
+                    <div class="text-center mb-4">
+                        <a href="{{ path('admin_add_question') }}" class="creative-button">Ajouter une Nouvelle Question</a>
+                    </div>
+
+                    <!-- Display flash messages -->
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    <!-- Questions Table -->
+                    {% if questions is not empty %}
+                        <!-- Filter Section -->
+                        <div class="filter-section mb-4">
+                            <div class="row">
+                                <!-- Language Filter -->
+                                <div class="col-md-3">
+                                    <label for="language-filter" class="form-label">Langue</label>
+                                    <select id="language-filter" class="form-select glass-input">
+                                        <option value="">Toutes les langues</option>
+                                        {% for language in languages %}
+                                            <option value="{{ language }}">{{ language }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <!-- Level Filter -->
+                                <div class="col-md-3">
+                                    <label for="level-filter" class="form-label">Niveau</label>
+                                    <select id="level-filter" class="form-select glass-input">
+                                        <option value="">Tous les niveaux</option>
+                                        {% for level in [1, 2, 3] %}
+                                            <option value="{{ level }}">{{ level }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <!-- Theme Filter -->
+                                <div class="col-md-3">
+                                    <label for="theme-filter" class="form-label">Thème</label>
+                                    <select id="theme-filter" class="form-select glass-input">
+                                        <option value="">Tous les thèmes</option>
+                                        {% for theme in themes %}
+                                            <option value="{{ theme }}">{{ theme }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <!-- Clear Filters Button -->
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button id="clear-filters" class="creative-button w-100">Effacer les filtres</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover glass-table" id="questions-table">
+                                <thead>
+                                    <tr>
+                                        <th>Question</th>
+                                        <th>Réponse Correcte</th>
+                                        <th>Autres Réponses</th>
+                                        <th>Thème</th>
+                                        <th>Niveau</th>
+                                        <th>Langue</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for question in questions %}
+                                        <tr data-id="{{ question.id }}" data-language="{{ question.language }}" data-level="{{ question.level }}" data-theme="{{ question.theme }}">
+                                            <!-- Question Text (Editable) -->
+                                            <td>
+                                                <span class="display-mode">{{ question.questionText }}</span>
+                                                <input type="text" name="questionText" value="{{ question.questionText }}" class="form-control glass-input edit-mode" style="display: none;">
+                                            </td>
+                                            <!-- Correct Answer (Editable) -->
+                                            <td>
+                                                <span class="display-mode">{{ question.correctAnswer }}</span>
+                                                <input type="text" name="correctAnswer" value="{{ question.correctAnswer }}" class="form-control glass-input edit-mode" style="display: none;">
+                                            </td>
+                                            <!-- Other Answers (Editable) -->
+                                            <td>
+                                                {% set wrongAnswers = [] %}
+                                                {% for answer in question.allAnswers %}
+                                                    {% if answer != question.correctAnswer %}
+                                                        {% set wrongAnswers = wrongAnswers|merge([answer]) %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% set wrongAnswer1 = wrongAnswers[0] ?? '' %}
+                                                {% set wrongAnswer2 = wrongAnswers[1] ?? '' %}
+                                                <span class="display-mode">
+                                                    {{ wrongAnswer1 }}{% if wrongAnswer2 %}, {{ wrongAnswer2 }}{% endif %}
+                                                </span>
+                                                <div class="edit-mode" style="display: none;">
+                                                    <div>
+                                                        <label>Mauvaise Réponse 1</label>
+                                                        <input type="text" name="incorrectAnswer1" value="{{ wrongAnswer1 }}" class="form-control glass-input">
+                                                    </div>
+                                                    <div>
+                                                        <label>Mauvaise Réponse 2</label>
+                                                        <input type="text" name="incorrectAnswer2" value="{{ wrongAnswer2 }}" class="form-control glass-input">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <!-- Theme (Non-Editable) -->
+                                            <td>
+                                                <span class="display-mode">{{ question.theme }}</span>
+                                            </td>
+                                            <!-- Level (Editable) -->
+                                            <td>
+                                                <span class="display-mode">{{ question.level }}</span>
+                                                <select name="level" class="form-control glass-input edit-mode" style="display: none;">
+                                                    {% for level in [1, 2, 3] %}
+                                                        <option value="{{ level }}" {{ question.level == level ? 'selected' : '' }}>{{ level }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <!-- Language (Non-Editable) -->
+                                            <td>
+                                                <span class="display-mode">{{ question.language }}</span>
+                                            </td>
+                                            <!-- Actions -->
+                                            <td>
+                                                <button class="action-icon me-2 edit-btn" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="action-icon me-2 save-btn" title="Enregistrer" style="display: none;">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="action-icon me-2 cancel-btn" title="Annuler" style="display: none;">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <a href="#" class="action-icon text-danger delete-question" title="Supprimer" data-id="{{ question.id }}">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-white">Aucune question dans la base de données.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for In-Place Editing, Filtering, and SweetAlert2 Delete Confirmation -->
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+
+        // Filter Functionality
+        const languageFilter = document.getElementById('language-filter');
+        const levelFilter = document.getElementById('level-filter');
+        const themeFilter = document.getElementById('theme-filter');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        const table = document.getElementById('questions-table');
+        const rows = table.querySelectorAll('tbody tr');
+
+        function applyFilters() {
+            const selectedLanguage = languageFilter.value;
+            const selectedLevel = levelFilter.value;
+            const selectedTheme = themeFilter.value;
+
+            rows.forEach(row => {
+                const rowLanguage = row.getAttribute('data-language');
+                const rowLevel = row.getAttribute('data-level');
+                const rowTheme = row.getAttribute('data-theme');
+
+                const matchesLanguage = !selectedLanguage || rowLanguage === selectedLanguage;
+                const matchesLevel = !selectedLevel || rowLevel === selectedLevel;
+                const matchesTheme = !selectedTheme || rowTheme === selectedTheme;
+
+                if (matchesLanguage && matchesLevel && matchesTheme) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Event listeners for filter changes
+        languageFilter.addEventListener('change', applyFilters);
+        levelFilter.addEventListener('change', applyFilters);
+        themeFilter.addEventListener('change', applyFilters);
+
+        // Clear filters
+        clearFiltersBtn.addEventListener('click', () => {
+            languageFilter.value = '';
+            levelFilter.value = '';
+            themeFilter.value = '';
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+        });
+
+        // Edit Functionality
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                // Hide display mode elements and show edit mode elements for editable fields only
+                row.querySelectorAll('.display-mode')[0].style.display = 'none'; // Question
+                row.querySelectorAll('.edit-mode')[0].style.display = 'block';   // Question input
+                row.querySelectorAll('.display-mode')[1].style.display = 'none'; // Correct Answer
+                row.querySelectorAll('.edit-mode')[1].style.display = 'block';   // Correct Answer input
+                row.querySelectorAll('.display-mode')[2].style.display = 'none'; // Other Answers
+                row.querySelectorAll('.edit-mode')[2].style.display = 'block';   // Other Answers inputs
+                row.querySelectorAll('.display-mode')[4].style.display = 'none'; // Level
+                row.querySelectorAll('.edit-mode')[3].style.display = 'block';   // Level select
+                // Hide edit button, show save and cancel buttons
+                this.style.display = 'none';
+                row.querySelector('.save-btn').style.display = 'inline-block';
+                row.querySelector('.cancel-btn').style.display = 'inline-block';
+            });
+        });
+
+        document.querySelectorAll('.cancel-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                // Show display mode elements and hide edit mode elements for editable fields only
+                row.querySelectorAll('.display-mode')[0].style.display = 'block'; // Question
+                row.querySelectorAll('.edit-mode')[0].style.display = 'none';    // Question input
+                row.querySelectorAll('.display-mode')[1].style.display = 'block'; // Correct Answer
+                row.querySelectorAll('.edit-mode')[1].style.display = 'none';    // Correct Answer input
+                row.querySelectorAll('.display-mode')[2].style.display = 'block'; // Other Answers
+                row.querySelectorAll('.edit-mode')[2].style.display = 'none';    // Other Answers inputs
+                row.querySelectorAll('.display-mode')[4].style.display = 'block'; // Level
+                row.querySelectorAll('.edit-mode')[3].style.display = 'none';    // Level select
+                // Reset input values to original
+                row.querySelector('input[name="questionText"]').value = row.querySelectorAll('.display-mode')[0].textContent;
+                row.querySelector('input[name="correctAnswer"]').value = row.querySelectorAll('.display-mode')[1].textContent;
+                const otherAnswersText = row.querySelectorAll('.display-mode')[2].textContent;
+                const otherAnswers = otherAnswersText.split(',').map(answer => answer.trim());
+                row.querySelector('input[name="incorrectAnswer1"]').value = otherAnswers[0] || '';
+                row.querySelector('input[name="incorrectAnswer2"]').value = otherAnswers[1] || '';
+                // Hide save and cancel buttons, show edit button
+                row.querySelector('.save-btn').style.display = 'none';
+                row.querySelector('.cancel-btn').style.display = 'none';
+                row.querySelector('.edit-btn').style.display = 'inline-block';
+            });
+        });
+
+        document.querySelectorAll('.save-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const questionId = row.getAttribute('data-id');
+                const questionText = row.querySelector('input[name="questionText"]').value;
+                const correctAnswer = row.querySelector('input[name="correctAnswer"]').value;
+                let incorrectAnswer1 = row.querySelector('input[name="incorrectAnswer1"]').value;
+                let incorrectAnswer2 = row.querySelector('input[name="incorrectAnswer2"]').value;
+                const theme = row.querySelectorAll('.display-mode')[3].textContent; // Non-editable, get from display
+                const level = row.querySelector('select[name="level"]').value;
+                const language = row.querySelectorAll('.display-mode')[5].textContent; // Non-editable, get from display
+
+                // Ensure incorrect answers are not undefined
+                incorrectAnswer1 = incorrectAnswer1 || '';
+                incorrectAnswer2 = incorrectAnswer2 || '';
+
+                // Validate inputs
+                if (!questionText || !correctAnswer || !incorrectAnswer1 || !incorrectAnswer2) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Veuillez remplir tous les champs.',
+                    });
+                    return;
+                }
+
+                if (!questionText.includes('____')) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'La question doit contenir un espace vide marqué par "____".',
+                    });
+                    return;
+                }
+
+                const allAnswers = [correctAnswer, incorrectAnswer1, incorrectAnswer2];
+                const uniqueAnswers = new Set(allAnswers);
+                if (uniqueAnswers.size !== allAnswers.length) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Les réponses ne doivent pas contenir de doublons.',
+                    });
+                    return;
+                }
+
+                // Send AJAX request to update the question
+                fetch('{{ path('admin_update_question') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        id: questionId,
+                        questionText: questionText,
+                        correctAnswer: correctAnswer,
+                        incorrectAnswer1: incorrectAnswer1,
+                        incorrectAnswer2: incorrectAnswer2,
+                        theme: theme,
+                        level: level,
+                        language: language
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the display mode elements with new values
+                        row.querySelectorAll('.display-mode')[0].textContent = questionText;
+                        row.querySelectorAll('.display-mode')[1].textContent = correctAnswer;
+                        row.querySelectorAll('.display-mode')[2].textContent = incorrectAnswer1 + (incorrectAnswer2 ? ', ' + incorrectAnswer2 : '');
+                        row.querySelectorAll('.display-mode')[4].textContent = level;
+
+                        // Update the row's data attributes for filtering
+                        row.setAttribute('data-level', level);
+
+                        // Switch back to display mode
+                        row.querySelectorAll('.display-mode')[0].style.display = 'block'; // Question
+                        row.querySelectorAll('.edit-mode')[0].style.display = 'none';    // Question input
+                        row.querySelectorAll('.display-mode')[1].style.display = 'block'; // Correct Answer
+                        row.querySelectorAll('.edit-mode')[1].style.display = 'none';    // Correct Answer input
+                        row.querySelectorAll('.display-mode')[2].style.display = 'block'; // Other Answers
+                        row.querySelectorAll('.edit-mode')[2].style.display = 'none';    // Other Answers inputs
+                        row.querySelectorAll('.display-mode')[4].style.display = 'block'; // Level
+                        row.querySelectorAll('.edit-mode')[3].style.display = 'none';    // Level select
+
+                        // Hide save and cancel buttons, show edit button
+                        row.querySelector('.save-btn').style.display = 'none';
+                        row.querySelector('.cancel-btn').style.display = 'none';
+                        row.querySelector('.edit-btn').style.display = 'inline-block';
+
+                        // Reapply filters after saving
+                        applyFilters();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: 'Question modifiée avec succès.',
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: data.message || 'Une erreur est survenue lors de la modification.',
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Une erreur est survenue : ' + error.message,
+                    });
+                });
+            });
+        });
+
+        // SweetAlert2 Delete Confirmation
+        document.querySelectorAll('.delete-question').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const questionId = this.getAttribute('data-id');
+                const deleteUrl = "{{ path('admin_fill_in_the_blank_database') }}?delete=" + questionId;
+
+                Swal.fire({
+                    title: 'Êtes-vous sûr ?',
+                    text: "Vous êtes sur le point de supprimer cette question. Cette action est irréversible !",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Oui, supprimer !',
+                    cancelButtonText: 'Annuler'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = deleteUrl;
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

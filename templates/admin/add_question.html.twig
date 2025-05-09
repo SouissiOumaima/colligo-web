@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter une Nouvelle Question{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/addQuestionsFillInTheBlank.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="container py-5">
+                <h1 class="dashboard-title">Ajouter une Nouvelle Question</h1>
+
+                <div class="dashboard-container glass-card">
+                    <!-- Display pre-selected values -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                <label class="form-label"><strong>Thème :</strong> {{ theme }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                <label class="form-label"><strong>Niveau :</strong> {{ level }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                <label class="form-label"><strong>Langue :</strong> {{ language }}</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
+                        <div class="col-md-12">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.questionText) }}
+                                {{ form_widget(form.questionText, {'attr': {'class': 'form-control form-text-area glass-input'}}) }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.correctAnswer) }}
+                                {{ form_widget(form.correctAnswer, {'attr': {'class': 'form-control form-text-field glass-input'}}) }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.incorrectAnswer1) }}
+                                {{ form_widget(form.incorrectAnswer1, {'attr': {'class': 'form-control form-text-field glass-input'}}) }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.incorrectAnswer2) }}
+                                {{ form_widget(form.incorrectAnswer2, {'attr': {'class': 'form-control form-text-field glass-input'}}) }}
+                            </div>
+                        </div>
+                        <div class="col-md-12 text-center mt-4">
+                            <button type="submit" class="creative-button">Enregistrer</button>
+                            <a href="{{ path('admin_fill_in_the_blank_database') }}" class="cancel-button ms-2">Annuler</a>
+                        </div>
+                    {{ form_end(form, {'render_rest': false}) }}
+
+                    <!-- Display flash messages -->
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success mt-3" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger mt-3" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+    </script>
+{% endblock %}
