@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: "word")]
+#[ORM\Table]
 class Images
 {
     #[ORM\Id]

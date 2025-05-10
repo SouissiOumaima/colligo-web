@@ -4,28 +4,29 @@ namespace App\Controller;
 
 use App\Entity\Images;
 use App\Service\WordGameService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+/**
+ * Controller for admin-related actions, such as managing game images.
+ */
 class AdminController extends AbstractController
 {
-    #[Route('/reset', name: 'reset_database', methods: ['POST'])]
-    public function resetDatabase(WordGameService $wordGameService): Response
-    {
-        $wordGameService->resetDatabase();
-        $this->addFlash('success', 'La base de données a été réinitialisée avec succès.');
-        return $this->redirectToRoute('main_menu');
-    }
-
+    /**
+     * Manages images (add, edit, delete) for the game.
+     *
+     * @param WordGameService $wordGameService Word game service
+     * @param Request $request HTTP request
+     * @return Response Rendered image management page
+     */
     #[Route('/admin', name: 'admin_manage_images')]
-    #[IsGranted('ROLE_USER')] 
+    #[IsGranted('ROLE_USER')]
     public function manageImages(WordGameService $wordGameService, Request $request): Response
     {
-        // Get all images
+        // Get all images from the database
         $images = $wordGameService->getAllImages();
 
         // Handle form submission for adding/editing images
@@ -50,7 +51,6 @@ class AdminController extends AbstractController
                             $this->addFlash('error', 'L\'image n\'existe pas.');
                             return $this->redirectToRoute('admin_manage_images');
                         }
-                        // Update image only if a new file is provided
                         $imageUrl = $wordGameService->handleImageUpload($file, $image->getImage_url());
                     } else {
                         // Create new image
@@ -87,6 +87,12 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Generates a unique ID for a new image.
+     *
+     * @param WordGameService $wordGameService Word game service
+     * @return int Unique image ID
+     */
     private function generateUniqueImageId(WordGameService $wordGameService): int
     {
         do {

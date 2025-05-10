@@ -9,19 +9,37 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * Controller for handling game-related actions such as starting, checking answers, and progressing.
+ */
 class GameController extends AbstractController
 {
+    /**
+     * Displays the main menu with game options.
+     *
+     * @param WordGameService $wordGameService Word game service
+     * @return Response Rendered main menu page
+     */
     #[Route('/main', name: 'main_menu')]
     public function mainMenu(WordGameService $wordGameService): Response
     {
         return $this->render('game/main_menu.html.twig', [
             'highestLevel' => $wordGameService->getHighestLevelReached(),
             'childId' => 3, // Default or dynamic childId
-            'gameId' => 3,  // Default gameId for "لعبة الصور"
+            'gameId' => 3, // Default gameId for "Picture Game"
             'selectedLevel' => 1, // Default level
         ]);
     }
 
+    /**
+     * Starts a new game at the specified level.
+     *
+     * @param int $level Level to start
+     * @param WordGameService $wordGameService Word game service
+     * @param Request $request HTTP request
+     * @return Response Rendered game screen
+     * @throws BadRequestHttpException If childId or gameId is invalid
+     */
     #[Route('/start/{level}', name: 'start_game', requirements: ['level' => '\d+'])]
     public function startGame(int $level, WordGameService $wordGameService, Request $request): Response
     {
@@ -41,10 +59,18 @@ class GameController extends AbstractController
         return $this->renderGameScreen($wordGameService, $childId, $gameId);
     }
 
+    /**
+     * Checks the player's answer and updates the game state.
+     *
+     * @param Request $request HTTP request
+     * @param WordGameService $wordGameService Word game service
+     * @return Response Rendered game screen with answer result
+     * @throws BadRequestHttpException If parameters are invalid
+     */
     #[Route('/check', name: 'check_answer', methods: ['POST'])]
     public function checkAnswer(Request $request, WordGameService $wordGameService): Response
     {
-        $childId = $request->request->getInt('child_id', 1); // Changed from 1 to 3
+        $childId = $request->request->getInt('child_id', 1);
         $gameId = $request->request->getInt('game_id', 3);
         $selectedImageUrl = $request->request->get('image_url');
         $timeout = $request->request->getBoolean('timeout');
@@ -82,6 +108,14 @@ class GameController extends AbstractController
         ]));
     }
 
+    /**
+     * Proceeds to the next stage or level, or retries if incorrect.
+     *
+     * @param Request $request HTTP request
+     * @param WordGameService $wordGameService Word game service
+     * @return Response Rendered game screen or redirect to main menu
+     * @throws BadRequestHttpException If parameters are invalid
+     */
     #[Route('/proceed', name: 'proceed_or_retry', methods: ['POST'])]
     public function proceedOrRetry(Request $request, WordGameService $wordGameService): Response
     {
@@ -106,6 +140,14 @@ class GameController extends AbstractController
         return $this->renderGameScreen($wordGameService, $childId, $gameId);
     }
 
+    /**
+     * Renders the game screen with current game state.
+     *
+     * @param WordGameService $wordGameService Word game service
+     * @param int $childId Child ID
+     * @param int $gameId Game ID
+     * @return Response Rendered game screen
+     */
     private function renderGameScreen(WordGameService $wordGameService, int $childId, int $gameId): Response
     {
         return $this->render('game/game_screen.html.twig', [

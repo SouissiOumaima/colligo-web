@@ -13,15 +13,27 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * Controller for displaying and managing game progress data.
+ */
 class ProgressController extends AbstractController
 {
+    /**
+     * Displays progress data for a child and game, including scores, times, and tries.
+     *
+     * @param Request $request HTTP request
+     * @param WordGameService $wordGameService Word game service
+     * @param EntityManagerInterface $em Doctrine entity manager
+     * @return Response Rendered progress chart or JSON response for AJAX
+     * @throws BadRequestHttpException If childId or gameId is invalid
+     */
     #[Route('/progress', name: 'show_progress')]
     public function showProgress(Request $request, WordGameService $wordGameService, EntityManagerInterface $em): Response
     {
         $childId = $request->query->getInt('childId');
         $gameId = $request->query->getInt('gameId', 3);
 
-        // Initialize arrays with default values for levels 1, 2, 3
+        // Initialize arrays for levels 1, 2, 3
         $scores = [1 => 0, 2 => 0, 3 => 0];
         $times = [1 => 0, 2 => 0, 3 => 0];
         $tries = [1 => 0, 2 => 0, 3 => 0];
@@ -39,25 +51,24 @@ class ProgressController extends AbstractController
             $wordGameService->setGameId($gameId);
 
             $maxScorePerLevel = $wordGameService->getMaxScorePerLevel();
-            // Hardcode target max time to 30 seconds
-            $targetMaxTimePerLevel = 30; // Override the value from WordGameService
+            $targetMaxTimePerLevel = 30; // Hardcoded to 30 seconds
+
             for ($level = 1; $level <= 3; $level++) {
                 $maxScores[$level] = $maxScorePerLevel;
                 $targetMaxTimes[$level] = $targetMaxTimePerLevel;
             }
 
-            // Fetch Level records, ordered by id
+            // Fetch level records ordered by ID
             $levels = $em->getRepository(Level::class)->findBy(
                 ['childId' => $childId, 'gameId' => $gameId],
                 ['id' => 'ASC']
             );
 
-            // Map the records to levels 1, 2, 3
+            // Map records to levels 1, 2, 3
             foreach ($levels as $index => $level) {
-                // Assuming the first record is level 1, second is level 2, etc.
                 $levelNumber = $index + 1;
                 if ($levelNumber > 3) {
-                    break; // Only process the first three levels
+                    break; // Only process first three levels
                 }
 
                 $scores[$levelNumber] = $level->getScore() ?? 0;
@@ -77,7 +88,7 @@ class ProgressController extends AbstractController
                 $timeComparisons[$levelNumber] = [
                     'actual' => $actualTime,
                     'targetMax' => $targetMaxTime,
-                    'percentage' => round($timePercentage, 2), // Round to 2 decimal places
+                    'percentage' => round($timePercentage, 2),
                 ];
             }
 
@@ -147,6 +158,13 @@ class ProgressController extends AbstractController
         ]);
     }
 
+    /**
+     * API endpoint to fetch children for a given parent.
+     *
+     * @param Request $request HTTP request
+     * @param EntityManagerInterface $em Doctrine entity manager
+     * @return JsonResponse List of children
+     */
     #[Route('/api/children', name: 'api_children', methods: ['GET'])]
     public function getChildren(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -156,10 +174,7 @@ class ProgressController extends AbstractController
             return $this->json(['error' => 'معرف الوالد غير صالح أو مفقود'], 400);
         }
 
-        // Fetch children for the given parentId
         $children = $em->getRepository(Child::class)->findBy(['parentId' => $parentId]);
-
-        // Map children to a JSON-friendly format
         $data = array_map(function (Child $child) {
             return [
                 'id' => $child->getChildId(),
