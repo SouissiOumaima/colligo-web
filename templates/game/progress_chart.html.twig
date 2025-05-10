@@ -1,0 +1,1129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}تقدم الطفل{% endblock %}
+
+{% block body %}
+    <div class="bg-animation light gradient">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+    </div>
+
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>لوحة التحكم</h2>
+                <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
+            </div>
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title parent-toggle" data-parent-id="{{ parentId|default(1) }}">الوالد</h3>
+                    <ul class="children-list" id="children-list">
+                        <!-- Children will be populated dynamically -->
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="container">
+            <header>
+                <a href="{{ path('main_menu') }}" class="back-button">
+                    <span class="back-icon"></span>
+                    <span>الرئيسية</span>
+                </a>
+                <h1>تقدم الطفل</h1>
+            </header>
+
+            <main class="progress-content">
+                <!-- Game Selection Section -->
+                <div class="section game-selection" id="game-selection" {% if not childId %}style="display: none;"{% endif %}>
+                    <h2 class="section-title">اختر اللعبة</h2>
+                    <div class="game-cards">
+                        {% for game in games %}
+                            <div class="game-card {% if game.id == gameId %}active{% endif %}" data-game-id="{{ game.id }}">
+                                <img src="{{ asset('images/game' ~ game.id ~ '.jpg') }}" alt="Game {{ game.id }} Icon" class="game-icon">
+                                <span class="game-name">
+                                    {% if game.id == 1 %}لعبة التخمين
+                                    {% elseif game.id == 2 %}ملء الفراغ
+                                    {% elseif game.id == 3 %}لعبة الصور
+                                    {% elseif game.id == 4 %}لعبة الكلمات
+                                    {% elseif game.id == 5 %}السحب والإفلات
+                                    {% endif %}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Progress Charts Section -->
+                <div class="section charts-section" id="charts-section" {% if not childId or not gameId %}style="display: none;"{% endif %}>
+                    <h2 class="section-title">تقدم الطفل في لعبة <span id="selected-game-name">
+                        {% if gameId %}
+                            {% if gameId == 1 %}لعبة التخمين
+                            {% elseif gameId == 2 %}ملء الفراغ
+                            {% elseif gameId == 3 %}لعبة الصور
+                            {% elseif gameId == 4 %}لعبة الكلمات
+                            {% elseif gameId == 5 %}السحب والإفلات
+                            {% endif %}
+                        {% else %}
+                            لعبة التخمين
+                        {% endif %}
+                    </span></h2>
+
+                    <!-- Original Chart (Progress Chart) -->
+                    <div class="original-chart-section">
+                        <div class="chart-container original-chart">
+                            <img id="game-image" src="" alt="Game Image" style="display: none;">
+                            <h3>نظرة عامة</h3>
+                            <canvas id="progress-chart" style="max-height: 400px; width: 100%;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Other Charts Section -->
+                    <div class="other-charts-section">
+                        <div class="chart-container">
+                            <h3>عدد المحاولات</h3>
+                            <canvas id="tries-chart" style="max-height: 300px; width: 100%;"></canvas>
+                        </div>
+
+                        <div class="chart-container">
+                            <h3>الوقت المستغرق (ثواني)</h3>
+                            <canvas id="time-chart" style="max-height: 300px; width: 100%;"></canvas>
+                        </div>
+
+                        <div class="chart-container">
+                            <h3>النقاط المكتسبة</h3>
+                            <canvas id="points-chart" style="max-height: 300px; width: 100%;"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon score-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">النقاط المكتسبة</h3>
+                                <p class="stat-value"><span id="total-points">0</span> نقطة</p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon time-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">الوقت المستغرق</h3>
+                                <p class="stat-value"><span id="total-time">0</span> دقيقة</p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon attempts-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">عدد المحاولات</h3>
+                                <p class="stat-value"><span id="total-attempts">0</span> محاولة</p>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-icon accuracy-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">نسبة الدقة</h3>
+                                <p class="stat-value"><span id="accuracy-percentage">0</span>%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Table Section -->
+                <div class="section comparison-section" id="comparison-section" {% if not childId or not gameId %}style="display: none;"{% endif %}>
+                    <h2 class="section-title">مقارنة النتائج</h2>
+
+                    <div class="table-container">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>المستوى</th>
+                                    <th>النقاط المحققة</th>
+                                    <th>عدد المحاولات</th>
+                                    <th>الوقت المستغرق (ثواني)</th>
+                                    <th>الوقت المستهدف الأقصى</th>
+                                    <th>النسبة المئوية (الوقت)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-body">
+                                {% for level in 1..3 %}
+                                    {% set scoreComparison = scoreComparisons[level] ?? {'achieved': 0, 'max': (maxScores[level] ?? 9), 'percentage': 0} %}
+                                    {% set timeComparison = timeComparisons[level] ?? {'actual': 0, 'targetMax': 30, 'percentage': 0} %}
+                                    <tr>
+                                        <td>المستوى {{ level }}</td>
+                                        <td>{{ scoreComparison.achieved }}</td>
+                                        <td>{{ tries[level] ?? 0 }}</td>
+                                        <td>{{ timeComparison.actual }}</td>
+                                        <td>30</td>
+                                        <td>{{ timeComparison.percentage }}%</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Achievements Badge Notification -->
+    <div class="achievement-badge" id="achievement-badge" style="display: none;">
+        <div class="badge-icon"></div>
+        <div class="badge-content">
+            <h3>إنجاز جديد!</h3>
+            <p>لقد أكملت المستوى الأول بنجاح!</p>
+        </div>
+    </div>
+
+    <!-- Use Chart.js 3.9.1 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chartRegistry = {
+                'progress-chart': null,
+                'tries-chart': null,
+                'time-chart': null,
+                'points-chart': null
+            };
+
+            let isFetching = false;
+
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                });
+            }
+
+            function destroyChart(chartId) {
+                const chart = chartRegistry[chartId];
+                if (chart) {
+                    try {
+                        chart.destroy();
+                        chartRegistry[chartId] = null;
+                    } catch (e) {
+                        console.error(`Error destroying chart ${chartId}:`, e);
+                    }
+                }
+            }
+
+            function createGradient(ctx, colorStart, colorEnd) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, colorStart);
+                gradient.addColorStop(1, colorEnd);
+                return gradient;
+            }
+
+            function renderChart(scores = {}, times = {}, tries = {}, maxScores = {}, targetMaxTimes = {}) {
+                const chartId = 'progress-chart';
+                destroyChart(chartId);
+
+                const canvas = document.getElementById(chartId);
+                if (!canvas) {
+                    console.error(`Canvas element "${chartId}" not found.`);
+                    return;
+                }
+
+                const allValues = [
+                    ...Object.values(scores).map(val => val || 0),
+                    ...Object.values(times).map(val => val || 0),
+                    ...Object.values(tries).map(val => val || 0),
+                    ...Object.values(maxScores).map(val => val || 9),
+                    ...Object.values(targetMaxTimes).map(val => val || 30)
+                ];
+                const maxValue = Math.max(...allValues, 30);
+
+                const ctx = canvas.getContext('2d');
+                chartRegistry[chartId] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['المستوى 1', 'المستوى 2', 'المستوى 3'],
+                        datasets: [
+                            {
+                                label: 'النقاط المكتسبة',
+                                data: [scores[1] || 0, scores[2] || 0, scores[3] || 0],
+                                backgroundColor: createGradient(ctx, 'rgba(163, 191, 250, 0.9)', 'rgba(163, 191, 250, 0.4)'),
+                                borderColor: 'rgba(163, 191, 250, 1)',
+                                borderWidth: 2,
+                                borderRadius: 5,
+                                borderSkipped: false
+                            },
+                            {
+                                label: 'النقاط القصوى',
+                                type: 'line',
+                                data: [maxScores[1] || 9, maxScores[2] || 9, maxScores[3] || 9],
+                                borderColor: 'rgba(246, 224, 94, 1)',
+                                backgroundColor: 'rgba(246, 224, 94, 0.2)',
+                                borderWidth: 3,
+                                fill: true,
+                                pointRadius: 6,
+                                pointBackgroundColor: 'rgba(246, 224, 94, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2
+                            },
+                            {
+                                label: 'الوقت المستغرق (ثواني)',
+                                data: [times[1] || 0, times[2] || 0, times[3] || 0],
+                                backgroundColor: createGradient(ctx, 'rgba(104, 211, 145, 0.9)', 'rgba(104, 211, 145, 0.4)'),
+                                borderColor: 'rgba(104, 211, 145, 1)',
+                                borderWidth: 2,
+                                borderRadius: 5,
+                                borderSkipped: false
+                            },
+                            {
+                                label: 'الوقت المستهدف الأقصى (ثواني)',
+                                type: 'line',
+                                data: [targetMaxTimes[1] || 30, targetMaxTimes[2] || 30, targetMaxTimes[3] || 30],
+                                borderColor: 'rgba(183, 148, 244, 1)',
+                                backgroundColor: 'rgba(183, 148, 244, 0.2)',
+                                borderWidth: 3,
+                                fill: true,
+                                pointRadius: 6,
+                                pointBackgroundColor: 'rgba(183, 148, 244, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2
+                            },
+                            {
+                                label: 'عدد المحاولات',
+                                data: [tries[1] || 0, tries[2] || 0, tries[3] || 0],
+                                backgroundColor: createGradient(ctx, 'rgba(252, 129, 129, 0.9)', 'rgba(252, 129, 129, 0.4)'),
+                                borderColor: 'rgba(252, 129, 129, 1)',
+                                borderWidth: 2,
+                                borderRadius: 5,
+                                borderSkipped: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: Math.ceil(maxValue / 5) * 5,
+                                title: { display: true, text: 'القيم', font: { family: 'Cairo', size: 14, weight: '600' } },
+                                ticks: { font: { family: 'Cairo', size: 12 }, stepSize: 5 },
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                            },
+                            x: {
+                                title: { display: true, text: 'المستويات', font: { family: 'Cairo', size: 14, weight: '600' } },
+                                ticks: { font: { family: 'Cairo', size: 12 } },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: { family: 'Cairo', size: 12 },
+                                    padding: 20,
+                                    boxWidth: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: { family: 'Cairo', size: 14 },
+                                bodyFont: { family: 'Cairo', size: 12 },
+                                padding: 10,
+                                cornerRadius: 5
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderTriesChart(tries = {}) {
+                const chartId = 'tries-chart';
+                destroyChart(chartId);
+
+                const canvas = document.getElementById(chartId);
+                if (!canvas) {
+                    console.error(`Canvas element "${chartId}" not found.`);
+                    return;
+                }
+
+                const ctx = canvas.getContext('2d');
+                chartRegistry[chartId] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['المستوى 1', 'المستوى 2', 'المستوى 3'],
+                        datasets: [{
+                            label: 'عدد المحاولات',
+                            data: [tries[1] || 0, tries[2] || 0, tries[3] || 0],
+                            backgroundColor: [
+                                createGradient(ctx, 'rgba(252, 129, 129, 0.9)', 'rgba(252, 129, 129, 0.4)'),
+                                createGradient(ctx, 'rgba(252, 129, 129, 0.7)', 'rgba(252, 129, 129, 0.3)'),
+                                createGradient(ctx, 'rgba(252, 129, 129, 0.5)', 'rgba(252, 129, 129, 0.2)')
+                            ],
+                            borderColor: 'rgba(252, 129, 129, 1)',
+                            borderWidth: 2,
+                            hoverOffset: 20
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeInOutQuart'
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: { family: 'Cairo', size: 12 },
+                                    padding: 20,
+                                    boxWidth: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: { family: 'Cairo', size: 14 },
+                                bodyFont: { family: 'Cairo', size: 12 },
+                                padding: 10,
+                                cornerRadius: 5
+                            }
+                        },
+                        cutout: '60%'
+                    }
+                });
+            }
+
+            function renderTimeChart(times = {}, targetMaxTimes = {}) {
+                const chartId = 'time-chart';
+                destroyChart(chartId);
+
+                const canvas = document.getElementById(chartId);
+                if (!canvas) {
+                    console.error(`Canvas element "${chartId}" not found.`);
+                    return;
+                }
+
+                const ctx = canvas.getContext('2d');
+                chartRegistry[chartId] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['المستوى 1', 'المستوى 2', 'المستوى 3'],
+                        datasets: [
+                            {
+                                label: 'الوقت المستغرق (ثواني)',
+                                data: [times[1] || 0, times[2] || 0, times[3] || 0],
+                                borderColor: 'rgba(104, 211, 145, 1)',
+                                backgroundColor: createGradient(ctx, 'rgba(104, 211, 145, 0.5)', 'rgba(104, 211, 145, 0.1)'),
+                                borderWidth: 3,
+                                fill: true,
+                                pointRadius: 6,
+                                pointBackgroundColor: 'rgba(104, 211, 145, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'الوقت المستهدف الأقصى (ثواني)',
+                                data: [targetMaxTimes[1] || 30, targetMaxTimes[2] || 30, targetMaxTimes[3] || 30],
+                                borderColor: 'rgba(183, 148, 244, 1)',
+                                backgroundColor: createGradient(ctx, 'rgba(183, 148, 244, 0.5)', 'rgba(183, 148, 244, 0.1)'),
+                                borderWidth: 3,
+                                fill: true,
+                                pointRadius: 6,
+                                pointBackgroundColor: 'rgba(183, 148, 244, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 60,
+                                title: { display: true, text: 'الوقت (ثواني)', font: { family: 'Cairo', size: 14, weight: '600' } },
+                                ticks: { font: { family: 'Cairo', size: 12 }, stepSize: 10 },
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                            },
+                            x: {
+                                title: { display: true, text: 'المستويات', font: { family: 'Cairo', size: 14, weight: '600' } },
+                                ticks: { font: { family: 'Cairo', size: 12 } },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: { family: 'Cairo', size: 12 },
+                                    padding: 20,
+                                    boxWidth: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: { family: 'Cairo', size: 14 },
+                                bodyFont: { family: 'Cairo', size: 12 },
+                                padding: 10,
+                                cornerRadius: 5
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderPointsChart(scores = {}, maxScores = {}) {
+                const chartId = 'points-chart';
+                destroyChart(chartId);
+
+                const canvas = document.getElementById(chartId);
+                if (!canvas) {
+                    console.error(`Canvas element "${chartId}" not found.`);
+                    return;
+                }
+
+                const ctx = canvas.getContext('2d');
+                chartRegistry[chartId] = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['المستوى 1', 'المستوى 2', 'المستوى 3'],
+                        datasets: [
+                            {
+                                label: 'النقاط المكتسبة',
+                                data: [scores[1] || 0, scores[2] || 0, scores[3] || 0],
+                                backgroundColor: 'rgba(163, 191, 250, 0.2)',
+                                borderColor: 'rgba(163, 191, 250, 1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(163, 191, 250, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2
+                            },
+                            {
+                                label: 'النقاط القصوى',
+                                data: [maxScores[1] || 9, maxScores[2] || 9, maxScores[3] || 9],
+                                backgroundColor: 'rgba(246, 224, 94, 0.2)',
+                                borderColor: 'rgba(246, 224, 94, 1)',
+                                borderWidth: 2,
+                                pointBackgroundColor: 'rgba(246, 224, 94, 1)',
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 15,
+                                title: { display: true, text: 'النقاط', font: { family: 'Cairo', size: 14, weight: '600' } },
+                                ticks: { 
+                                    display: false // Hide the radial axis labels (15, 12, 9, 6, 3)
+                                },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { font: { family: 'Cairo', size: 12 } }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: { family: 'Cairo', size: 12 },
+                                    padding: 20,
+                                    boxWidth: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: { family: 'Cairo', size: 14 },
+                                bodyFont: { family: 'Cairo', size: 12 },
+                                padding: 10,
+                                cornerRadius: 5
+                            }
+                        }
+                    }
+                });
+            }
+
+            const parentToggle = document.querySelector('.parent-toggle');
+            const childrenList = document.getElementById('children-list');
+            if (parentToggle && childrenList) {
+                parentToggle.addEventListener('click', async () => {
+                    if (isFetching) return;
+                    isFetching = true;
+
+                    try {
+                        const parentId = parentToggle.getAttribute('data-parent-id');
+                        const response = await fetch(`/api/children?parentId=${parentId}`, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch children: ' + response.statusText);
+                        }
+
+                        const children = await response.json();
+                        if (children.length === 0) {
+                            childrenList.innerHTML = '<li>لا يوجد أطفال</li>';
+                            childrenList.classList.toggle('active');
+                            return;
+                        }
+
+                        childrenList.innerHTML = '';
+                        children.forEach(child => {
+                            const li = document.createElement('li');
+                            li.classList.add('child-item');
+                            li.setAttribute('data-child-id', child.id);
+                            li.textContent = child.name || `طفل ${child.id}`;
+                            childrenList.appendChild(li);
+
+                            li.addEventListener('click', () => {
+                                window.location.href = `/progress?childId=${child.id}`;
+                            });
+                        });
+
+                        childrenList.classList.toggle('active');
+                    } catch (error) {
+                        console.error('Error fetching children:', error);
+                        alert('حدث خطأ أثناء جلب قائمة الأطفال. يرجى المحاولة مرة أخرى.');
+                    } finally {
+                        isFetching = false;
+                    }
+                });
+            }
+
+            const gameCards = document.querySelectorAll('.game-card');
+            if (gameCards.length > 0) {
+                gameCards.forEach(card => {
+                    card.addEventListener('click', async () => {
+                        if (isFetching) return;
+                        isFetching = true;
+
+                        try {
+                            const gameId = card.getAttribute('data-game-id');
+                            document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active'));
+                            card.classList.add('active');
+
+                            const gameImage = document.getElementById('game-image');
+                            if (gameImage) {
+                                gameImage.src = `{{ asset('images/game') }}${gameId}.jpg`;
+                                gameImage.alt = `Game ${gameId} Image`;
+                                gameImage.style.display = 'block';
+                            }
+
+                            const chartsSection = document.getElementById('charts-section');
+                            const comparisonSection = document.getElementById('comparison-section');
+                            if (chartsSection && comparisonSection) {
+                                chartsSection.style.display = 'block';
+                                comparisonSection.style.display = 'block';
+                            }
+
+                            const gameNames = {
+                                1: 'لعبة التخمين',
+                                2: 'ملء الفراغ',
+                                3: 'لعبة الصور',
+                                4: 'لعبة الكلمات',
+                                5: 'السحب والإفلات'
+                            };
+                            const selectedGameName = document.getElementById('selected-game-name');
+                            if (selectedGameName) {
+                                selectedGameName.textContent = gameNames[gameId];
+                            }
+
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const childId = urlParams.get('childId');
+
+                            if (!childId || !gameId) {
+                                alert('يرجى اختيار طفل ولعبة صحيحين قبل عرض التقدم.');
+                                return;
+                            }
+
+                            const response = await fetch(`/progress?childId=${childId}&gameId=${gameId}`, {
+                                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok ' + response.statusText);
+                            }
+
+                            const data = await response.json();
+
+                            const scores = data.scores || { 1: 0, 2: 0, 3: 0 };
+                            const times = data.times || { 1: 0, 2: 0, 3: 0 };
+                            const tries = data.tries || { 1: 0, 2: 0, 3: 0 };
+                            const maxScores = data.maxScores || { 1: 9, 2: 9, 3: 9 };
+                            const targetMaxTimes = { 1: 30, 2: 30, 3: 30 };
+                            const scoreComparisons = data.scoreComparisons || { 1: { achieved: 0, max: 9, percentage: 0 }, 2: { achieved: 0, max: 9, percentage: 0 }, 3: { achieved: 0, max: 9, percentage: 0 } };
+                            const timeComparisons = data.timeComparisons || { 1: { actual: 0, targetMax: 30, percentage: 0 }, 2: { actual: 0, targetMax: 30, percentage: 0 }, 3: { actual: 0, targetMax: 30, percentage: 0 } };
+
+                            const totalPoints = Object.values(scores).reduce((a, b) => a + b, 0);
+                            const totalTime = Object.values(times).reduce((a, b) => a + b, 0);
+                            const totalAttempts = Object.values(tries).reduce((a, b) => a + b, 0);
+                            const maxPointsPerAttempt = 9;
+                            const totalPossiblePoints = totalAttempts * maxPointsPerAttempt;
+                            const accuracy = totalPossiblePoints > 0 ? Math.round((totalPoints / totalPossiblePoints) * 100) : 0;
+
+                            document.getElementById('total-points').textContent = totalPoints;
+                            document.getElementById('total-time').textContent = Math.round(totalTime / 60);
+                            document.getElementById('total-attempts').textContent = totalAttempts;
+                            document.getElementById('accuracy-percentage').textContent = accuracy;
+
+                            const tbody = document.getElementById('comparison-body');
+                            if (tbody) {
+                                tbody.innerHTML = '';
+                                for (let level = 1; level <= 3; level++) {
+                                    const scoreComparison = scoreComparisons[level] || { achieved: 0, max: maxScores[level] || 9, percentage: 0 };
+                                    const timeComparison = timeComparisons[level] || { actual: 0, targetMax: 30, percentage: 0 };
+                                    tbody.innerHTML += `
+                                        <tr>
+                                            <td>المستوى ${level}</td>
+                                            <td>${scoreComparison.achieved}</td>
+                                            <td>${tries[level] || 0}</td>
+                                            <td>${timeComparison.actual}</td>
+                                            <td>${timeComparison.targetMax}</td>
+                                            <td>${timeComparison.percentage}%</td>
+                                        </tr>
+                                    `;
+                                }
+                            }
+
+                            renderChart(scores, times, tries, maxScores, targetMaxTimes);
+                            renderTriesChart(tries);
+                            renderTimeChart(times, targetMaxTimes);
+                            renderPointsChart(scores, maxScores);
+                        } catch (error) {
+                            console.error('Error fetching progress data:', error);
+                            alert('حدث خطأ أثناء جلب بيانات التقدم. يرجى المحاولة مرة أخرى.');
+                        } finally {
+                            isFetching = false;
+                        }
+                    });
+                });
+            }
+
+            {% if childId and gameId %}
+                document.getElementById('game-selection').style.display = 'block';
+                document.getElementById('charts-section').style.display = 'block';
+                document.getElementById('comparison-section').style.display = 'block';
+
+                const gameImage = document.getElementById('game-image');
+                if (gameImage) {
+                    gameImage.src = `{{ asset('images/game') }}{{ gameId }}.jpg`;
+                    gameImage.alt = `Game {{ gameId }} Image`;
+                    gameImage.style.display = 'block';
+                }
+
+                const initialScores = {{ scores|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
+                const initialTimes = {{ times|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
+                const initialTries = {{ tries|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
+                const initialMaxScores = {{ maxScores|json_encode|raw }} || { 1: 9, 2: 9, 3: 9 };
+                const initialTargetMaxTimes = { 1: 30, 2: 30, 3: 30 };
+
+                const initialTotalPoints = Object.values(initialScores).reduce((a, b) => a + b, 0);
+                const initialTotalTime = Object.values(initialTimes).reduce((a, b) => a + b, 0);
+                const initialTotalAttempts = Object.values(initialTries).reduce((a, b) => a + b, 0);
+                const initialMaxPoints = Object.values(initialMaxScores).reduce((a, b) => a + b, 0);
+                const initialAccuracy = initialMaxPoints > 0 ? Math.round((initialTotalPoints / initialMaxPoints) * 100) : 0;
+
+                document.getElementById('total-points').textContent = initialTotalPoints;
+                document.getElementById('total-time').textContent = Math.round(initialTotalTime / 60);
+                document.getElementById('total-attempts').textContent = initialTotalAttempts;
+                document.getElementById('accuracy-percentage').textContent = initialAccuracy;
+
+                renderChart(initialScores, initialTimes, initialTries, initialMaxScores, initialTargetMaxTimes);
+                renderTriesChart(initialTries);
+                renderTimeChart(initialTimes, initialTargetMaxTimes);
+                renderPointsChart(initialScores, initialMaxScores);
+            {% endif %}
+        });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/progress.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            color: #333;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            transition: color 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            color: #7b61ff;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .sidebar-title::before {
+            content: '▶';
+            margin-right: 10px;
+            transition: transform 0.2s;
+        }
+
+        .sidebar-title.active::before {
+            transform: rotate(90deg);
+        }
+
+        .children-list {
+            list-style: none;
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .children-list.active {
+            max-height: 500px;
+        }
+
+        .child-item {
+            padding: 10px;
+            font-size: 16px;
+            color: #555;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            transition: background 0.2s, transform 0.2s;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .child-item:hover {
+            background: #e0e7ff;
+            transform: translateX(5px);
+        }
+
+        .container {
+            flex: 1;
+            padding: 30px;
+            margin-left: 270px;
+        }
+
+        .game-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .game-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #d1d1d1;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-card:hover {
+            transform: scale(1.05);
+            border-color: #7b61ff;
+            box-shadow: 0 8px 20px rgba(123, 97, 255, 0.2);
+        }
+
+        .game-card.active {
+            border-color: #7b61ff;
+            background: rgba(240, 237, 255, 0.9);
+            box-shadow: 0 8px 20px rgba(123, 97, 255, 0.3);
+        }
+
+        .game-icon {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.3s;
+        }
+
+        .game-card:hover .game-icon {
+            transform: scale(1.1);
+        }
+
+        .game-name {
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .charts-section {
+            background: transparent;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px;
+            margin: 20px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .original-chart-section {
+            margin-bottom: 60px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .other-charts-section {
+            padding-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        canvas#progress-chart {
+            width: 100% !important;
+            max-height: 400px !important;
+            background: transparent;
+        }
+
+        canvas#tries-chart, canvas#time-chart, canvas#points-chart {
+            width: 100% !important;
+            max-height: 300px !important;
+            background: transparent;
+        }
+
+        img#game-image {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: none;
+            border: 2px solid #7b61ff;
+        }
+
+        .chart-container h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 5px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            color: #7b61ff;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+        }
+
+        .comparison-section {
+            margin-top: 40px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 15px;
+            text-align: center;
+            font-family: 'Cairo', sans-serif;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .comparison-table th {
+            background: rgba(123, 97, 255, 0.3);
+            color: #333;
+            font-weight: 600;
+        }
+
+        .comparison-table td {
+            color: #555;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(123, 97, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 200px;
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(0);
+            }
+
+            .container {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .other-charts-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .game-icon {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/progress.js') }}"></script>
+{% endblock %}

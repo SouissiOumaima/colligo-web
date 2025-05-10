@@ -1,0 +1,451 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة مطابقة الصور{% endblock %}
+
+{% block body %}
+    <div class="bg-animation light">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+    </div>
+
+    <div class="container">
+        <header class="game-header">
+            <a href="{{ path('main_menu') }}" class="back-button">
+                <span class="back-icon"></span>
+                <span>الرئيسية</span>
+            </a>
+            <div class="level-info">
+                <span class="level-label">المستوى <span id="current-level">{{ currentLevel }}</span></span>
+                <span class="stage-label">المرحلة <span id="current-stage">{{ currentStage }}</span> من <span id="total-stages">3</span></span>
+            </div>
+            <div class="score-display">
+                <span class="score-icon"></span>
+                <span class="score-value" id="current-score">{{ currentScore }}</span>
+            </div>
+        </header>
+
+        <main class="game-content">
+            <div class="question-container">
+                <h2 class="question-text" id="question-text">هل هذا "{{ correctWord }}"؟</h2>
+
+                <div class="timer-container">
+                    <div class="timer-bar">
+                        <div class="timer-progress" id="timer-progress"></div>
+                    </div>
+                </div>
+
+                <div class="progress-indicator">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="stage-progress" style="width: {{ (currentStage / 3) * 100 }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-grid" id="game-grid">
+                {% for image in currentImages %}
+                    <div class="image-option">
+                        <form method="post" action="{{ path('check_answer') }}" class="image-form">
+                            <input type="hidden" name="image_url" value="{{ image.url }}">
+                            <input type="hidden" name="child_id" value="{{ childId }}">
+                            <input type="hidden" name="game_id" value="{{ gameId }}">
+                            <button type="submit" class="image-button">
+                                <div class="image-container">
+                                    <img src="{{ image.url }}" alt="{{ image.word }}" class="game-image">
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Check button -->
+            <div class="check-button-container">
+                <button id="check-answer" class="check-button">تحقق</button>
+            </div>
+
+            <!-- Hidden form for timeout failure -->
+            <form method="post" action="{{ path('check_answer') }}" id="timeout-form" style="display: none;">
+                <input type="hidden" name="timeout" value="1">
+                <input type="hidden" name="child_id" value="{{ childId }}">
+                <input type="hidden" name="game_id" value="{{ gameId }}">
+            </form>
+
+            <div class="feedback-container" id="feedback-container">
+                {% if isCorrect is defined and isCorrect is not null %}
+                    <p class="feedback-text {% if isCorrect %}text-success{% else %}text-danger{% endif %}">
+                        {% if isCorrect %}
+                            إجابة صحيحة! لقد حصلت على {{ points }} نقاط.
+                        {% else %}
+                            {% if timeout is defined and timeout %}
+                                انتهى الوقت! حاول مرة أخرى.
+                            {% else %}
+                                إجابة خاطئة! حاول مرة أخرى.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </main>
+
+        <!-- Result Modal -->
+        {% if isCorrect is defined and isCorrect is not null %}
+            <div class="modal" id="result-modal">
+                <div class="modal-content result-modal-content">
+                    <div class="result-header">
+                        <h3 id="result-title">
+                            {% if isCorrect %}
+                                إجابة صحيحة!!
+                            {% else %}
+                                {% if timeout is defined and timeout %}
+                                    انتهى الوقت!
+                                {% else %}
+                                    إجابة خاطئة!
+                                {% endif %}
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <div class="result-body">
+                        <div class="result-animation" id="result-animation">
+                            <!-- Reverted to show a single GIF for both correct and incorrect answers -->
+                            <img src="{{ asset('images/' ~ (isCorrect ? 'yes' : 'no') ~ '.gif') }}" alt="{{ isCorrect ? 'Correct' : 'Incorrect' }}">
+                        </div>
+                        <p class="result-message" id="result-message">
+                            {% if isCorrect %}
+                                ممتاز جدًا! استمر هكذا
+                            {% else %}
+                                {% if timeout is defined and timeout %}
+                                    انتهى الوقت! حاول مرة أخرى.
+                                {% else %}
+                                    حاول مرة أخرى!
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                        <div class="result-buttons">
+                            <form method="post" action="{{ path('proceed_or_retry') }}">
+                                <input type="hidden" name="is_correct" value="{{ isCorrect ? '1' : '0' }}">
+                                <input type="hidden" name="child_id" value="{{ childId }}">
+                                <input type="hidden" name="game_id" value="{{ gameId }}">
+                                <button type="submit" class="btn primary-btn" id="continue-btn">
+                                    {% if isCorrect %}المتابعة{% else %}إعادة المحاولة{% endif %}
+                                </button>
+                            </form>
+                            <a href="{{ path('main_menu') }}" class="btn secondary-btn" id="home-btn">العودة للرئيسية</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="character-container">
+            <img src="{{ asset('images/character-happy.svg') }}" alt="شخصية مساعدة" id="game-character" class="game-character">
+            <div class="character-speech" id="character-speech">
+                <p>اختر الصورة الصحيحة!!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TIME_LIMIT = 10000; // 10 seconds
+        const timerProgress = document.getElementById('timer-progress');
+        let startTime = Date.now();
+        let timerActive = {% if isCorrect is defined and isCorrect is not null %}false{% else %}true{% endif %};
+        
+        // Add selection functionality
+        const imageButtons = document.querySelectorAll('.image-button');
+        let selectedImage = null;
+        
+        imageButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form submission
+                
+                // Remove selection from all buttons
+                imageButtons.forEach(btn => btn.classList.remove('selected'));
+                
+                // Add selection to clicked button
+                this.classList.add('selected');
+                selectedImage = this;
+            });
+        });
+        
+        // Handle check button
+        const checkButton = document.getElementById('check-answer');
+        if (checkButton) {
+            checkButton.addEventListener('click', function() {
+                if (selectedImage) {
+                    // Submit the parent form of the selected image
+                    selectedImage.closest('form').submit();
+                }
+            });
+        }
+
+        function updateTimer() {
+            if (!timerActive) return;
+
+            const elapsed = Date.now() - startTime;
+            const progress = Math.max(0, 1 - elapsed / TIME_LIMIT);
+            timerProgress.style.width = (progress * 100) + '%';
+
+            if (progress <= 0) {
+                timerActive = false;
+                // Disable image buttons to prevent further clicks
+                document.querySelectorAll('.image-button').forEach(button => {
+                    button.disabled = true;
+                });
+                // Submit the timeout form
+                document.getElementById('timeout-form').submit();
+            } else {
+                requestAnimationFrame(updateTimer);
+            }
+        }
+
+        if (timerActive) {
+            requestAnimationFrame(updateTimer);
+        }
+    </script>
+
+    <style>
+        /* Main container styles */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        /* Question text styles */
+        .question-text {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        
+        /* Grid layout for options */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* Image option styles */
+        .image-option {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #f0f4f8;
+        }
+        
+        /* Image button styles */
+        .image-button {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            border: none;
+            border-radius: 15px;
+            padding: 0;
+            display: block;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .image-button:hover {
+            opacity: 0.9;
+        }
+        
+        .image-button.selected {
+            box-shadow: 0 0 0 4px #58cc02;
+        }
+        
+        /* Image container styles */
+        .image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+        
+        /* Game image styles */
+        .game-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background-color: transparent;
+        }
+        
+        /* Check button styles */
+        .check-button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .check-button {
+            background-color: #34c759;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .check-button:hover {
+            background-color: #2db34a;
+        }
+        
+        .check-button:active {
+            transform: translateY(2px);
+        }
+        
+        /* Timer styles */
+        .timer-container {
+            margin-bottom: 20px;
+        }
+        
+        .timer-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #e5e5e5;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .timer-progress {
+            height: 100%;
+            background-color: #58cc02;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        
+        /* Progress indicator */
+        .progress-indicator {
+            margin-bottom: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e5e5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #ff4b4b;
+            transition: width 0.3s ease;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-header h3 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .result-animation {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .result-message {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .result-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .primary-btn {
+            background-color: #b19cd9;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .primary-btn:hover {
+            background-color: #9b83c1;
+        }
+
+        .secondary-btn {
+            background-color: #66d9d1;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+
+        .secondary-btn:hover {
+            background-color: #55c1b9;
+        }
+    </style>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/game.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;707&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/animations.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,27 @@
+parameters:
+    app.upload_dir: '%kernel.project_dir%/public/uploads/images'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    # Explicitly define Session service (optional, as Symfony provides it by default)
+    Symfony\Component\HttpFoundation\Session\Session:
+        public: true
+
+    # Alias SessionInterface to the Session service
+    Symfony\Component\HttpFoundation\Session\SessionInterface: '@Symfony\Component\HttpFoundation\Session\Session'
+
+    # Explicitly configure GameService with the uploadDir parameter
+    App\Service\WordGameService:
+        arguments:
+            $uploadDir: '%app.upload_dir%'

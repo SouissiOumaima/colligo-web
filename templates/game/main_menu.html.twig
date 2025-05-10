@@ -1,0 +1,161 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة مطابقة الصور{% endblock %}
+
+{% block body %}
+    <div class="bg-animation">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+        <div class="sun"></div>
+        <div class="rainbow"></div>
+    </div>
+
+    <div class="container" style="background-color: transparent !important;">
+        <header>
+        </header>
+
+        <main class="home-content" style="background-color: transparent !important;">
+            <div class="welcome-card" style="background-color: transparent !important;">
+                <div class="card-content" style="background-color: transparent !important;">
+                    <h2 class="section-title">لعبة مطابقة الصور</h2>
+
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+
+                    <div class="action-buttons">
+                        <button class="btn primary-btn" id="start-game">بدء اللعب</button>
+                        <button class="btn secondary-btn" onclick="window.history.back()">رجوع</button>
+                    </div>
+                </div>
+
+                <!-- Keep the hello.gif -->
+                <div class="mascot-container">
+                    <img src="{{ asset('images/hello.gif') }}" alt="صورة متحركة" class="mascot">
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle start game button click
+            document.getElementById('start-game').addEventListener('click', () => {
+                const selectedLevel = {{ selectedLevel|default(1) }}; // Use value from controller
+                const childId = {{ childId|default(3) }}; // Use value from controller
+                const gameId = {{ gameId|default(3) }}; // Use value from controller
+                const baseUrl = '{{ path('start_game', {'level': selectedLevel|default(1)}) }}' + `?childId=${childId}&gameId=${gameId}`;
+                window.location.href = baseUrl;
+            });
+
+            // Debug: Check if the GIF is loading and its natural dimensions
+            const mascot = document.querySelector('.mascot');
+            mascot.addEventListener('load', () => {
+                console.log('GIF loaded. Natural dimensions:', mascot.naturalWidth, 'x', mascot.naturalHeight);
+            });
+            mascot.addEventListener('error', () => {
+                console.error('Error loading GIF. Check the path:', mascot.src);
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: transparent !important;
+        }
+
+        .home-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: transparent !important;
+        }
+
+        .welcome-card {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: transparent !important;
+            text-align: center;
+        }
+
+        .card-content {
+            background-color: transparent !important;
+        }
+
+        .section-title {
+            font-size: 48px; /* Increased font size */
+            font-family: 'Cairo', sans-serif;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 4px solid #7b61ff; /* Purple underline */
+            padding-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px; /* Reduced gap for closer buttons */
+            margin-bottom: 30px;
+            justify-content: center; /* Keep buttons centered within the container */
+        }
+
+        .btn {
+            padding: 8px 16px; /* Reduced padding to make buttons smaller */
+            font-size: 16px; /* Reduced font size */
+            font-family: 'Cairo', sans-serif;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .primary-btn {
+            background-color: #7b61ff; /* Purple */
+            color: #fff;
+        }
+
+        .secondary-btn {
+            background-color: #68d391; /* Green */
+            color: #fff;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .mascot-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .mascot {
+            width: 540px; /* Increased by 20% (450 * 1.2) */
+            height: 180px; /* Increased by 20% (150 * 1.2) */
+            object-fit: contain; /* Maintain aspect ratio */
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/animations.js') }}"></script>
+{% endblock %}
