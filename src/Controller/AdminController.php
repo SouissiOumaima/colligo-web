@@ -4,13 +4,17 @@ namespace App\Controller;
 
 use App\Entity\Admin;
 use App\Entity\Fill_in_the_blank;
+use App\Entity\Jeudedevinette;
 use App\Form\AddAdminType;
 use App\Repository\AdminRepository;
-use App\Repository\ParentsRepository;
 use App\Repository\ChildRepository;
 use App\Repository\Fill_in_the_blankRepository;
+use App\Repository\ParentsRepository;
 use App\Service\AIService;
+use App\Service\GoogleAIUtilService;
+use App\Service\GuessingGameService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,6 +34,8 @@ class AdminController extends AbstractController
     private ParentsRepository $parentsRepository;
     private ChildRepository $childRepository;
     private EntityManagerInterface $entityManager;
+    private GuessingGameService $gameService;
+    private GoogleAIUtilService $googleAIUtil;
 
     public function __construct(
         AdminRepository $adminRepository,
@@ -37,7 +43,9 @@ class AdminController extends AbstractController
         ParentsRepository $parentsRepository,
         ChildRepository $childRepository,
         AIService $aiService,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        GuessingGameService $gameService,
+        GoogleAIUtilService $googleAIUtil
     ) {
         $this->adminRepository = $adminRepository;
         $this->fillInTheBlankRepository = $fillInTheBlankRepository;
@@ -45,6 +53,8 @@ class AdminController extends AbstractController
         $this->childRepository = $childRepository;
         $this->aiService = $aiService;
         $this->entityManager = $entityManager;
+        $this->gameService = $gameService;
+        $this->googleAIUtil = $googleAIUtil;
     }
 
     #[Route('/admin/dashboard', name: 'admin_dashboard')]
@@ -836,6 +846,7 @@ class AdminController extends AbstractController
             'form' => $form->createView(),
         ]);
     }
+
     #[Route('/admin/user/statistics', name: 'admin_user_statistics')]
     public function userStatistics(): Response
     {
@@ -969,5 +980,171 @@ class AdminController extends AbstractController
             'scoreHistogram' => $scoreHistogram,
             'scoreBins' => $scoreBins,
         ]);
+    }
+
+    #[Route('/admin/load-words', name: 'admin_load_words', methods: ['GET'])]
+    public function loadWords(Request $request, LoggerInterface $logger): Response
+    {
+        $language = $request->query->get('language', 'français');
+        $level = $request->query->get('level', '1');
+
+        $words = $this->gameService->getWordsForAdmin($language, $level) ?? [];
+
+        return $this->render('admin/adminJeuDevinette.html.twig', [
+            'words' => $words,
+            'language' => $language,
+            'level' => $level,
+        ]);
+    }
+
+    #[Route('/admin/generate', name: 'admin_generate_words', methods: ['POST'])]
+    public function generateWords(Request $request, LoggerInterface $logger): Response
+    {
+        try {
+            $language = $request->request->get('language', 'français');
+            $level = $request->request->get('level', '1');
+
+            $logger->info('Generating words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+
+            $words = $this->googleAIUtil->getWordsForLevelAndLanguage($level, $language);
+
+            $this->addFlash('info', 'Mots générés avec succès.');
+
+            return $this->redirectToRoute('admin_load_words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+        } catch (\Throwable $e) {
+            $logger->error('Erreur lors de la génération des mots', [
+                'exception' => $e->getMessage(),
+                'language' => $language,
+                'level' => $level,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->addFlash('error', 'Erreur lors de la génération : ' . $e->getMessage());
+
+            return $this->redirectToRoute('admin_load_words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+        }
+    }
+
+    #[Route('/admin/add', name: 'admin_add_words', methods: ['POST'])]
+    public function addWords(Request $request, LoggerInterface $logger): Response
+    {
+        $language = $request->request->get('language', 'français');
+        $level = $request->request->get('level', '1');
+        $rightWords = $request->request->get('rightWords');
+        $wrongWord = $request->request->get('wrongWord');
+        $theme = $request->request->get('theme');
+
+        try {
+            $logger->info('Adding words', [
+                'rightWords' => $rightWords,
+                'wrongWord' => $wrongWord,
+                'theme' => $theme,
+                'language' => $language,
+                'level' => $level,
+            ]);
+
+            if (empty($rightWords) || empty($wrongWord) || empty($theme)) {
+                $this->addFlash('error', 'Tous les champs doivent être remplis.');
+                return $this->redirectToRoute('admin_load_words', [
+                    'language' => $language,
+                    'level' => $level,
+                ]);
+            }
+
+            $this->gameService->addLot($rightWords, $wrongWord, $theme, $language, $level);
+
+            $this->addFlash('success', 'Mots ajoutés avec succès.');
+
+            return $this->redirectToRoute('admin_load_words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+        } catch (\Throwable $e) {
+            $logger->error('Erreur lors de l\'ajout des mots', [
+                'exception' => $e->getMessage(),
+                'language' => $language,
+                'level' => $level,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->addFlash('error', 'Erreur lors de l\'ajout : ' . $e->getMessage());
+
+            return $this->redirectToRoute('admin_load_words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+        }
+    }
+
+    #[Route('/admin/delete', name: 'admin_delete_words', methods: ['POST'])]
+    public function deleteWords(Request $request, LoggerInterface $logger): Response
+    {
+        $language = $request->request->get('language', 'français');
+        $level = $request->request->get('level', '1');
+
+        try {
+            $requestData = $request->request->all();
+            $selectedEntries = $requestData['selectedEntries'] ?? [];
+
+            if (!is_array($selectedEntries) || empty($selectedEntries)) {
+                $this->addFlash('error', 'Aucune entrée sélectionnée pour la suppression.');
+                return $this->redirectToRoute('admin_load_words', [
+                    'language' => $language,
+                    'level' => $level,
+                ]);
+            }
+
+            $deletedCount = 0;
+            foreach ($selectedEntries as $entryData) {
+                if (is_string($entryData)) {
+                    $entryData = json_decode($entryData, true);
+                }
+
+                if (
+                    !is_array($entryData) ||
+                    !isset($entryData['rightWord'], $entryData['wrongWord'], $entryData['theme'])
+                ) {
+                    continue;
+                }
+
+                $this->gameService->deleteLot(
+                    $entryData['rightWord'],
+                    $entryData['wrongWord'],
+                    $entryData['theme'],
+                    $language,
+                    $level,
+                    $logger
+                );
+                $deletedCount++;
+            }
+
+            if ($deletedCount > 0) {
+                $this->addFlash('success', "$deletedCount entrée(s) supprimée(s) avec succès.");
+            } else {
+                $this->addFlash('warning', 'Aucune entrée valide n\'a été trouvée pour suppression.');
+            }
+
+            return $this->redirectToRoute('admin_load_words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+        } catch (\Throwable $e) {
+            $logger->error('Erreur lors de la suppression des mots', [
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->addFlash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
+            return $this->redirectToRoute('admin_load_words', [
+                'language' => $language,
+                'level' => $level,
+            ]);
+        }
     }
 }
