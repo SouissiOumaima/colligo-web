@@ -5,6 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     gemini_api_key: '%env(GEMINI_API_KEY)%'
+    app.upload_dir: '%kernel.project_dir%/public/uploads/images'
 
 services:
     # default configuration for services in *this* file
@@ -21,7 +22,7 @@ services:
     # Explicitly configure GoogleAIUtilService to inject the googleApiKey
     App\Service\GoogleAIUtilService:
         arguments:
-            $googleApiKey: '%google_api_key%'
+            $geminiApiKey: '%gemini_api_key%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -31,6 +32,8 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
+    App\Service\WordGameService:
+        arguments:
+            $uploadDir: '%app.upload_dir%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
