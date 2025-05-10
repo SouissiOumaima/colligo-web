@@ -135,22 +135,6 @@
         #modal-close:hover, #level-modal-close:hover {
             background-color: #AED9F0;
         }
-        .alert {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            font-size: 18px;
-        }
-        .alert-success {
-            background-color: #D4E4D7;
-            color: #5A4B6B;
-            border: 2px solid #B7D4BB;
-        }
-        .alert-danger {
-            background-color: #F9E4E8;
-            color: #A89EBF;
-            border: 2px solid #E8C7D2;
-        }
         .stats-button {
             background-color: #E8E8F5;
             color: #5A4B6B;
@@ -181,18 +165,8 @@
 </head>
 <body class="flex items-center justify-center min-h-screen">
     <div class="game-container max-w-4xl w-full">
-        <h1 id="theme" class="text-4xl font-bold text-[#A89EBF] bg-[#C9E4F5] p-4 rounded-lg shadow-md">الموضوع: {{ theme }}</h1>
-        <p id="instruction" class="text-2xl text-[#A89EBF] mb-6">قم بمطابقة الكلمات مع مرادفاتها!</p>
-        {% for message in app.flashes('success') %}
-            <div class="alert alert-success">
-                {{ message }}
-            </div>
-        {% endfor %}
-        {% for message in app.flashes('error') %}
-            <div class="alert alert-danger">
-                {{ message }}
-            </div>
-        {% endfor %}
+        <h1 id="theme" class="text-4xl font-bold text-[#A89EBF] bg-[#C9E4F5] p-4 rounded-lg shadow-md text-center">الموضوع: {{ theme }}</h1>
+        <p id="instruction" class="text-2xl text-[#A89EBF] mb-6 text-center">قم بمطابقة الكلمات مع مرادفاتها!</p>
         <div class="flex justify-center space-x-6 mb-6">
             <button id="attempts" class="stats-button">المحاولات: {{ attemptsLeft }}</button>
             <button id="time" class="stats-button">الوقت: {{ timeLeft }}s</button>
@@ -252,13 +226,15 @@
 
         document.querySelectorAll('.word-button, .synonym-button').forEach(button => {
             button.addEventListener('click', () => {
+                if (button.classList.contains('matched') || button.disabled) return; // Prevent clicking matched buttons
                 if (firstSelected === null) {
                     firstSelected = button;
                     firstWord = button.dataset.word || button.dataset.synonym;
                     button.classList.add('selected');
-                } else {
+                } else if (firstSelected !== button) { // Prevent selecting the same button
                     const secondWord = button.dataset.word || button.dataset.synonym;
                     const isWord = button.classList.contains('word-button');
+                    firstSelected.classList.remove('selected');
                     submitMatch(firstWord, secondWord, isWord, button);
                 }
             });
@@ -275,7 +251,6 @@
             .catch(error => {
                 console.error('Fetch error:', error);
                 showModal('حدث خطأ في الشبكة.', '/images/no.gif', '/audio/incorrect.mp3');
-                setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
             });
         });
 
@@ -291,7 +266,6 @@
             .catch(error => {
                 console.error('Fetch error:', error);
                 showModal('حدث خطأ في الشبكة.', '/images/no.gif', '/audio/incorrect.mp3');
-                setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
             });
         }
 
@@ -310,6 +284,13 @@
                 document.getElementById('next-button').style.display = 'none';
             }
 
+            // Handle flash messages
+            if (data.flashMessages && data.flashMessages.success) {
+                showModal(data.flashMessages.success, '/images/correct.gif', '/audio/correct.mp3');
+            } else if (data.flashMessages && data.flashMessages.error) {
+                showModal(data.flashMessages.error, '/images/no.gif', '/audio/incorrect.mp3');
+            }
+
             if (data.status === 'continue') {
                 if (data.correctMatch) {
                     firstSelected.classList.add('matched');
@@ -317,12 +298,16 @@
                     firstSelected.disabled = true;
                     secondButton.disabled = true;
                 }
-                showModal(data.message, data.gif, data.audio || '/audio/incorrect.mp3');
+                if (data.message) {
+                    showModal(data.message, data.correctMatch ? '/images/correct.gif' : '/images/no.gif', data.correctMatch ? '/audio/correct.mp3' : '/audio/incorrect.mp3');
+                }
                 updateButtons(data.words, data.synonyms);
             } else if (data.status === 'next_theme') {
                 document.getElementById('theme').textContent = `الموضوع: ${data.theme}`;
                 updateButtons(data.words, data.synonyms);
-                showModal(data.message, data.gif, data.audio || '/audio/correct.mp3');
+                if (data.message) {
+                    showModal(data.message, data.gif || '/images/correct.gif', data.audio || '/audio/correct.mp3');
+                }
                 attemptsLeft = data.attemptsLeft;
                 timeLeft = data.timeLeft;
                 initialTime = timeLeft;
@@ -340,14 +325,13 @@
                     }
                 }, 1000);
             } else if (data.status === 'next_level') {
-                showLevelModal(data.message, data.gif, data.audio || '/audio/correct.mp3');
+                showLevelModal(data.message, data.gif || '/images/star.gif', data.audio || '/audio/correct.mp3');
                 setTimeout(() => window.location.reload(), 2000);
             } else if (data.status === 'game_over') {
-                showModal(data.message, data.gif, '/audio/correct.mp3');
+                showModal(data.message, data.gif || '/images/fun.gif', data.audio || '/audio/correct.mp3');
                 setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
             } else if (data.status === 'error') {
                 showModal(data.message || 'حدث خطأ.', '/images/no.gif', '/audio/incorrect.mp3');
-                setTimeout(() => window.location.href = '{{ path('language_selection') }}', 2000);
             }
             firstSelected = null;
             firstWord = null;
@@ -381,7 +365,7 @@
             document.getElementById('modal-gif').src = gif;
             const audio = document.getElementById('modal-audio');
             audio.src = audioSrc;
-            audio.play();
+            audio.play().catch(error => console.error('Audio playback error:', error));
             document.getElementById('modal').style.display = 'flex';
         }
 
@@ -390,7 +374,7 @@
             document.getElementById('level-modal-star').src = gif;
             const audio = document.getElementById('level-modal-audio');
             audio.src = audioSrc;
-            audio.play();
+            audio.play().catch(error => console.error('Audio playback error:', error));
             document.getElementById('level-modal').style.display = 'flex';
         }
 

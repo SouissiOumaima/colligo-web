@@ -83,8 +83,13 @@
             </div>
         </form>
 
+        <!-- Search Bar -->
+        <div class="mb-6">
+            <input type="text" id="themeSearch" placeholder="Rechercher un thème par nom..." class="w-full max-w-md border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+        </div>
+
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <table class="w-full table-hover">
+            <table class="w-full table-hover" id="themesTable">
                 <thead>
                     <tr class="bg-gray-100">
                         <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Nom</th>
@@ -164,6 +169,38 @@
                     modal.style.display = 'none';
                 }
             };
+
+            // Search functionality
+            const searchInput = document.getElementById('themeSearch');
+            const table = document.getElementById('themesTable');
+            const rows = table.querySelectorAll('tbody tr');
+
+            searchInput.addEventListener('input', function() {
+                const searchTerm = searchInput.value.toLowerCase();
+
+                rows.forEach(row => {
+                    const themeName = row.cells[0].textContent.toLowerCase();
+                    if (themeName.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // Show "no themes" message if all rows are hidden
+                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+                if (visibleRows.length === 0) {
+                    const noResultsRow = table.querySelector('tbody tr td[colspan="7"]');
+                    if (noResultsRow) {
+                        noResultsRow.parentElement.style.display = '';
+                    }
+                } else {
+                    const noResultsRow = table.querySelector('tbody tr td[colspan="7"]');
+                    if (noResultsRow) {
+                        noResultsRow.parentElement.style.display = 'none';
+                    }
+                }
+            });
         });
     </script>
 </body>
