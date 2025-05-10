@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Child;
 use App\Entity\Level;
 use App\Service\WordGameService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -144,5 +145,28 @@ class ProgressController extends AbstractController
             'gameId' => $gameId,
             'games' => $games,
         ]);
+    }
+
+    #[Route('/api/children', name: 'api_children', methods: ['GET'])]
+    public function getChildren(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $parentId = $request->query->getInt('parentId');
+
+        if (!$parentId) {
+            return $this->json(['error' => 'معرف الوالد غير صالح أو مفقود'], 400);
+        }
+
+        // Fetch children for the given parentId
+        $children = $em->getRepository(Child::class)->findBy(['parentId' => $parentId]);
+
+        // Map children to a JSON-friendly format
+        $data = array_map(function (Child $child) {
+            return [
+                'id' => $child->getChildId(),
+                'name' => $child->getName() ?? 'طفل ' . $child->getChildId(),
+            ];
+        }, $children);
+
+        return $this->json($data);
     }
 }

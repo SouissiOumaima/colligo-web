@@ -148,7 +148,7 @@
 
     <!-- Add/Edit Image Form -->
     <h2>Ajouter une nouvelle image</h2>
-    <form method="post" action="{{ path('parent_manage_images') }}" enctype="multipart/form-data">
+    <form method="post" action="{{ path('admin_manage_images') }}" enctype="multipart/form-data">
         <input type="hidden" name="image_id" id="image_id" value="">
         <div class="mb-3">
             <label for="word" class="form-label">Mot en anglais</label>
@@ -205,7 +205,7 @@
                                 data-french="{{ image.french_translation }}"
                                 data-spanish="{{ image.spanish_translation }}"
                                 data-german="{{ image.german_translation }}">Modifier</button>
-                        <a href="{{ path('parent_manage_images', {delete: image.id}) }}" 
+                        <a href="{{ path('admin_manage_images', {delete: image.id}) }}" 
                            class="btn btn-sm btn-danger"
                            onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">Supprimer</a>
                     </td>
