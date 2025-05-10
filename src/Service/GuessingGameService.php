@@ -18,8 +18,6 @@ class GuessingGameService
         $this->entityManager = $entityManager;
     }
 
-    // src/Service/GuessingGameService.php
-
     public function deleteLot(
         string $rightWord,
         string $wrongWord,
@@ -39,9 +37,9 @@ class GuessingGameService
         ]);
 
         $word = $this->entityManager->getRepository(Jeudedevinette::class)->findOneBy([
-            'rightword' => $rightWord,    // minuscule comme dans l'entité
-            'wrongword' => $wrongWord,   // minuscule comme dans l'entité
-            'thème' => $theme,          // accent grave comme dans l'entité
+            'rightword' => $rightWord,
+            'wrongword' => $wrongWord,
+            'theme' => $theme,
             'language' => $language,
             'level' => $level
         ]);
@@ -51,22 +49,19 @@ class GuessingGameService
             $this->entityManager->flush();
         }
     }
+
     public function getWordsForAdmin(string $language, string $level): array
     {
-        return $this->jeudedevinetteRepository->findBy([
-            'language' => $language,
-            'level' => $level,
-        ]);
+        return $this->jeudedevinetteRepository->findByLanguageAndLevel($language, $level);
     }
 
     public function addLot(string $rightWords, string $wrongWord, string $theme, string $language, string $level): void
     {
-        // Normalize separators for consistency when adding
         $normalize = fn(string $input): string => trim(preg_replace('/[\s,-]+/', ' ', $input));
 
         $lot = new Jeudedevinette();
-        $lot->setRightWord($normalize($rightWords));
-        $lot->setWrongWord($normalize($wrongWord));
+        $lot->setRightword($normalize($rightWords));
+        $lot->setWrongword($normalize($wrongWord));
         $lot->setThème($theme);
         $lot->setLanguage($language);
         $lot->setLevel($level);

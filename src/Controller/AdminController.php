@@ -997,7 +997,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/generate', name: 'admin_generate_words', methods: ['POST'])]
+    #[Route('/generate', name: 'admin_generate_words', methods: ['POST'])]
     public function generateWords(Request $request, LoggerInterface $logger): Response
     {
         try {

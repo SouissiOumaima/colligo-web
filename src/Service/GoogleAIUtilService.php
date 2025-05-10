@@ -18,7 +18,8 @@ class GoogleAIUtilService
         HttpClientInterface $httpClient,
         JeudedevinetteRepository $jeudedevinetteRepository,
         LoggerInterface $logger,
-        string $googleApiKey="%env(GEMINI_API_KEY)%"
+        #string $googleApiKey="%env(GEMINI_API_KEY)%"
+        string $googleApiKey="AIzaSyDF7yQnIBAEoRQa2i4-bxKEsrh0omr26dc"
     ) {
         $this->apiKey = $googleApiKey;
         $this->httpClient = $httpClient;
@@ -150,7 +151,6 @@ class GoogleAIUtilService
     private function saveWordsToDatabase(string $words, string $language, string $level): void
     {
         try {
-            // Remove trailing " -" from each line
             $words = preg_replace('/ - $/', '', $words);
             $lots = array_filter(array_map('trim', explode("\n", $words)));
             $lotData = [];
@@ -175,6 +175,12 @@ class GoogleAIUtilService
                 $this->logger->error('Aucun lot valide à enregistrer', ['words' => $words]);
                 throw new \RuntimeException('Aucun lot valide à enregistrer.');
             }
+
+            $this->logger->info('Données prêtes à être enregistrées', [
+                'lotData' => $lotData,
+                'language' => $language,
+                'level' => $level,
+            ]);
 
             $this->jeudedevinetteRepository->saveLots($lotData, $language, $level);
             $this->logger->info("Données enregistrées pour $language niveau $level", ['lots' => count($lotData)]);
