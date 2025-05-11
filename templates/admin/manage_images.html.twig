@@ -1,0 +1,249 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des images{% endblock %}
+
+{% block body %}
+<style>
+    /* Global styles */
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        font-family: 'Noto Sans', sans-serif;
+        color: #333;
+        direction: ltr;
+        text-align: left;
+    }
+
+    .container {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    h1, h2 {
+        color: #333;
+        font-weight: 600;
+    }
+
+    /* Form styles */
+    .form-label {
+        font-weight: 500;
+        color: #555;
+    }
+
+    .form-control {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 0.5rem;
+        background: #fff;
+        transition: border-color 0.3s ease;
+        text-align: left;
+    }
+
+    .form-control:focus {
+        border-color: #FF8A65;
+        box-shadow: 0 0 5px rgba(255, 138, 101, 0.3);
+        outline: none;
+    }
+
+    /* Button styles */
+    .btn-primary, .btn-warning, .btn-danger {
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        color: #fff;
+        background: linear-gradient(90deg, #FF8A65, #FF6F61);
+        transition: background 0.3s ease;
+    }
+
+    .btn-primary:hover, .btn-warning:hover, .btn-danger:hover {
+        background: linear-gradient(90deg, #FF7043, #FF5722);
+    }
+
+    .btn-warning {
+        background: linear-gradient(90deg, #FFB300, #FF8F00);
+    }
+
+    .btn-warning:hover {
+        background: linear-gradient(90deg, #FFA000, #FF6F00);
+    }
+
+    .btn-danger {
+        background: linear-gradient(90deg, #FF5252, #F44336);
+    }
+
+    .btn-danger:hover {
+        background: linear-gradient(90deg, #FF4040, #D32F2F);
+    }
+
+    /* Table styles */
+    .table {
+        background: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .table thead {
+        background: #FF8A65;
+        color: #fff;
+    }
+
+    .table thead th {
+        padding: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .table tbody tr:nth-child(odd) {
+        background: #E6F4EA;
+    }
+
+    .table tbody tr:nth-child(even) {
+        background: #fff;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        text-align: left;
+    }
+
+    .table img {
+        border-radius: 5px;
+    }
+
+    /* Alert styles */
+    .alert {
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        text-align: left;
+    }
+
+    .alert-success {
+        background: #E6F4EA;
+        color: #2E7D32;
+        border: 1px solid #A5D6A7;
+    }
+
+    .alert-danger {
+        background: #FFEBEE;
+        color: #D32F2F;
+        border: 1px solid #EF9A9A;
+    }
+</style>
+
+<div class="container mt-5">
+    <h1>Gestion des images du jeu</h1>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
+
+    <!-- Add/Edit Image Form -->
+    <h2>Ajouter une nouvelle image</h2>
+    <form method="post" action="{{ path('admin_manage_images') }}" enctype="multipart/form-data">
+        <input type="hidden" name="image_id" id="image_id" value="">
+        <div class="mb-3">
+            <label for="word" class="form-label">Mot en anglais</label>
+            <input type="text" class="form-control" id="word" name="word" required>
+        </div>
+        <div class="mb-3">
+            <label for="image_file" class="form-label">Télécharger l'image (JPEG, PNG, GIF)</label>
+            <input type="file" class="form-control" id="image_file" name="image_file" accept="image/jpeg,image/png,image/gif">
+        </div>
+        <div class="mb-3">
+            <label for="french_translation" class="form-label">Traduction française</label>
+            <input type="text" class="form-control" id="french_translation" name="french_translation">
+        </div>
+        <div class="mb-3">
+            <label for="spanish_translation" class="form-label">Traduction espagnole</label>
+            <input type="text" class="form-control" id="spanish_translation" name="spanish_translation">
+        </div>
+        <div class="mb-3">
+            <label for="german_translation" class="form-label">Traduction allemande</label>
+            <input type="text" class="form-control" id="german_translation" name="german_translation">
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer l'image</button>
+    </form>
+
+    <!-- Image List -->
+    <h2 class="mt-5">Images existantes</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Anglais</th>
+                <th>Image</th>
+                <th>Français</th>
+                <th>Espagnol</th>
+                <th>Allemand</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for image in images %}
+                <tr>
+                    <td>{{ image.id }}</td>
+                    <td>{{ image.word }}</td>
+                    <td>
+                        <img src="{{ image.image_url }}" alt="{{ image.word }}" style="max-width: 100px;">
+                    </td>
+                    <td>{{ image.french_translation }}</td>
+                    <td>{{ image.spanish_translation }}</td>
+                    <td>{{ image.german_translation }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning edit-image" 
+                                data-id="{{ image.id }}"
+                                data-word="{{ image.word }}"
+                                data-french="{{ image.french_translation }}"
+                                data-spanish="{{ image.spanish_translation }}"
+                                data-german="{{ image.german_translation }}">Modifier</button>
+                        <a href="{{ path('admin_manage_images', {delete: image.id}) }}" 
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette image ?');">Supprimer</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7">Aucune image trouvée.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Handle edit button click
+        document.querySelectorAll('.edit-image').forEach(button => {
+            button.addEventListener('click', () => {
+                console.log('Edit button clicked for image ID:', button.dataset.id); // Debugging log
+                const imageId = button.dataset.id;
+                document.querySelector('#image_id').value = imageId;
+                document.querySelector('#word').value = button.dataset.word;
+                document.querySelector('#french_translation').value = button.dataset.french;
+                document.querySelector('#spanish_translation').value = button.dataset.spanish;
+                document.querySelector('#german_translation').value = button.dataset.german;
+                document.querySelector('h2').textContent = 'Modifier l\'image';
+                // Make file input optional when editing
+                document.querySelector('#image_file').removeAttribute('required');
+                window.scrollTo(0, 0);
+            });
+        });
+
+        // Reset form to "Add New Image" state when page loads
+        const imageId = document.querySelector('#image_id').value;
+        if (!imageId) {
+            document.querySelector('#image_file').setAttribute('required', 'required');
+            document.querySelector('h2').textContent = 'Ajouter une nouvelle image';
+        }
+    });
+</script>
+{% endblock %}

@@ -3,39 +3,55 @@
 namespace App\Controller;
 
 use App\Entity\Admin;
+use App\Entity\Child;
 use App\Entity\Fill_in_the_blank;
+use App\Entity\Images;
 use App\Entity\Jeudedevinette;
+use App\Entity\Parents;
+use App\Entity\Theme;
+use App\Entity\Word;
 use App\Form\AddAdminType;
 use App\Repository\AdminRepository;
 use App\Repository\ChildRepository;
 use App\Repository\Fill_in_the_blankRepository;
 use App\Repository\ParentsRepository;
 use App\Service\AIService;
+use App\Service\GameService;
 use App\Service\GoogleAIUtilService;
 use App\Service\GuessingGameService;
+use App\Service\WordGameService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 
+#[Route('/admin')]
 class AdminController extends AbstractController
 {
     private AdminRepository $adminRepository;
     private Fill_in_the_blankRepository $fillInTheBlankRepository;
-    private AIService $aiService;
     private ParentsRepository $parentsRepository;
     private ChildRepository $childRepository;
+    private AIService $aiService;
     private EntityManagerInterface $entityManager;
     private GuessingGameService $gameService;
     private GoogleAIUtilService $googleAIUtil;
+    #private WordGameService $wordGameService;
+    private LoggerInterface $logger;
+    private CsrfTokenManagerInterface $csrfTokenManager;
+    private GameService $themeGameService;
 
     public function __construct(
         AdminRepository $adminRepository,
@@ -45,7 +61,11 @@ class AdminController extends AbstractController
         AIService $aiService,
         EntityManagerInterface $entityManager,
         GuessingGameService $gameService,
-        GoogleAIUtilService $googleAIUtil
+        GoogleAIUtilService $googleAIUtil,
+        #WordGameService $wordGameService,
+        LoggerInterface $logger,
+        CsrfTokenManagerInterface $csrfTokenManager,
+        GameService $themeGameService
     ) {
         $this->adminRepository = $adminRepository;
         $this->fillInTheBlankRepository = $fillInTheBlankRepository;
@@ -55,26 +75,95 @@ class AdminController extends AbstractController
         $this->entityManager = $entityManager;
         $this->gameService = $gameService;
         $this->googleAIUtil = $googleAIUtil;
+        #$this->wordGameService = $wordGameService;
+        $this->logger = $logger;
+        $this->csrfTokenManager = $csrfTokenManager;
+        $this->themeGameService = $themeGameService;
     }
 
-    #[Route('/admin/dashboard', name: 'admin_dashboard')]
+    // #[Route('/reset', name: 'reset_database', methods: ['POST'])]
+    // public function resetDatabase(WordGameService $wordGameService): Response
+    // {
+    //     $wordGameService->resetDatabase();
+    //     $this->addFlash('success', 'La base de données a été réinitialisée avec succès.');
+    //     return $this->redirectToRoute('main_menu');
+    // }
+
+    // #[Route('/admin/manage-images', name: 'admin_manage_images')]
+    // public function manageImages(WordGameService $wordGameService, Request $request): Response
+    // {
+    //     $images = $wordGameService->getAllImages();
+
+    //     if ($request->isMethod('POST')) {
+    //         $imageId = $request->request->getInt('image_id');
+    //         $word = $request->request->get('word');
+    //         $french = $request->request->get('french_translation');
+    //         $spanish = $request->request->get('spanish_translation');
+    //         $german = $request->request->get('german_translation');
+    //         $file = $request->files->get('image_file');
+
+    //         if (!$word) {
+    //             $this->addFlash('error', 'Le mot est requis.');
+    //         } elseif (!$imageId && !$file) {
+    //             $this->addFlash('error', 'Le fichier image est requis pour les nouvelles images.');
+    //         } else {
+    //             try {
+    //                 if ($imageId) {
+    //                     $image = $wordGameService->getImageById($imageId);
+    //                     if (!$image) {
+    //                         $this->addFlash('error', 'L\'image n\'existe pas.');
+    //                         return $this->redirectToRoute('admin_manage_images');
+    //                     }
+    //                     $imageUrl = $wordGameService->handleImageUpload($file, $image->getImage_url());
+    //                 } else {
+    //                     $image = new Images();
+    //                     $image->setId($this->generateUniqueImageId($wordGameService));
+    //                     $imageUrl = $wordGameService->handleImageUpload($file);
+    //                 }
+
+    //                 $image->setWord($word);
+    //                 $image->setImage_url($imageUrl);
+    //                 $image->setFrench_translation($french ?: $word);
+    //                 $image->setSpanish_translation($spanish ?: $word);
+    //                 $image->setGerman_translation($german ?: $word);
+
+    //                 $wordGameService->saveImage($image);
+    //                 $this->addFlash('success', 'L\'image a été enregistrée avec succès.');
+    //             } catch (\Exception $e) {
+    //                 $this->addFlash('error', $e->getMessage());
+    //             }
+    //             return $this->redirectToRoute('admin_manage_images');
+    //         }
+    //     }
+
+    //     if ($request->query->has('delete')) {
+    //         $imageId = $request->query->getInt('delete');
+    //         $wordGameService->deleteImage($imageId);
+    //         $this->addFlash('success', 'L\'image a été supprimée avec succès.');
+    //         return $this->redirectToRoute('admin_manage_images');
+    //     }
+
+    //     return $this->render('admin/manage_images.html.twig', [
+    //         'images' => $images,
+    //     ]);
+    // }
+
+    #[Route('/dashboard', name: 'admin_dashboard')]
     public function dashboard(): Response
     {
         $connection = $this->entityManager->getConnection();
 
-        // Fetch total counts
         $totalAdmins = $connection->fetchOne('SELECT COUNT(*) FROM admin');
         $totalParents = $connection->fetchOne('SELECT COUNT(*) FROM parents');
         $totalChildren = $connection->fetchOne('SELECT COUNT(*) FROM child');
 
-        // Fetch admins using raw SQL
         $stmt = $connection->prepare('SELECT adminId, email, password FROM admin');
         $result = $stmt->executeQuery();
         $adminRows = $result->fetchAllAssociative();
 
         $admins = [];
         foreach ($adminRows as $row) {
-            $admin = new \App\Entity\Admin();
+            $admin = new Admin();
             $reflection = new \ReflectionClass($admin);
             $adminIdProperty = $reflection->getProperty('adminId');
             $adminIdProperty->setAccessible(true);
@@ -84,7 +173,6 @@ class AdminController extends AbstractController
             $admins[] = $admin;
         }
 
-        // Fetch parents using raw SQL
         $stmt = $connection->prepare('SELECT parentId, email, password FROM parents');
         $result = $stmt->executeQuery();
         $parentRows = $result->fetchAllAssociative();
@@ -92,7 +180,7 @@ class AdminController extends AbstractController
         $parents = [];
         $parentChildren = [];
         foreach ($parentRows as $row) {
-            $parent = new \App\Entity\Parents();
+            $parent = new Parents();
             $reflection = new \ReflectionClass($parent);
             $parentIdProperty = $reflection->getProperty('parentId');
             $parentIdProperty->setAccessible(true);
@@ -100,7 +188,6 @@ class AdminController extends AbstractController
             $parent->setEmail((string) $row['email']);
             $parent->setPassword((string) $row['password']);
 
-            // Fetch children for this parent
             $stmt = $connection->prepare(
                 'SELECT childId, age, language, avatar, name FROM child WHERE parentId = :parentId'
             );
@@ -109,7 +196,7 @@ class AdminController extends AbstractController
 
             $children = [];
             foreach ($childRows as $childRow) {
-                $child = new \App\Entity\Child();
+                $child = new Child();
                 $reflection = new \ReflectionClass($child);
                 $childIdProperty = $reflection->getProperty('childId');
                 $childIdProperty->setAccessible(true);
@@ -126,15 +213,13 @@ class AdminController extends AbstractController
             $parents[] = $parent;
         }
 
-        // Fetch children by language
         $childrenFrench = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "Français"');
         $childrenEnglish = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "Anglais"');
         $childrenSpanish = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "Espagnol"');
         $childrenGerman = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "German"');
 
-        // Fetch children's age distribution (histogram)
         $ageData = $connection->fetchAllAssociative('SELECT age FROM child');
-        $ageHistogram = array_fill(0, 4, 0); // Bins: 4-5, 6-7, 8-9, 10+
+        $ageHistogram = array_fill(0, 4, 0);
         foreach ($ageData as $row) {
             $age = (int)$row['age'];
             if ($age <= 5) {
@@ -163,18 +248,15 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/fill-in-the-blank-dashboard', name: 'admin_fill_in_the_blank_dashboard')]
+    #[Route('/fill-in-the-blank-dashboard', name: 'admin_fill_in_the_blank_dashboard')]
     public function fillInTheBlankDashboard(): Response
     {
         return $this->render('admin/fill_in_the_blank_dashboard.html.twig');
     }
 
-    #[Route('/admin/generate-questions', name: 'admin_generate_questions')]
-    public function generateQuestions(
-        Request $request,
-        SessionInterface $session
-    ): Response {
-        // Define choices for the form
+    #[Route('/generate-questions', name: 'admin_generate_questions')]
+    public function generateQuestions(Request $request, SessionInterface $session): Response
+    {
         $themes = [
             'Animaux',
             'Couleurs',
@@ -192,7 +274,6 @@ class AdminController extends AbstractController
         $levels = [1, 2, 3];
         $languages = ['Français', 'Anglais', 'Espagnol', 'German'];
 
-        // Create the form with default values
         $form = $this->createFormBuilder()
             ->add('theme', ChoiceType::class, [
                 'choices' => array_combine($themes, $themes),
@@ -219,14 +300,12 @@ class AdminController extends AbstractController
         $questions = $session->get('generated_questions', []);
         $selectedQuestions = [];
 
-        // Handle form submission for generating questions
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $theme = $data['theme'];
             $level = $data['level'];
             $language = $data['language'];
 
-            // Validate form data
             if (!is_string($theme) || empty($theme)) {
                 $this->addFlash('error', 'Le thème est requis.');
                 return $this->render('admin/generate_questions.html.twig', [
@@ -252,7 +331,6 @@ class AdminController extends AbstractController
                 ]);
             }
 
-            // Generate questions using AIService
             $rawResponse = $this->aiService->generateMultipleFillInTheBlank($theme, $level, $language);
 
             if (count($rawResponse) === 1 && str_starts_with($rawResponse[0], 'Error')) {
@@ -264,7 +342,6 @@ class AdminController extends AbstractController
             }
         }
 
-        // Handle the "Sauvegarder" (Save) button
         if ($request->request->has('save')) {
             $selected = $request->request->all()['selected_questions'] ?? [];
             $selected = is_array($selected) ? $selected : [];
@@ -284,7 +361,6 @@ class AdminController extends AbstractController
             }
             $this->entityManager->flush();
 
-            // Remove saved questions from the session
             $remainingQuestions = array_filter($questions, function ($question) use ($selected) {
                 return !in_array($question->getQuestionText(), $selected);
             });
@@ -294,13 +370,11 @@ class AdminController extends AbstractController
             $this->addFlash('success', 'Les questions sélectionnées ont été sauvegardées avec succès.');
         }
 
-        // Handle the "Rafraîchir" (Refresh) button
         if ($request->request->has('refresh')) {
             $theme = $request->request->get('theme', 'Animaux');
             $level = (int) $request->request->get('level', 1);
             $language = $request->request->get('language', 'Français');
 
-            // Validate refresh data
             if (!is_string($theme) || empty($theme)) {
                 $this->addFlash('error', 'Le thème est requis pour rafraîchir.');
                 return $this->render('admin/generate_questions.html.twig', [
@@ -397,7 +471,7 @@ class AdminController extends AbstractController
         return $questions;
     }
 
-    #[Route('/admin/add-question', name: 'admin_add_question')]
+    #[Route('/add-question', name: 'admin_add_question')]
     public function addQuestion(Request $request): Response
     {
         $theme = $request->query->get('theme', 'Animaux');
@@ -436,7 +510,6 @@ class AdminController extends AbstractController
             $incorrectAnswer1 = $formData['incorrectAnswer1'];
             $incorrectAnswer2 = $formData['incorrectAnswer2'];
 
-            // Validate form inputs
             if (!is_string($questionText) || empty($questionText)) {
                 $this->addFlash('error', 'La question est requise.');
                 return $this->render('admin/add_question.html.twig', [
@@ -474,7 +547,6 @@ class AdminController extends AbstractController
                 ]);
             }
 
-            // Validate query parameters
             if (!is_string($theme) || empty($theme)) {
                 $this->addFlash('error', 'Le thème est requis.');
                 return $this->render('admin/add_question.html.twig', [
@@ -558,7 +630,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/fill-in-the-blank-database', name: 'admin_fill_in_the_blank_database')]
+    #[Route('/fill-in-the-blank-database', name: 'admin_fill_in_the_blank_database')]
     public function fillInTheBlankDatabase(Request $request): Response
     {
         $themes = [
@@ -601,7 +673,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/update-question', name: 'admin_update_question', methods: ['POST'])]
+    #[Route('/update-question', name: 'admin_update_question', methods: ['POST'])]
     public function updateQuestion(Request $request): JsonResponse
     {
         if (!$request->isXmlHttpRequest()) {
@@ -657,78 +729,64 @@ class AdminController extends AbstractController
         return new JsonResponse(['success' => true, 'message' => 'Question modifiée avec succès.']);
     }
 
-    #[Route('/admin/user/management', name: 'admin_user_management')]
-    public function userManagement(
-        Request $request,
-        UserPasswordHasherInterface $passwordHasher
-    ): Response {
-        // Log the request query parameters for debugging
+    #[Route('/user/management', name: 'admin_user_management')]
+    public function userManagement(Request $request, UserPasswordHasherInterface $passwordHasher): Response
+    {
         error_log('Query Parameters: ' . json_encode($request->query->all()));
 
-        // Fetch raw admins using raw SQL to avoid mapping issues
         $connection = $this->entityManager->getConnection();
         $stmt = $connection->prepare('SELECT adminId, email, password FROM admin');
         $result = $stmt->executeQuery();
         $adminRows = $result->fetchAllAssociative();
 
-        // Fetch parents using raw SQL to avoid parent_id vs parentId mismatch
         $stmt = $connection->prepare('SELECT parentId, email, password FROM parents');
         $result = $stmt->executeQuery();
         $parentRows = $result->fetchAllAssociative();
 
-        // Debug: Log the raw data
         error_log('Raw Admins: ' . json_encode($adminRows));
         error_log('Raw Parents: ' . json_encode($parentRows));
 
-        // Construct Admins entities from raw data
         $admins = [];
         foreach ($adminRows as $row) {
-            $admin = new \App\Entity\Admin();
+            $admin = new Admin();
             $reflection = new \ReflectionClass($admin);
             $adminIdProperty = $reflection->getProperty('adminId');
             $adminIdProperty->setAccessible(true);
             $adminIdProperty->setValue($admin, (int) $row['adminId']);
-
             $admin->setEmail((string) $row['email']);
             $admin->setPassword((string) $row['password']);
             $admins[] = $admin;
         }
 
-        // Construct Parents entities from raw data
         $parents = [];
-        $parentChildren = []; // Array to store children for each parent
+        $parentChildren = [];
         foreach ($parentRows as $row) {
-            $parent = new \App\Entity\Parents();
+            $parent = new Parents();
             $reflection = new \ReflectionClass($parent);
             $parentIdProperty = $reflection->getProperty('parentId');
             $parentIdProperty->setAccessible(true);
             $parentIdProperty->setValue($parent, (int) $row['parentId']);
-
             $parent->setEmail((string) $row['email']);
             $parent->setPassword((string) $row['password']);
 
-            // Fetch children using raw SQL to avoid child_id vs childId mismatch
             $stmt = $connection->prepare(
-                'SELECT childId, age, language, avatar, name ' .
-                    'FROM child WHERE parentId = :parentId'
+                'SELECT childId, age, language, avatar, name FROM child WHERE parentId = :parentId'
             );
             $result = $stmt->executeQuery(['parentId' => $parent->getParentId()]);
             $childRows = $result->fetchAllAssociative();
 
             $children = [];
             foreach ($childRows as $childRow) {
-                $child = new \App\Entity\Child();
+                $child = new Child();
                 $reflection = new \ReflectionClass($child);
                 $childIdProperty = $reflection->getProperty('childId');
                 $childIdProperty->setAccessible(true);
                 $childIdProperty->setValue($child, (int) $childRow['childId']);
-
                 $child->setParentId($parent);
                 $child->setAge(isset($childRow['age']) ? (int) $childRow['age'] : null);
                 $child->setLanguage(isset($childRow['language']) ? (string) $childRow['language'] : null);
                 $child->setAvatar(isset($childRow['avatar']) ? (string) $childRow['avatar'] : null);
                 $child->setName(isset($childRow['name']) ? (string) $childRow['name'] : null);
-
                 $children[] = $child;
             }
 
@@ -737,57 +795,48 @@ class AdminController extends AbstractController
             $parents[] = $parent;
         }
 
-        // Debug: Log the filtered data
         error_log('Filtered Admins: ' . json_encode($admins));
         error_log('Filtered Parents: ' . json_encode($parents));
-        // Handle delete action
+
         if ($request->query->has('delete')) {
             $id = $request->query->getInt('delete');
             error_log("Delete request received: ID=$id");
 
             try {
-                // Check if the ID belongs to an admin
                 $stmt = $connection->prepare('SELECT adminId, email FROM admin WHERE adminId = :id');
                 $result = $stmt->executeQuery(['id' => $id]);
                 $adminRow = $result->fetchAssociative();
 
                 if ($adminRow) {
                     error_log("Deleting admin with ID: $id");
-                    $affectedRows = $connection->executeQuery('DELETE FROM admin WHERE adminId = :id', ['id' => $id]);
-                    error_log("Affected rows after admin delete: " . $affectedRows->rowCount());
+                    $connection->executeQuery('DELETE FROM admin WHERE adminId = :id', ['id' => $id]);
                     $this->addFlash('success', 'Administrateur supprimé avec succès.');
                     return $this->redirectToRoute('admin_user_management');
                 }
 
-                // Check if the ID belongs to a parent
                 $stmt = $connection->prepare('SELECT parentId, email FROM parents WHERE parentId = :id');
                 $result = $stmt->executeQuery(['id' => $id]);
                 $parentRow = $result->fetchAssociative();
 
                 if ($parentRow) {
                     error_log("Deleting parent with ID: $id");
-                    // Delete associated children first due to foreign key constraint
                     $connection->executeQuery('DELETE FROM child WHERE parentId = :id', ['id' => $id]);
-                    $affectedRows = $connection->executeQuery('DELETE FROM parents WHERE parentId = :id', ['id' => $id]);
-                    error_log("Affected rows after parent delete: " . $affectedRows->rowCount());
+                    $connection->executeQuery('DELETE FROM parents WHERE parentId = :id', ['id' => $id]);
                     $this->addFlash('success', 'Parent supprimé avec succès.');
                     return $this->redirectToRoute('admin_user_management');
                 }
 
-                // Check if the ID belongs to a child
                 $stmt = $connection->prepare('SELECT childId, name FROM child WHERE childId = :id');
                 $result = $stmt->executeQuery(['id' => $id]);
                 $childRow = $result->fetchAssociative();
 
                 if ($childRow) {
                     error_log("Deleting child with ID: $id");
-                    $affectedRows = $connection->executeQuery('DELETE FROM child WHERE childId = :id', ['id' => $id]);
-                    error_log("Affected rows after child delete: " . $affectedRows->rowCount());
+                    $connection->executeQuery('DELETE FROM child WHERE childId = :id', ['id' => $id]);
                     $this->addFlash('success', 'Enfant supprimé avec succès.');
                     return $this->redirectToRoute('admin_user_management');
                 }
 
-                // If ID doesn't match any user type
                 error_log("No user found with ID: $id");
                 $this->addFlash('error', 'Utilisateur non trouvé.');
             } catch (\Exception $e) {
@@ -798,7 +847,6 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_user_management');
         }
 
-        // Render the template with validated data
         return $this->render('admin/user_management.html.twig', [
             'admins' => $admins,
             'parents' => $parents,
@@ -806,7 +854,7 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/add-admin', name: 'admin_add_admin', methods: ['GET', 'POST'])]
+    #[Route('/add-admin', name: 'admin_add_admin', methods: ['GET', 'POST'])]
     public function addAdmin(Request $request, UserPasswordHasherInterface $passwordHasher): Response
     {
         $form = $this->createForm(AddAdminType::class);
@@ -817,7 +865,6 @@ class AdminController extends AbstractController
             $email = $data['email'];
             $plainPassword = $data['password'];
 
-            // Check if email already exists
             $existingAdmin = $this->adminRepository->findOneBy(['email' => $email]);
             if ($existingAdmin) {
                 $this->addFlash('error', 'Un administrateur avec cet email existe déjà.');
@@ -826,7 +873,6 @@ class AdminController extends AbstractController
                 ]);
             }
 
-            // Create new Admin entity
             $admin = new Admin();
             $admin->setEmail($email);
             $hashedPassword = $passwordHasher->hashPassword($admin, $plainPassword);
@@ -847,42 +893,37 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/user/statistics', name: 'admin_user_statistics')]
+    #[Route('/user/statistics', name: 'admin_user_statistics')]
     public function userStatistics(): Response
     {
         $connection = $this->entityManager->getConnection();
 
-        // Fetch total counts
         $totalAdmins = $connection->fetchOne('SELECT COUNT(*) FROM admin');
         $totalParents = $connection->fetchOne('SELECT COUNT(*) FROM parents');
         $totalChildren = $connection->fetchOne('SELECT COUNT(*) FROM child');
 
-        // Fetch children by level
         $childrenLevel1 = $connection->fetchOne('SELECT COUNT(DISTINCT l.childId) FROM level l WHERE l.id = 1');
         $childrenLevel2 = $connection->fetchOne('SELECT COUNT(DISTINCT l.childId) FROM level l WHERE l.id = 2');
         $childrenLevel3 = $connection->fetchOne('SELECT COUNT(DISTINCT l.childId) FROM level l WHERE l.id = 3');
 
-        // Fetch children by language
         $childrenFrench = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "Français"');
         $childrenEnglish = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "Anglais"');
         $childrenSpanish = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "Espagnol"');
         $childrenGerman = $connection->fetchOne('SELECT COUNT(*) FROM child WHERE language = "German"');
 
-        // Fetch number of children per parent (for histogram)
         $childrenPerParentData = $connection->fetchAllAssociative(
             'SELECT p.parentId, COUNT(c.childId) as child_count 
              FROM parents p 
              LEFT JOIN child c ON c.parentId = p.parentId 
              GROUP BY p.parentId'
         );
-        $childrenPerParentHistogram = array_fill(0, 6, 0); // For 0 to 5+ children
+        $childrenPerParentHistogram = array_fill(0, 6, 0);
         foreach ($childrenPerParentData as $row) {
             $count = (int)$row['child_count'];
-            $index = min($count, 5); // Cap at 5+ for the histogram
+            $index = min($count, 5);
             $childrenPerParentHistogram[$index]++;
         }
 
-        // Fetch levels by game from the level table
         $levelsByGameData = $connection->fetchAllAssociative(
             'SELECT gameId, id as level, COUNT(DISTINCT childId) as child_count 
              FROM level 
@@ -899,23 +940,21 @@ class AdminController extends AbstractController
             $levelsByGame[$game]["Level $level"] = (int)$row['child_count'];
         }
 
-        // Fetch children's age distribution (histogram)
         $ageData = $connection->fetchAllAssociative('SELECT age FROM child');
-        $ageHistogram = array_fill(0, 4, 0); // Bins: 4-5, 6-7, 8-9, 10+
+        $ageHistogram = array_fill(0, 4, 0);
         foreach ($ageData as $row) {
             $age = (int)$row['age'];
-            if ($age <= 5) { // Include ages 4 and below in the 4-5 bin
+            if ($age <= 5) {
                 $ageHistogram[0]++;
             } elseif ($age <= 7) {
                 $ageHistogram[1]++;
             } elseif ($age <= 9) {
                 $ageHistogram[2]++;
-            } else { // 10+
+            } else {
                 $ageHistogram[3]++;
             }
         }
 
-        // Fetch average attempts per level
         $avgAttemptsPerLevel = [];
         for ($level = 1; $level <= 3; $level++) {
             $avg = $connection->fetchOne(
@@ -927,7 +966,6 @@ class AdminController extends AbstractController
             $avgAttemptsPerLevel[$level] = $avg ? round((float)$avg, 2) : 0;
         }
 
-        // Fetch average time spent per level
         $avgTimePerLevel = [];
         for ($level = 1; $level <= 3; $level++) {
             $avg = $connection->fetchOne(
@@ -939,13 +977,12 @@ class AdminController extends AbstractController
             $avgTimePerLevel[$level] = $avg ? round((float)$avg, 2) : 0;
         }
 
-        // Fetch score distribution per game (histogram)
         $scoreData = $connection->fetchAllAssociative(
             'SELECT gameId, score 
              FROM level'
         );
         $scoreHistogram = [];
-        $scoreBins = [0, 20, 40, 60, 80, 100]; // Bins: 0-20, 20-40, ..., 80-100
+        $scoreBins = [0, 20, 40, 60, 80, 100];
         foreach ($games as $game) {
             $scoreHistogram[$game] = array_fill(0, count($scoreBins), 0);
         }
@@ -982,8 +1019,8 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/load-words', name: 'admin_load_words', methods: ['GET'])]
-    public function loadWords(Request $request, LoggerInterface $logger): Response
+    #[Route('/load-words', name: 'admin_load_words', methods: ['GET'])]
+    public function loadWords(Request $request): Response
     {
         $language = $request->query->get('language', 'français');
         $level = $request->query->get('level', '1');
@@ -998,13 +1035,13 @@ class AdminController extends AbstractController
     }
 
     #[Route('/generate', name: 'admin_generate_words', methods: ['POST'])]
-    public function generateWords(Request $request, LoggerInterface $logger): Response
+    public function generateWords(Request $request): Response
     {
         try {
             $language = $request->request->get('language', 'français');
             $level = $request->request->get('level', '1');
 
-            $logger->info('Generating words', [
+            $this->logger->info('Generating words', [
                 'language' => $language,
                 'level' => $level,
             ]);
@@ -1018,7 +1055,7 @@ class AdminController extends AbstractController
                 'level' => $level,
             ]);
         } catch (\Throwable $e) {
-            $logger->error('Erreur lors de la génération des mots', [
+            $this->logger->error('Erreur lors de la génération des mots', [
                 'exception' => $e->getMessage(),
                 'language' => $language,
                 'level' => $level,
@@ -1033,8 +1070,8 @@ class AdminController extends AbstractController
         }
     }
 
-    #[Route('/admin/add', name: 'admin_add_words', methods: ['POST'])]
-    public function addWords(Request $request, LoggerInterface $logger): Response
+    #[Route('/add', name: 'admin_add_words', methods: ['POST'])]
+    public function addWords(Request $request): Response
     {
         $language = $request->request->get('language', 'français');
         $level = $request->request->get('level', '1');
@@ -1043,7 +1080,7 @@ class AdminController extends AbstractController
         $theme = $request->request->get('theme');
 
         try {
-            $logger->info('Adding words', [
+            $this->logger->info('Adding words', [
                 'rightWords' => $rightWords,
                 'wrongWord' => $wrongWord,
                 'theme' => $theme,
@@ -1068,7 +1105,7 @@ class AdminController extends AbstractController
                 'level' => $level,
             ]);
         } catch (\Throwable $e) {
-            $logger->error('Erreur lors de l\'ajout des mots', [
+            $this->logger->error('Erreur lors de l\'ajout des mots', [
                 'exception' => $e->getMessage(),
                 'language' => $language,
                 'level' => $level,
@@ -1083,8 +1120,8 @@ class AdminController extends AbstractController
         }
     }
 
-    #[Route('/admin/delete', name: 'admin_delete_words', methods: ['POST'])]
-    public function deleteWords(Request $request, LoggerInterface $logger): Response
+    #[Route('/delete', name: 'admin_delete_words', methods: ['POST'])]
+    public function deleteWords(Request $request): Response
     {
         $language = $request->request->get('language', 'français');
         $level = $request->request->get('level', '1');
@@ -1120,7 +1157,7 @@ class AdminController extends AbstractController
                     $entryData['theme'],
                     $language,
                     $level,
-                    $logger
+                    $this->logger
                 );
                 $deletedCount++;
             }
@@ -1136,7 +1173,7 @@ class AdminController extends AbstractController
                 'level' => $level,
             ]);
         } catch (\Throwable $e) {
-            $logger->error('Erreur lors de la suppression des mots', [
+            $this->logger->error('Erreur lors de la suppression des mots', [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -1146,5 +1183,193 @@ class AdminController extends AbstractController
                 'level' => $level,
             ]);
         }
+    }
+
+    // private function generateUniqueImageId(WordGameService $wordGameService): int
+    // {
+    //     do {
+    //         $id = random_int(1, 999999);
+    //         $exists = $wordGameService->getImageById($id);
+    //     } while ($exists);
+    //     return $id;
+    // }
+
+    #[Route('/themes', name: 'admin_themes', methods: ['GET'])]
+    public function themes(EntityManagerInterface $entityManager, SessionInterface $session): Response
+    {
+        $language = $session->get('admin_filter_language', null);
+        $level = $session->get('admin_filter_level', null);
+
+        $queryBuilder = $entityManager->getRepository(Theme::class)->createQueryBuilder('t');
+        if ($language) {
+            $queryBuilder->andWhere('t.language = :language')->setParameter('language', $language);
+        }
+        if ($level) {
+            $queryBuilder->andWhere('t.level = :level')->setParameter('level', $level);
+        }
+
+        $themes = $queryBuilder->getQuery()->getResult();
+
+        return $this->render('admin/themes.html.twig', [
+            'themes' => $themes,
+            'filter_language' => $language,
+            'filter_level' => $level,
+        ]);
+    }
+
+    #[Route('/generate-themes', name: 'admin_generate_themes', methods: ['GET', 'POST'])]
+    public function generateThemes(Request $request, SessionInterface $session, EntityManagerInterface $entityManager): Response
+    {
+        $validLanguages = ['fr', 'en', 'de', 'es'];
+        $validLevels = ['Facile', 'Moyen', 'Difficile'];
+
+        if ($request->isMethod('POST')) {
+            $language = $request->request->get('language');
+            $level = $request->request->get('level');
+
+            if (!in_array($language, $validLanguages) || !in_array($level, $validLevels)) {
+                $this->addFlash('error', 'Langue ou niveau invalide.');
+                return $this->redirectToRoute('admin_themes');
+            }
+
+            $themeCount = 5; // Default value
+            $wordsPerTheme = 5; // Default value
+            $themes = $this->themeGameService->generateThemes($language, $level, $themeCount, $wordsPerTheme);
+            $session->set('admin_filter_language', $language);
+            $session->set('admin_filter_level', $level);
+            $this->addFlash('success', 'Thèmes générés avec succès. Veuillez les valider.');
+            return $this->redirectToRoute('admin_themes');
+        }
+
+        // For GET requests, render themes.html.twig with filter options
+        $language = $session->get('admin_filter_language', null);
+        $level = $session->get('admin_filter_level', null);
+
+        $queryBuilder = $entityManager->getRepository(Theme::class)->createQueryBuilder('t');
+        if ($language) {
+            $queryBuilder->andWhere('t.language = :language')->setParameter('language', $language);
+        }
+        if ($level) {
+            $queryBuilder->andWhere('t.level = :level')->setParameter('level', $level);
+        }
+
+        $themes = $queryBuilder->getQuery()->getResult();
+
+        return $this->render('admin/themes.html.twig', [
+            'themes' => $themes,
+            'filter_language' => $language,
+            'filter_level' => $level,
+            'validLanguages' => $validLanguages,
+            'validLevels' => $validLevels,
+        ]);
+    }
+    #[Route('/add-theme', name: 'admin_add_theme', methods: ['GET'])]
+    public function addTheme(): Response
+    {
+        return $this->render('admin/add_theme.html.twig');
+    }
+
+    #[Route('/save-theme', name: 'admin_save_theme', methods: ['POST'])]
+    public function saveTheme(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        // Validate CSRF token
+        $token = new CsrfToken('save_theme', $request->request->get('_csrf_token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
+            $this->addFlash('error', 'Jeton CSRF invalide.');
+            return $this->redirectToRoute('admin_add_theme');
+        }
+
+        $name = $request->request->get('name');
+        $language = $request->request->get('language');
+        $level = $request->request->get('level');
+        $stage = $request->request->get('stage', 1);
+        // Retrieve the 'words' parameter as an array
+        $allParams = $request->request->all();
+        $wordsData = isset($allParams['words']) && is_array($allParams['words']) ? $allParams['words'] : [];
+
+        $validLanguages = ['fr', 'en', 'de', 'es'];
+        $validLevels = ['Facile', 'Moyen', 'Difficile'];
+
+        // Validation
+        if (empty($name) || !in_array($language, $validLanguages) || !in_array($level, $validLevels)) {
+            $this->addFlash('error', 'Données invalides. Vérifiez le nom, la langue ou le niveau.');
+            return $this->redirectToRoute('admin_add_theme');
+        }
+
+        if (empty($wordsData)) {
+            $this->addFlash('error', 'Vous devez ajouter au moins un mot.');
+            return $this->redirectToRoute('admin_add_theme');
+        }
+
+        // Create new Theme entity
+        $theme = new Theme();
+        $theme->setName($name);
+        $theme->setLanguage($language);
+        $theme->setLevel($level);
+        $theme->setStage((int)$stage);
+        $theme->setIsValidated(false);
+
+        // Process words
+        foreach ($wordsData as $wordData) {
+            // Ensure $wordData is an array with 'word' and 'synonym' keys
+            if (is_array($wordData) && !empty($wordData['word']) && !empty($wordData['synonym'])) {
+                $word = new Word();
+                $word->setWord($wordData['word']);
+                $word->setSynonym($wordData['synonym']);
+                $word->setTheme($theme);
+                $theme->addWord($word);
+                $entityManager->persist($word);
+            }
+        }
+
+        $entityManager->persist($theme);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Thème ajouté avec succès.');
+        return $this->redirectToRoute('admin_themes');
+    }
+
+    #[Route('/validate-theme/{id}', name: 'admin_validate_theme', methods: ['POST'])]
+    #[ParamConverter('theme', class: 'App\Entity\Theme')]
+    public function validateTheme(Theme $theme, EntityManagerInterface $entityManager, Request $request): Response
+    {
+        $token = new CsrfToken('validate_theme', $request->request->get('_csrf_token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
+            $this->addFlash('error', 'Jeton CSRF invalide.');
+            return $this->redirectToRoute('admin_themes');
+        }
+
+        $theme->setIsValidated(!$theme->isValidated());
+        $entityManager->flush();
+        $this->addFlash('success', sprintf(
+            'Le thème "%s" a été %s.',
+            $theme->getName(),
+            $theme->isValidated() ? 'validé' : 'dévalidé'
+        ));
+        return $this->redirectToRoute('admin_themes');
+    }
+
+    #[Route('/delete-theme/{id}', name: 'admin_delete_theme', methods: ['POST'])]
+    #[ParamConverter('theme', class: 'App\Entity\Theme')]
+    public function deleteTheme(Theme $theme, EntityManagerInterface $entityManager, Request $request): Response
+    {
+        $token = new CsrfToken('delete_theme', $request->request->get('_csrf_token'));
+        if (!$this->csrfTokenManager->isTokenValid($token)) {
+            $this->addFlash('error', 'Jeton CSRF invalide.');
+            return $this->redirectToRoute('admin_themes');
+        }
+
+        $entityManager->remove($theme);
+        $entityManager->flush();
+        $this->addFlash('success', 'Thème supprimé avec succès.');
+        return $this->redirectToRoute('admin_themes');
+    }
+
+    #[Route('/clear-filter', name: 'admin_clear_filter', methods: ['GET'])]
+    public function clearFilter(SessionInterface $session): Response
+    {
+        $session->remove('admin_filter_language');
+        $session->remove('admin_filter_level');
+        return $this->redirectToRoute('admin_themes');
     }
 }

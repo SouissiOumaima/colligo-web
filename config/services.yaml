@@ -18,6 +18,12 @@ services:
     App\Service\AIService:
         arguments:
             $httpClient: '@http_client'
+            $geminiApiKey: '%gemini_api_key%'
+    # App\Service\WordGameService:
+    #     arguments:
+    #         $em: '@doctrine.orm.entity_manager'
+    #         $uploadDir: '%app.upload_dir%'
+            
 
     # Explicitly configure GoogleAIUtilService to inject the googleApiKey
     App\Service\GoogleAIUtilService:
@@ -32,8 +38,8 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-    App\Service\WordGameService:
+    App\Service\GameService:
         arguments:
-            $uploadDir: '%app.upload_dir%'
+            $apiKey: '%gemini_api_key%'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
