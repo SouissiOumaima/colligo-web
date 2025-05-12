@@ -22,14 +22,19 @@ class GameController extends AbstractController
      */
     #[Route('/main', name: 'main_menu')]
     public function mainMenu(WordGameService $wordGameService): Response
-    {
-        return $this->render('game/main_menu.html.twig', [
-            'highestLevel' => $wordGameService->getHighestLevelReached(),
-            'childId' => 3, // Default or dynamic childId
-            'gameId' => 3, // Default gameId for "Picture Game"
-            'selectedLevel' => 1, // Default level
-        ]);
-    }
+{
+    $childId = 1; // Default or dynamic childId, adjust as needed
+    $gameId = 3; // Default gameId for "Picture Game", adjust as needed
+    $wordGameService->setChildId($childId);
+    $wordGameService->setGameId($gameId);
+
+    return $this->render('game/main_menu.html.twig', [
+        'highestLevel' => $wordGameService->getHighestLevelReached(),
+        'childId' => $childId,
+        'gameId' => $gameId,
+        'selectedLevel' => $wordGameService->getHighestLevelReached(), // Use highest level reached
+    ]);
+}
 
     /**
      * Starts a new game at the specified level.
