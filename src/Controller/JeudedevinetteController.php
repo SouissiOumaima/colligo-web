@@ -204,7 +204,7 @@ class JeudedevinetteController extends AbstractController
                 // Update level in database immediately when correct
                 $this->updateLevel($child, $gameState);
 
-                if ($gameState['successfulLots'] >= 5) {
+                if ($gameState['successfulLots'] >= 10) {
                     $newLevel = $gameState['level'] + 1;
                     $this->logger->info('Level completed, moving to next level', ['currentLevel' => $gameState['level'], 'newLevel' => $newLevel]);
 

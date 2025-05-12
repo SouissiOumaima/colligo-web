@@ -15,7 +15,7 @@
             font-family: 'Bubblegum Sans', 'Tajawal', 'Arial', sans-serif;
             direction: rtl;
             overflow: hidden;
-            background: linear-gradient(135deg, #4B5563, #1F2937);
+            background: #E0F2FE; /* Fallback to a light pastel blue */
         }
 
         .main-container {
@@ -25,7 +25,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: url("{{ asset('images/image.jpg') }}") no-repeat center center;
+            background: linear-gradient(135deg, #A7C7E7, #F9A8D4); /* Brighter gradient for a cheerful look */
             background-size: cover;
             overflow: hidden;
         }
@@ -44,11 +44,11 @@
             flex-direction: column;
             align-items: center;
             padding: 40px;
-            background: linear-gradient(45deg, #FECACA, #A7F3D0, #BFDBFE);
+            background: linear-gradient(45deg, #FFD1DC, #B5EAD7, #C7D2FE);
             border-radius: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px #A7F3D0;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px #B5EAD7;
             animation: slideIn 1s ease-out;
-            width: 1000px;
+            width: 800px; /* Reduced from 1000px */
             min-height: 700px;
             position: relative;
             z-index: 10;
@@ -65,9 +65,9 @@
             left: 25px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 10px; /* Reduced from 15px */
             background: linear-gradient(45deg, #60A5FA, #34D399);
-            padding: 10px 20px;
+            padding: 8px 15px; /* Reduced from 10px 20px */
             border-radius: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 10px #34D399;
             z-index: 11;
@@ -79,8 +79,8 @@
         }
 
         .profile-image {
-            width: 50px;
-            height: 50px;
+            width: 40px; /* Reduced from 50px */
+            height: 40px; /* Reduced from 50px */
             border-radius: 50%;
             object-fit: cover;
             border: 3px solid #FFF;
@@ -89,7 +89,7 @@
 
         .profile-name {
             color: #1F2937;
-            font-size: 22px;
+            font-size: 18px; /* Reduced from 22px */
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -97,7 +97,7 @@
         .progress-bar {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 15px; /* Reduced from 20px */
             margin: 20px 0;
             background: rgba(255, 255, 255, 0.2);
             padding: 15px;
@@ -106,8 +106,8 @@
         }
 
         .star {
-            width: 50px;
-            height: 50px;
+            width: 40px; /* Reduced from 50px */
+            height: 40px; /* Reduced from 50px */
             fill: #D1D5DB;
             transition: fill 0.5s, transform 0.3s;
             cursor: pointer;
@@ -132,8 +132,8 @@
             background: linear-gradient(45deg, #F472B6, #F9A8D4);
             color: #1F2937;
             font-weight: bold;
-            font-size: 24px;
-            padding: 12px 25px;
+            font-size: 20px; /* Reduced from 24px */
+            padding: 10px 20px; /* Reduced from 12px 25px */
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 10px #F472B6;
             position: absolute;
@@ -154,7 +154,7 @@
                 "gif error-message theme"
                 "words-box words-box words-box"
                 "next-button next-button next-button";
-            grid-template-columns: 200px 1fr 200px;
+            grid-template-columns: 150px 1fr 150px; /* Reduced from 200px 1fr 200px */
             grid-template-rows: auto auto 250px auto;
             gap: 30px;
             width: 100%;
@@ -164,8 +164,8 @@
 
         .gif-pane {
             grid-area: gif;
-            width: 200px;
-            height: 200px;
+            width: 150px; /* Reduced from 200px */
+            height: 150px; /* Reduced from 200px to maintain aspect ratio */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -189,7 +189,7 @@
 
         .word-text {
             grid-area: word-text;
-            color: #EF4444;
+            color: #F87171;
             font-size: 40px;
             font-weight: bold;
             text-align: center;
@@ -221,22 +221,22 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            width: 200px;
+            width: 150px; /* Reduced from 200px */
         }
 
         .theme-label {
             color: #1E40AF;
-            font-size: 26px;
+            font-size: 22px; /* Reduced from 26px */
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .theme-content {
             color: #9D174D;
-            font-size: 26px;
+            font-size: 22px; /* Reduced from 26px */
             font-weight: bold;
             background: linear-gradient(45deg, #BAE6FD, #E0F2FE);
-            padding: 10px 20px;
+            padding: 10px 15px; /* Adjusted padding */
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             width: 100%;
@@ -250,11 +250,11 @@
             gap: 15px;
             flex-wrap: wrap;
             justify-content: center;
-            background: linear-gradient(45deg, #A7F3D0, #D9F99D);
+            background: linear-gradient(45deg, #C9F1E2, #E6F4A2);
             padding: 20px;
             border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 15px #A7F3D0;
-            width: 600px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 15px #C9F1E2;
+            width: 450px; /* Reduced from 600px */
             min-height: 200px;
             overflow: hidden;
         }
@@ -271,19 +271,26 @@
         .word-button {
             background: linear-gradient(45deg, #60A5FA, #34D399);
             color: #1F2937;
-            font-size: 22px;
+            font-size: 16px; /* Reduced from 18px */
             font-weight: bold;
-            padding: 15px 30px;
+            padding: 8px 10px; /* Adjusted padding */
             border: none;
             border-radius: 15px;
             cursor: pointer;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 10px #34D399;
             transition: transform 0.3s, box-shadow 0.3s;
-            min-width: 120px;
+            width: 110px; /* Reduced from 140px */
+            height: 50px; /* Reduced from 60px */
             text-align: center;
             position: relative;
             z-index: 2;
             animation: buttonPulse 3s infinite;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .word-button:hover:not(:disabled) {
@@ -314,16 +321,16 @@
             grid-area: next-button;
             background: linear-gradient(45deg, #FBBF24, #F87171);
             color: #1F2937;
-            font-size: 22px;
+            font-size: 20px; /* Reduced from 22px */
             font-weight: bold;
-            padding: 15px 35px;
+            padding: 12px 30px; /* Adjusted padding */
             border: none;
             border-radius: 15px;
             cursor: pointer;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 0 10px #FBBF24;
             transition: transform 0.3s, box-shadow 0.3s;
-            min-width: 140px;
-            max-width: 200px;
+            min-width: 120px; /* Reduced from 140px */
+            max-width: 160px; /* Reduced from 200px */
             position: relative;
             z-index: 10;
             animation: buttonPulse 3s infinite;
@@ -364,19 +371,19 @@
         @media (max-width: 768px) {
             .content-box {
                 padding: 30px;
-                width: 750px;
+                width: 600px; /* Reduced from 750px */
                 min-height: 550px;
             }
 
             .game-content-box {
-                grid-template-columns: 160px 1fr 160px;
+                grid-template-columns: 120px 1fr 120px; /* Reduced from 160px 1fr 160px */
                 grid-template-rows: auto auto 200px auto;
                 gap: 25px;
             }
 
             .gif-pane {
-                width: 160px;
-                height: 160px;
+                width: 120px; /* Reduced from 160px */
+                height: 120px; /* Reduced from 160px */
             }
 
             .word-text {
@@ -388,47 +395,48 @@
             }
 
             .theme-label, .theme-content {
-                font-size: 22px;
+                font-size: 18px; /* Reduced from 22px */
             }
 
             .theme-container {
-                width: 160px;
+                width: 120px; /* Reduced from 160px */
             }
 
             .words-box {
-                width: 450px;
+                width: 350px; /* Reduced from 450px */
                 min-height: 160px;
             }
 
             .word-button {
-                font-size: 20px;
-                padding: 12px 25px;
-                min-width: 100px;
+                font-size: 14px; /* Reduced from 16px */
+                padding: 8px 10px;
+                width: 90px; /* Reduced from 120px */
+                height: 40px; /* Reduced from 50px */
             }
 
             .next-button {
-                font-size: 20px;
-                padding: 12px 30px;
-                max-width: 160px;
+                font-size: 18px; /* Reduced from 20px */
+                padding: 10px 25px; /* Adjusted */
+                max-width: 140px; /* Reduced from 160px */
             }
 
             .score-box, .profile-box {
-                font-size: 22px;
-                padding: 10px 20px;
+                font-size: 18px; /* Reduced from 22px */
+                padding: 8px 15px; /* Adjusted */
             }
 
             .profile-image {
-                width: 40px;
-                height: 40px;
+                width: 35px; /* Reduced from 40px */
+                height: 35px; /* Reduced from 40px */
             }
 
             .progress-bar {
-                gap: 15px;
+                gap: 10px; /* Reduced from 15px */
             }
 
             .star {
-                width: 40px;
-                height: 40px;
+                width: 35px; /* Reduced from 40px */
+                height: 35px; /* Reduced from 40px */
             }
         }
 
@@ -436,19 +444,19 @@
             .content-box {
                 padding: 20px;
                 width: 95%;
-                max-width: 450px;
+                max-width: 400px; /* Reduced from 450px */
                 min-height: 450px;
             }
 
             .game-content-box {
-                grid-template-columns: 120px 1fr 120px;
+                grid-template-columns: 100px 1fr 100px; /* Reduced from 120px 1fr 120px */
                 grid-template-rows: auto auto 180px auto;
                 gap: 20px;
             }
 
             .gif-pane {
-                width: 120px;
-                height: 120px;
+                width: 100px; /* Reduced from 120px */
+                height: 100px; /* Reduced from 120px */
             }
 
             .word-text {
@@ -460,47 +468,48 @@
             }
 
             .theme-label, .theme-content {
-                font-size: 20px;
+                font-size: 16px; /* Reduced from 20px */
             }
 
             .theme-container {
-                width: 120px;
+                width: 100px; /* Reduced from 120px */
             }
 
             .words-box {
-                width: 300px;
+                width: 250px; /* Reduced from 300px */
                 min-height: 140px;
             }
 
             .word-button {
-                font-size: 18px;
-                padding: 10px 20px;
-                min-width: 90px;
+                font-size: 12px; /* Reduced from 14px */
+                padding: 6px 8px; /* Adjusted */
+                width: 80px; /* Reduced from 100px */
+                height: 35px; /* Reduced from 40px */
             }
 
             .next-button {
-                font-size: 18px;
-                padding: 10px 25px;
-                max-width: 120px;
+                font-size: 16px; /* Reduced from 18px */
+                padding: 8px 20px; /* Adjusted */
+                max-width: 100px; /* Reduced from 120px */
             }
 
             .score-box, .profile-box {
-                font-size: 20px;
-                padding: 8px 15px;
+                font-size: 16px; /* Reduced from 20px */
+                padding: 6px 12px; /* Adjusted */
             }
 
             .profile-image {
-                width: 30px;
-                height: 30px;
+                width: 25px; /* Reduced from 30px */
+                height: 25px; /* Reduced from 30px */
             }
 
             .progress-bar {
-                gap: 10px;
+                gap: 8px; /* Reduced from 10px */
             }
 
             .star {
-                width: 30px;
-                height: 30px;
+                width: 25px; /* Reduced from 30px */
+                height: 25px; /* Reduced from 30px */
             }
         }
     </style>
@@ -515,7 +524,7 @@
                 <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') | default('https://via.placeholder.com/120') }}" class="profile-image" alt="Profile Avatar">
                 <span class="profile-name">{{ child.name|default('اللاعب')|e }}</span>
             </div>
-            <div class="score-box" id="score-text">النقاط: {{ score|default(0) }}/25</div>
+            <div class="score-box" id="score-text">النقاط: {{ score|default(0) }}/50</div>
             <div class="progress-bar">
                 <svg class="star" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.446l-7.416 3.967 1.48-8.279L0 8.306l8.332-1.151z"/></svg>
                 <svg class="star" viewBox="0 0 24 24"><path d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.446l-7.416 3.967 1.48-8.279L0 8.306l8.332-1.151z"/></svg>
@@ -564,9 +573,10 @@
             const incorrectSound = new Audio("{{ asset('sounds/incorrect1.mp3') }}");
 
             // Particules pour la boîte des mots
-            const wordsCanvas = document.getElementById('words-particles');
+            let wordsCanvas = document.getElementById('words-particles');
             const wordsBox = document.getElementById('words-box');
-            const wordsCtx = wordsCanvas.getContext('2d');
+            let wordsCtx = wordsCanvas.getContext('2d');
+            let animationFrameId = null;
 
             function resizeWordsCanvas() {
                 wordsCanvas.width = wordsBox.offsetWidth;
@@ -635,6 +645,13 @@
                 }
             }
 
+            function stopWordsParticlesAnimation() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+            }
+
             function animateWordsParticles() {
                 wordsCtx.clearRect(0, 0, wordsCanvas.width, wordsCanvas.height);
                 wordsParticlesArray.forEach(particle => {
@@ -645,7 +662,7 @@
                         wordsParticlesArray.push(new WordParticle(particle.isStar));
                     }
                 });
-                requestAnimationFrame(animateWordsParticles);
+                animationFrameId = requestAnimationFrame(animateWordsParticles);
             }
 
             initWordsParticles();
@@ -721,7 +738,8 @@
                 incorrectAttempts: Number("{{ incorrectAttempts|default(0)|e('js') }}") || 0,
                 successfulLots: Number("{{ successful_lots|default(0)|e('js') }}") || 0,
                 maxAttempts: 3,
-                level: Number("{{ level|default(1)|e('js') }}") || 1
+                level: Number("{{ level|default(1)|e('js') }}") || 1,
+                score: Number("{{ score|default(0)|e('js') }}") || 0
             };
 
             const urls = {
@@ -735,15 +753,18 @@
             // Gestion de la barre de progression
             const stars = document.querySelectorAll('.star');
             function updateProgressBar() {
-                const scoreText = document.getElementById('score-text').textContent;
-                const score = parseInt(scoreText.match(/\d+/)[0], 10);
+                // Extract the current score from the score-text element
+                const scoreText = document.getElementById('score-text').textContent; // e.g., "النقاط: 25/50"
+                const scoreMatch = scoreText.match(/النقاط: (\d+)\/50/);
+                const currentScore = scoreMatch ? parseInt(scoreMatch[1], 10) : gameState.score;
+
                 stars.forEach(star => star.classList.remove('active'));
-                if (score >= 25) {
+                if (currentScore >= 45) { // 90% of 50
                     stars.forEach(star => star.classList.add('active'));
-                } else if (score >= 18) {
+                } else if (currentScore >= 30) { // 60% of 50
                     stars[0].classList.add('active');
                     stars[1].classList.add('active');
-                } else if (score >= 10) {
+                } else if (currentScore >= 15) { // 30% of 50
                     stars[0].classList.add('active');
                 }
             }
@@ -849,7 +870,8 @@
                             disableWordButtons();
                         }
                     }
-                    document.getElementById('score-text').textContent = `النقاط: ${data.score}/25`;
+                    document.getElementById('score-text').textContent = `النقاط: ${data.score}/50`;
+                    gameState.score = data.score; // Update gameState.score
                     updateProgressBar();
                     setTimeout(() => wordText.classList.remove('animate', 'animate-incorrect'), 500);
                 })
@@ -897,7 +919,8 @@
 
                     wordText.textContent = 'اختر الكلمة الدخيلة';
                     themeContent.textContent = data.theme;
-                    scoreText.textContent = `النقاط: ${data.score}/25`;
+                    scoreText.textContent = `النقاط: ${data.score}/50`;
+                    gameState.score = data.score; // Update gameState.score
                     correctGif.style.display = 'none';
                     incorrectGif.style.display = 'none';
                     nextButton.disabled = true;
@@ -913,18 +936,20 @@
                         wordsBox.appendChild(button);
                     });
 
+                    // Update the canvas and context for particles
+                    stopWordsParticlesAnimation(); // Stop the previous animation loop
+                    wordsCanvas = document.getElementById('words-particles');
+                    wordsCtx = wordsCanvas.getContext('2d');
+                    wordsCanvas.width = wordsBox.offsetWidth;
+                    wordsCanvas.height = wordsBox.offsetHeight;
+                    wordsParticlesArray.length = 0;
+                    initWordsParticles();
+                    animateWordsParticles(); // Start the new animation loop
+
                     setTimeout(() => {
                         wordsBox.style.transition = 'opacity 0.5s';
                         wordsBox.style.opacity = '1';
                     }, 100);
-
-                    const newCanvas = document.getElementById('words-particles');
-                    const newCtx = newCanvas.getContext('2d');
-                    newCanvas.width = wordsBox.offsetWidth;
-                    newCanvas.height = wordsBox.offsetHeight;
-                    wordsParticlesArray.length = 0;
-                    initWordsParticles();
-                    animateWordsParticles();
 
                     attachWordButtonListeners();
                     updateProgressBar();
