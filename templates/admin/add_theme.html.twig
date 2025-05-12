@@ -47,16 +47,28 @@
                         </select>
                     </div>
 
-                    <div class="mb-6">
-                        <label for="stage" class="form-label">Étape</label>
-                        <input type="number" name="stage" id="stage" value="1" min="1" class="glass-input w-full">
-                    </div>
-
                     <div id="words-container" class="mb-6">
                         <h3 class="text-xl font-semibold text-gray-700 mb-4">Mots et synonymes</h3>
+                        <!-- 5 paires initiales de champs mot/synonyme -->
                         <div class="word-entry flex space-x-4 mb-4">
                             <input type="text" name="words[0][word]" placeholder="Mot" class="glass-input w-1/2" required>
                             <input type="text" name="words[0][synonym]" placeholder="Synonyme" class="glass-input w-1/2" required>
+                        </div>
+                        <div class="word-entry flex space-x-4 mb-4">
+                            <input type="text" name="words[1][word]" placeholder="Mot" class="glass-input w-1/2" required>
+                            <input type="text" name="words[1][synonym]" placeholder="Synonyme" class="glass-input w-1/2" required>
+                        </div>
+                        <div class="word-entry flex space-x-4 mb-4">
+                            <input type="text" name="words[2][word]" placeholder="Mot" class="glass-input w-1/2" required>
+                            <input type="text" name="words[2][synonym]" placeholder="Synonyme" class="glass-input w-1/2" required>
+                        </div>
+                        <div class="word-entry flex space-x-4 mb-4">
+                            <input type="text" name="words[3][word]" placeholder="Mot" class="glass-input w-1/2" required>
+                            <input type="text" name="words[3][synonym]" placeholder="Synonyme" class="glass-input w-1/2" required>
+                        </div>
+                        <div class="word-entry flex space-x-4 mb-4">
+                            <input type="text" name="words[4][word]" placeholder="Mot" class="glass-input w-1/2" required>
+                            <input type="text" name="words[4][synonym]" placeholder="Synonyme" class="glass-input w-1/2" required>
                         </div>
                     </div>
 
@@ -83,7 +95,7 @@ try {
     }
 
     // Add Word/Synonym Pair
-    let wordIndex = 1;
+    let wordIndex = 5; // Start after the 5 initial pairs
     let isAdding = true;
 
     document.getElementById('add-word').addEventListener('click', () => {

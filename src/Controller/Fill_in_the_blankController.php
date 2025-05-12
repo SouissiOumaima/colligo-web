@@ -104,7 +104,9 @@ class Fill_in_the_blankController extends AbstractController
                 throw $this->createNotFoundException('No questions found for this level and language');
             }
 
+            // Shuffle all questions and limit to 10
             shuffle($questions);
+            $limitedQuestions = array_slice($questions, 0, min(10, count($questions)));
 
             $gameState['questions'] = array_map(function ($question) {
                 return [
@@ -113,9 +115,9 @@ class Fill_in_the_blankController extends AbstractController
                     'correct_answer' => $question->getCorrectAnswer(),
                     'all_answers' => $question->getAllAnswers(),
                 ];
-            }, $questions);
+            }, $limitedQuestions);
 
-            $gameState['total_questions'] = count($questions);
+            $gameState['total_questions'] = count($limitedQuestions); // Set to 10 or less if fewer questions exist
             $gameState['current_question_index'] = 0;
             $gameState['start_time'] = time();
             $gameState['show_feedback'] = $gameState['show_feedback'] ?? false;
@@ -207,7 +209,7 @@ class Fill_in_the_blankController extends AbstractController
         $answers = $currentQuestion['all_answers'];
         shuffle($answers);
 
-        return $this->render('fill_in_the_blank/fill_in_the_blank.html.twig', [
+        return $this->render('fill_in_the_blank/cover_page_FillInTheBlank.html.twig', [
             'child_id' => $childId,
             'child_name' => $child->getName(),
             'child_avatar' => $child->getAvatar() ?? 'avatar1.png',
@@ -219,55 +221,6 @@ class Fill_in_the_blankController extends AbstractController
             'questions' => $questions,
             'completed' => false,
             'feedback' => $feedback,
-        ]);
-    }
-
-    #[Route('/fill-in-the-blank/{id}/{childId}', name: 'fill_in_the_blank_show', methods: ['GET', 'POST'], defaults: ['childId' => null], requirements: ['id' => '\d+'])]
-    public function show(int $id, ?int $childId, Request $request): Response
-    {
-        $fillInTheBlank = $this->fillInTheBlankRepository->find($id);
-
-        if (!$fillInTheBlank) {
-            throw $this->createNotFoundException('Fill in the blanks question not found');
-        }
-
-        $child = null;
-        if ($childId !== null) {
-            $child = $this->entityManager->getRepository(Child::class)->find($childId);
-            if (!$child) {
-                throw $this->createNotFoundException('Child not found');
-            }
-        }
-
-        $childIdToRender = $child ? $childId : 0;
-        $childName = $child ? $child->getName() : 'Guest';
-        $childAvatar = $child ? ($child->getAvatar() ?? 'avatar1.png') : 'avatar1.png';
-
-        if ($request->isMethod('POST')) {
-            $defaultChildId = $childId ?? 1;
-            return $this->redirectToRoute('fill_in_the_blank_play', ['childId' => $defaultChildId]);
-        }
-
-        $question = [
-            'id' => $fillInTheBlank->getId(),
-            'question_text' => $fillInTheBlank->getQuestionText(),
-            'correct_answer' => $fillInTheBlank->getCorrectAnswer(),
-            'all_answers' => $fillInTheBlank->getAllAnswers(),
-        ];
-
-        return $this->render('fill_in_the_blank/fill_in_the_blank.html.twig', [
-            'fill_in_the_blank' => $fillInTheBlank,
-            'child_id' => $childIdToRender,
-            'child_name' => $childName,
-            'child_avatar' => $childAvatar,
-            'level' => $fillInTheBlank->getLevel() ?? 1,
-            'score' => 0,
-            'lives' => 3,
-            'question' => $question,
-            'answers' => $fillInTheBlank->getAllAnswers(),
-            'questions' => [$question],
-            'completed' => false,
-            'feedback' => null,
         ]);
     }
 
@@ -306,6 +259,8 @@ class Fill_in_the_blankController extends AbstractController
         $questions = $this->fillInTheBlankRepository->findByLevelAndLanguage($level->getId(), $language);
         shuffle($questions);
 
+        $limitedQuestions = array_slice($questions, 0, min(10, count($questions)));
+
         $gameState = [
             'current_question_index' => 0,
             'score' => $level->getScore(),
@@ -318,8 +273,8 @@ class Fill_in_the_blankController extends AbstractController
                     'correct_answer' => $question->getCorrectAnswer(),
                     'all_answers' => $question->getAllAnswers(),
                 ];
-            }, $questions),
-            'total_questions' => count($questions),
+            }, $limitedQuestions),
+            'total_questions' => count($limitedQuestions),
             'feedback' => null,
             'show_feedback' => false,
             'lives' => 3,

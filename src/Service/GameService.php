@@ -76,10 +76,10 @@ class GameService
     private function generateThemeNames(string $level, int $count): array
     {
         $prompt = sprintf(
-    "Génère %d noms de thèmes adaptés au niveau '%s' pour un jeu éducatif destiné aux enfants de 4 à 12 ans. Les thèmes doivent être simples, engageants et liés à des sujets quotidiens ou scolaires, même pour le niveau 'Difficile', qui doit rester compréhensible et accessible pour cet âge. Retourne une liste au format JSON.",
-    $count,
-    $level
-);
+            "Génère %d noms de thèmes uniques et variés adaptés au niveau '%s' pour un jeu éducatif destiné aux enfants de 4 à 12 ans. Les thèmes doivent être simples, engageants et liés à des sujets quotidiens, scolaires ou aux centres d'intérêt des enfants (par exemple, la nature, les animaux, les sciences, les fêtes, les sports, etc.). Assure-toi qu'il n'y a aucune répétition dans les noms des thèmes. Même pour le niveau 'Difficile', les thèmes doivent rester compréhensibles et accessibles pour cet âge. Retourne une liste au format JSON.",
+            $count,
+            $level
+        );
 
         $data = [
             'contents' => [

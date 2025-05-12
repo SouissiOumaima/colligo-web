@@ -1,0 +1,316 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة املأ الفراغات {% endblock %}
+
+{% block stylesheets %}
+    <style>
+        /* Réinitialisation et style de base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', 'Arial', sans-serif;
+            direction: rtl;
+            overflow: hidden;
+            background: linear-gradient(45deg, #ff6b6b, #ff69b4, #4ecdc4, #45b7d1, #96c93d);
+            background-size: 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Conteneur principal */
+        .main-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Boîte de contenu */
+        .content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px; /* Réduit de 30px à 20px */
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px; /* Réduit légèrement */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 1s ease-out;
+            max-width: 80%; /* Réduit de 90% */
+            width: clamp(250px, 40vw, 450px); /* Réduit de 300px/50vw/600px */
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Texte de bienvenue */
+        .welcome-text {
+            color: #ff4b5c;
+            font-size: clamp(20px, 4vw, 32px); /* Réduit de 24px/5vw/40px */
+            font-weight: 700;
+            margin-bottom: 10px; /* Réduit de 15px */
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Texte d'information */
+        .info-text {
+            color: #333;
+            font-size: clamp(14px, 2.5vw, 20px); /* Réduit de 16px/3vw/24px */
+            margin: 8px 0; /* Réduit de 10px */
+            background: rgba(255, 235, 59, 0.2);
+            padding: 6px 12px; /* Réduit de 8px/15px */
+            border-radius: 8px; /* Réduit de 10px */
+            transition: background 0.3s;
+        }
+
+        .info-text:hover {
+            background: rgba(255, 235, 59, 0.4);
+        }
+
+        /* Image GIF */
+        .gif-image {
+            width: clamp(120px, 25vw, 180px); /* Réduit de 120px/30vw/250px */
+            height: auto;
+            margin: 15px 0; /* Réduit de 20px */
+            border-radius: 15px; /* Réduit de 15px */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+        }
+
+        .gif-image:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Boutons */
+        .button {
+            font-size: clamp(14px, 2.5vw, 18px); /* Réduit de 16px/3vw/22px */
+            font-weight: 600;
+            padding: 12px 25px; /* Réduit de 15px/30px */
+            margin: 8px 0; /* Réduit de 10px */
+            border: none;
+            border-radius: 20px; /* Réduit de 25px */
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            width: clamp(140px, 20vw, 200px); /* Réduit de 180px/25vw/250px */
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 1;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+            z-index: -1;
+        }
+
+        .button:hover::before {
+            left: 100%;
+        }
+
+        .button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #28a745, #34d058);
+        }
+
+        .start-button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+        }
+
+        .back-button {
+            background: linear-gradient(45deg, #007bff, #00c4ff);
+        }
+
+        .back-button:hover {
+            background: linear-gradient(45deg, #0056b3, #007bff);
+        }
+
+        /* Canvas pour les particules */
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .content-box {
+                padding: 15px;
+                width: 85%;
+            }
+
+            .welcome-text {
+                font-size: clamp(18px, 5vw, 28px);
+            }
+
+            .info-text {
+                font-size: clamp(12px, 3.5vw, 16px);
+            }
+
+            .button {
+                font-size: clamp(12px, 3.5vw, 16px);
+                padding: 10px 20px;
+                width: clamp(120px, 35vw, 180px);
+            }
+
+            .gif-image {
+                width: clamp(70px, 30vw, 150px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-box {
+                padding: 10px;
+            }
+
+            .welcome-text {
+                font-size: clamp(16px, 6vw, 24px);
+            }
+
+            .info-text {
+                font-size: clamp(10px, 4vw, 14px);
+            }
+
+            .button {
+                font-size: clamp(10px, 4vw, 14px);
+                padding: 8px 15px;
+                width: clamp(100px, 40vw, 150px);
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <canvas id="particles"></canvas>
+    <div class="main-container">
+        <div class="content-box">
+            <div class="welcome-text">
+                مرحبا بيك في لعبة املأ الفراغات
+            </div>
+            <div class="info-text">
+                <span style="margin-left: 10px;">🎮</span> المرحلة: {{ level|default(1) }}
+            </div>
+            <div class="info-text">
+                <span style="margin-left: 10px;">🌐</span> اللغة: {{ language|default('غير محدد') }}
+            </div>
+            <img src="{{ asset('images/salut.gif') }}" class="gif-image" alt="Salut GIF">
+            {# <a href="{{ path('fill_in_the_blank_play', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': 2}) }}" class="button start-button">ابدأ</a> #}
+            {# <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="button back-button">ارجع للألعاب</a> #}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particlesArray = [];
+            const numberOfParticles = 100;
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 5 + 1;
+                    this.speedX = Math.random() * 3 - 1.5;
+                    this.speedY = Math.random() * 3 - 1.5;
+                    this.color = `hsl(${Math.random() * 360}, 70%, 70%)`;
+                }
+
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.size > 0.2) this.size -= 0.05;
+                    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                }
+
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function init() {
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particlesArray.push(new Particle());
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particlesArray.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                    if (particle.size <= 0.2) {
+                        particlesArray.splice(particlesArray.indexOf(particle), 1);
+                        particlesArray.push(new Particle());
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+
+            init();
+            animate();
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            // Animation des boutons au survol
+            const buttons = document.querySelectorAll('.button');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    button.style.transform = 'scale(1.1) translateY(-5px)';
+                });
+                button.addEventListener('mouseleave', () => {
+                    button.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+{% endblock %}
