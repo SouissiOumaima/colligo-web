@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\Images;
 use App\Entity\Level;
-use App\Entity\Feedback;
 use App\Entity\Child;
 use App\Entity\Game;
 use Doctrine\ORM\EntityManagerInterface;
@@ -270,31 +269,7 @@ class WordGameService
      *
      * @throws \Exception If childId or gameId is not set
      */
-    public function resetDatabase(): void
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before resetting the database.');
-        }
-
-        $this->em->createQuery('DELETE FROM App\Entity\Level l WHERE l.childId = :childId AND l.gameId = :gameId')
-            ->setParameter('childId', $this->childId)
-            ->setParameter('gameId', $this->gameId)
-            ->execute();
-
-        $this->em->createQuery('DELETE FROM App\Entity\Feedback f WHERE f.childId = :childId AND f.gameId = :gameId')
-            ->setParameter('childId', $this->childId)
-            ->setParameter('gameId', $this->gameId)
-            ->execute();
-
-        $state = $this->session->get('game_state');
-        $state['currentLevel'] = 1;
-        $state['currentStage'] = 1;
-        $state['currentLevelPoints'] = 0;
-        $state['totalTriesInLevel'] = 0;
-        $state['totalTimeInLevel'] = 0;
-        $state['highestLevelReached'] = 1;
-        $this->session->set('game_state', $state);
-    }
+ 
 
     /**
      * Ensures a default parent exists in the database.
@@ -337,34 +312,8 @@ class WordGameService
         }
     }
 
-    /**
-     * Saves feedback for the game.
-     *
-     * @param string $feedbackText Feedback text
-     * @param int $rating Rating value
-     * @param int $gameId Game ID
-     * @throws \Exception If childId is not set or child not found
-     */
-    public function saveFeedback(string $feedbackText, int $rating, int $gameId): void
-    {
-        if ($this->childId === null) {
-            throw new \Exception('Child ID must be set before saving feedback.');
-        }
-
-        $child = $this->em->getRepository(Child::class)->find($this->childId);
-        if (!$child) {
-            throw new \Exception('Child not found for ID: ' . $this->childId);
-        }
-
-        $feedback = new Feedback();
-        $feedback->setChild($child);
-        $feedback->setGameId($gameId);
-        $feedback->setFeedbackText($feedbackText);
-        $feedback->setRating($rating);
-
-        $this->em->persist($feedback);
-        $this->em->flush();
-    }
+    
+    
 
     /**
      * Fetches the child's language preference.
