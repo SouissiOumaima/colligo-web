@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Admin;
 use App\Entity\Child;
+use App\Entity\Dragdrop;
 use App\Entity\Fill_in_the_blank;
 use App\Entity\Images;
 use App\Entity\Jeudedevinette;
@@ -11,12 +12,15 @@ use App\Entity\Parents;
 use App\Entity\Theme;
 use App\Entity\Word;
 use App\Form\AddAdminType;
+use App\Form\DragdropType;
 use App\Repository\AdminRepository;
 use App\Repository\ChildRepository;
+use App\Repository\DragdropRepository;
 use App\Repository\Fill_in_the_blankRepository;
 use App\Repository\ParentsRepository;
 use App\Service\AIService;
 use App\Service\GameService;
+use Symfony\Component\HttpClient\HttpClient;
 use App\Service\GoogleAIUtilService;
 use App\Service\GuessingGameService;
 use App\Service\WordGameService;
@@ -48,10 +52,11 @@ class AdminController extends AbstractController
     private EntityManagerInterface $entityManager;
     private GuessingGameService $gameService;
     private GoogleAIUtilService $googleAIUtil;
-    #private WordGameService $wordGameService;
     private LoggerInterface $logger;
     private CsrfTokenManagerInterface $csrfTokenManager;
     private GameService $themeGameService;
+    private DragdropRepository $dragdropRepository;
+    private string $aiApiKey;
 
     public function __construct(
         AdminRepository $adminRepository,
@@ -62,10 +67,11 @@ class AdminController extends AbstractController
         EntityManagerInterface $entityManager,
         GuessingGameService $gameService,
         GoogleAIUtilService $googleAIUtil,
-        #WordGameService $wordGameService,
         LoggerInterface $logger,
         CsrfTokenManagerInterface $csrfTokenManager,
-        GameService $themeGameService
+        GameService $themeGameService,
+        DragdropRepository $dragdropRepository,
+        string $aiApiKey
     ) {
         $this->adminRepository = $adminRepository;
         $this->fillInTheBlankRepository = $fillInTheBlankRepository;
@@ -75,78 +81,12 @@ class AdminController extends AbstractController
         $this->entityManager = $entityManager;
         $this->gameService = $gameService;
         $this->googleAIUtil = $googleAIUtil;
-        #$this->wordGameService = $wordGameService;
         $this->logger = $logger;
         $this->csrfTokenManager = $csrfTokenManager;
         $this->themeGameService = $themeGameService;
+        $this->dragdropRepository = $dragdropRepository;
+        $this->aiApiKey = $aiApiKey;
     }
-
-    // #[Route('/reset', name: 'reset_database', methods: ['POST'])]
-    // public function resetDatabase(WordGameService $wordGameService): Response
-    // {
-    //     $wordGameService->resetDatabase();
-    //     $this->addFlash('success', 'La base de données a été réinitialisée avec succès.');
-    //     return $this->redirectToRoute('main_menu');
-    // }
-
-    // #[Route('/admin/manage-images', name: 'admin_manage_images')]
-    // public function manageImages(WordGameService $wordGameService, Request $request): Response
-    // {
-    //     $images = $wordGameService->getAllImages();
-
-    //     if ($request->isMethod('POST')) {
-    //         $imageId = $request->request->getInt('image_id');
-    //         $word = $request->request->get('word');
-    //         $french = $request->request->get('french_translation');
-    //         $spanish = $request->request->get('spanish_translation');
-    //         $german = $request->request->get('german_translation');
-    //         $file = $request->files->get('image_file');
-
-    //         if (!$word) {
-    //             $this->addFlash('error', 'Le mot est requis.');
-    //         } elseif (!$imageId && !$file) {
-    //             $this->addFlash('error', 'Le fichier image est requis pour les nouvelles images.');
-    //         } else {
-    //             try {
-    //                 if ($imageId) {
-    //                     $image = $wordGameService->getImageById($imageId);
-    //                     if (!$image) {
-    //                         $this->addFlash('error', 'L\'image n\'existe pas.');
-    //                         return $this->redirectToRoute('admin_manage_images');
-    //                     }
-    //                     $imageUrl = $wordGameService->handleImageUpload($file, $image->getImage_url());
-    //                 } else {
-    //                     $image = new Images();
-    //                     $image->setId($this->generateUniqueImageId($wordGameService));
-    //                     $imageUrl = $wordGameService->handleImageUpload($file);
-    //                 }
-
-    //                 $image->setWord($word);
-    //                 $image->setImage_url($imageUrl);
-    //                 $image->setFrench_translation($french ?: $word);
-    //                 $image->setSpanish_translation($spanish ?: $word);
-    //                 $image->setGerman_translation($german ?: $word);
-
-    //                 $wordGameService->saveImage($image);
-    //                 $this->addFlash('success', 'L\'image a été enregistrée avec succès.');
-    //             } catch (\Exception $e) {
-    //                 $this->addFlash('error', $e->getMessage());
-    //             }
-    //             return $this->redirectToRoute('admin_manage_images');
-    //         }
-    //     }
-
-    //     if ($request->query->has('delete')) {
-    //         $imageId = $request->query->getInt('delete');
-    //         $wordGameService->deleteImage($imageId);
-    //         $this->addFlash('success', 'L\'image a été supprimée avec succès.');
-    //         return $this->redirectToRoute('admin_manage_images');
-    //     }
-
-    //     return $this->render('admin/manage_images.html.twig', [
-    //         'images' => $images,
-    //     ]);
-    // }
 
     #[Route('/dashboard', name: 'admin_dashboard')]
     public function dashboard(): Response
@@ -1185,15 +1125,6 @@ class AdminController extends AbstractController
         }
     }
 
-    // private function generateUniqueImageId(WordGameService $wordGameService): int
-    // {
-    //     do {
-    //         $id = random_int(1, 999999);
-    //         $exists = $wordGameService->getImageById($id);
-    //     } while ($exists);
-    //     return $id;
-    // }
-
     #[Route('/themes', name: 'admin_themes', methods: ['GET'])]
     public function themes(EntityManagerInterface $entityManager, SessionInterface $session): Response
     {
@@ -1241,7 +1172,6 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_themes');
         }
 
-        // For GET requests, render themes.html.twig with filter options
         $language = $session->get('admin_filter_language', null);
         $level = $session->get('admin_filter_level', null);
 
@@ -1263,6 +1193,7 @@ class AdminController extends AbstractController
             'validLevels' => $validLevels,
         ]);
     }
+
     #[Route('/add-theme', name: 'admin_add_theme', methods: ['GET'])]
     public function addTheme(): Response
     {
@@ -1272,7 +1203,6 @@ class AdminController extends AbstractController
     #[Route('/save-theme', name: 'admin_save_theme', methods: ['POST'])]
     public function saveTheme(Request $request, EntityManagerInterface $entityManager): Response
     {
-        // Validate CSRF token
         $token = new CsrfToken('save_theme', $request->request->get('_csrf_token'));
         if (!$this->csrfTokenManager->isTokenValid($token)) {
             $this->addFlash('error', 'Jeton CSRF invalide.');
@@ -1283,14 +1213,12 @@ class AdminController extends AbstractController
         $language = $request->request->get('language');
         $level = $request->request->get('level');
         $stage = $request->request->get('stage', 1);
-        // Retrieve the 'words' parameter as an array
         $allParams = $request->request->all();
         $wordsData = isset($allParams['words']) && is_array($allParams['words']) ? $allParams['words'] : [];
 
         $validLanguages = ['fr', 'en', 'de', 'es'];
         $validLevels = ['Facile', 'Moyen', 'Difficile'];
 
-        // Validation
         if (empty($name) || !in_array($language, $validLanguages) || !in_array($level, $validLevels)) {
             $this->addFlash('error', 'Données invalides. Vérifiez le nom, la langue ou le niveau.');
             return $this->redirectToRoute('admin_add_theme');
@@ -1301,7 +1229,6 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_add_theme');
         }
 
-        // Create new Theme entity
         $theme = new Theme();
         $theme->setName($name);
         $theme->setLanguage($language);
@@ -1309,9 +1236,7 @@ class AdminController extends AbstractController
         $theme->setStage((int)$stage);
         $theme->setIsValidated(false);
 
-        // Process words
         foreach ($wordsData as $wordData) {
-            // Ensure $wordData is an array with 'word' and 'synonym' keys
             if (is_array($wordData) && !empty($wordData['word']) && !empty($wordData['synonym'])) {
                 $word = new Word();
                 $word->setWord($wordData['word']);
@@ -1371,5 +1296,229 @@ class AdminController extends AbstractController
         $session->remove('admin_filter_language');
         $session->remove('admin_filter_level');
         return $this->redirectToRoute('admin_themes');
+    }
+
+    private function buildPrompt(string $language, int $level): string
+    {
+        $langCode = match (strtolower($language)) {
+            'français' => 'fr',
+            'english' => 'en',
+            'espagnol' => 'es',
+            'allemand' => 'de',
+            default => 'fr',
+        };
+        return match ($level) {
+            0 => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to understand. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The cat sleeps\", \"arabicTranslation\": \"القط ينام\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            1 => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            2 => "Generate exactly 10 unique, slightly more complex but still child-friendly sentences in the language code '$langCode'. Each sentence must have 4 to 6 words suitable for drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The dog runs in the park\", \"arabicTranslation\": \"الكلب يركض في الحديقة\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            3 => "Generate exactly 10 unique, moderately complex child-friendly sentences in the language code '$langCode'. Each sentence must have 5 to 7 words suitable for advanced drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The girl reads a book quietly\", \"arabicTranslation\": \"الفتاة تقرأ كتابًا بهدوء\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            default => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+        };
+    }
+
+    private function callApi(string $prompt): ?string
+    {
+        $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' . $this->aiApiKey;
+        $client = HttpClient::create();
+
+        try {
+            $response = $client->request('POST', $apiUrl, [
+                'headers' => ['Content-Type' => 'application/json'],
+                'json' => [
+                    'contents' => [['parts' => [['text' => $prompt]]]],
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                        'topK' => 40,
+                        'topP' => 0.95,
+                        'maxOutputTokens' => 500,
+                        'stopSequences' => [],
+                    ],
+                ],
+            ]);
+
+            $statusCode = $response->getStatusCode();
+            $rawContent = $response->getContent(false);
+            $this->logger->debug('API Gemini Raw Response', ['status' => $statusCode, 'content' => $rawContent]);
+
+            if ($statusCode !== 200) {
+                throw new \Exception('API request failed with status code: ' . $statusCode . ', content: ' . $rawContent);
+            }
+
+            $data = $response->toArray();
+            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
+            $this->logger->debug('API Gemini Parsed Response', ['response' => $data, 'prompt' => $prompt]);
+            return trim($text);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur API Gemini', ['exception' => $e->getMessage(), 'prompt' => $prompt, 'raw_content' => $rawContent ?? 'N/A']);
+            return null;
+        }
+    }
+
+    private function parseDualLanguageResponse(string $response, int $level): array
+    {
+        $cleanedResponse = trim($response);
+        $cleanedResponse = preg_replace('/^```json\s*|\s*```$/m', '', $cleanedResponse);
+        $cleanedResponse = trim($cleanedResponse);
+
+        $result = json_decode($cleanedResponse, true);
+        $sentences = [];
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($result) && !empty($result)) {
+            foreach ($result as $item) {
+                if (is_string($item)) {
+                    $subItem = json_decode($item, true);
+                    if (json_last_error() === JSON_ERROR_NONE && isset($subItem['sentence']) && isset($subItem['arabicTranslation'])) {
+                        $sentences[] = $subItem['sentence'] . ' | ' . $subItem['arabicTranslation'];
+                    }
+                } elseif (is_array($item) && count($item) >= 2 && isset($item[0]) && $item[0] === 'json') {
+                    $translation = isset($item[1]) ? trim($item[1]) : 'ترجمة افتراضية';
+                    $sentences[] = 'Generated sentence | ' . $translation;
+                } elseif (isset($item['sentence']) && isset($item['arabicTranslation'])) {
+                    $sentences[] = $item['sentence'] . ' | ' . $item['arabicTranslation'];
+                }
+            }
+        }
+
+        if (empty($sentences)) {
+            $lines = array_filter(explode("\n", $cleanedResponse));
+            foreach ($lines as $line) {
+                $parts = explode(' | ', trim($line), 2);
+                if (count($parts) === 2) {
+                    $sentences[] = $line;
+                } elseif (count($parts) === 1) {
+                    $sentences[] = $parts[0] . ' | ترجمة افتراضية';
+                }
+            }
+        }
+
+        while (count($sentences) < 10) {
+            $sentences[] = "Fallback sentence " . (count($sentences) + 1) . " | ترجمة افتراضية";
+        }
+
+        return array_slice($sentences, 0, 10);
+    }
+
+    private function getFallbackSentences(string $language, int $level): array
+    {
+        $fallbackSentences = [
+            0 => [
+                'The sun shines | الشمس تشرق',
+                'Je mange une pomme | أتناول تفاحة',
+                'El sol brilla | الشمس تشرق',
+                'Die Sonne scheint | الشمس تشرق',
+                'I eat an apple | أتناول تفاحة',
+                'The dog barks | الكلب ينبح',
+                'Nous jouons ensemble | نلعب معًا',
+                'Jugamos juntos | نلعب معًا',
+                'Wir spielen zusammen | نلعب معًا',
+                'Birds fly high | الطيور تطير عاليًا',
+            ],
+            1 => [
+                'I like to play | أحب اللعب',
+                'J’aime jouer | أحب اللعب',
+                'Me gusta jugar | أحب اللعب',
+                'Ich mag spielen | أحب اللعب',
+                'The cat runs fast | القط يركض بسرعة',
+                'Nous lisons un livre | نقرأ كتابًا',
+                'Leemos un libro | نقرأ كتابًا',
+                'Wir lesen ein Buch | نقرأ كتابًا',
+                'The bird sings | الطائر يغني',
+                'I draw a house | أرسم منزلًا',
+            ],
+            2 => [
+                'The dog runs in the park | الكلب يركض في الحديقة',
+                'Je lis un livre tranquillement | أقرأ كتابًا بهدوء',
+                'Leo un libro tranquilo | أقرأ كتابًا بهدوء',
+                'Ich lese ein Buch leise | أقرأ كتابًا بهدوء',
+                'The cat climbs the tree | القط يتسلق الشجرة',
+                'Nous jouons avec nos jouets | نلعب مع ألعابنا',
+                'Jugamos con nuestros juguetes | نلعب مع ألعابنا',
+                'Wir spielen mit unseren Spielsachen | نلعب مع ألعابنا',
+                'The bird flies over water | الطائر يطير فوق الماء',
+                'I draw a big house | أرسم منزلًا كبيرًا',
+            ],
+            3 => [
+                'The girl reads a book quietly | الفتاة تقرأ كتابًا بهدوء',
+                'La fille lit un livre tranquillement | الفتاة تقرأ كتابًا بهدوء',
+                'La niña lee un libro tranquilo | الفتاة تقرأ كتابًا بهدوء',
+                'Das Mädchen liest ein Buch leise | الفتاة تقرأ كتابًا بهدوء',
+                'The dog runs quickly in the garden | الكلب يركض بسرعة في الحديقة',
+                'Nous jouons avec des amis chaque après-midi | نلعب مع الأصدقاء كل بعد ظهر',
+                'Jugamos con amigos cada tarde | نلعب مع الأصدقاء كل بعد ظهر',
+                'Wir spielen mit Freunden jeden Nachmittag | نلعب مع الأصدقاء كل بعد ظهر',
+                'The bird flies high above the trees | الطائر يطير عاليًا فوق الأشجار',
+                'I draw a house with a red roof | أرسم منزلًا بسيطًا بلون أحمر',
+            ],
+        ];
+
+        return $fallbackSentences[$level] ?? $fallbackSentences[1];
+    }
+     #[Route('/dragdrop', name: 'admin_dragdrop_content', methods: ['GET', 'POST'])]
+    public function manageContent(Request $request): Response
+    {
+        $validLanguages = ['Français', 'English', 'Espagnol', 'Allemand'];
+
+        $dragdrop = new Dragdrop();
+        $form = $this->createForm(DragdropType::class, $dragdrop);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->persist($dragdrop);
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Phrase ajoutée avec succès !');
+            return $this->redirectToRoute('admin_dragdrop_content');
+        }
+
+        $language = $request->request->get('language');
+        $level = (int) $request->request->get('level', 0);
+        $generatedSentences = [];
+
+        if ($request->isMethod('POST') && $request->request->has('generate')) {
+            if (!$language || !in_array($language, $validLanguages)) {
+                $this->addFlash('error', 'Veuillez sélectionner une langue valide.');
+                $language = 'Français';
+            }
+            $prompt = $this->buildPrompt($language, $level);
+            $result = $this->callApi($prompt);
+            $generatedSentences = $result ? $this->parseDualLanguageResponse($result, $level) : $this->getFallbackSentences($language, $level);
+        }
+
+        $selectedSentences = $request->request->all('sentences');
+        $saveLanguage = $request->request->get('save_language', $language ?? 'Français');
+
+        if ($request->isMethod('POST') && $request->request->has('save_generated') && is_array($selectedSentences) && !empty($selectedSentences)) {
+            foreach ($selectedSentences as $sentenceText) {
+                if (is_string($sentenceText) && trim($sentenceText) !== '') {
+                    $sentenceParts = explode(' | ', $sentenceText, 2);
+                    $originalSentence = trim($sentenceParts[0]);
+                    $arabicTranslation = isset($sentenceParts[1]) ? trim($sentenceParts[1]) : 'ترجمة افتراضية';
+                    $dragdropEntity = new Dragdrop();
+                    $dragdropEntity->setPhrase($originalSentence);
+                    $dragdropEntity->setArabicTranslation($arabicTranslation);
+                    $dragdropEntity->setNiveau($level);
+                    $saveLanguage = $saveLanguage ?? 'Français';
+                    if (!in_array($saveLanguage, $validLanguages)) {
+                        $saveLanguage = 'Français';
+                    }
+                    $dragdropEntity->setLangue($saveLanguage);
+                    $this->entityManager->persist($dragdropEntity);
+                }
+            }
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Phrases enregistrées avec succès !');
+            return $this->redirectToRoute('admin_dragdrop_content');
+        } elseif ($request->request->has('save_generated') && (!is_array($selectedSentences) || empty($selectedSentences))) {
+            $this->addFlash('error', 'Veuillez sélectionner au moins une phrase à enregistrer.');
+        }
+
+        $dragdrops = $this->dragdropRepository->findAll();
+
+        return $this->render('admin/dragdrop_content.html.twig', [
+            'form' => $form->createView(),
+            'dragdrops' => $dragdrops,
+            'language' => $language ?? 'Français',
+            'level' => $level,
+            'generatedSentences' => $generatedSentences,
+        ]);
     }
 }

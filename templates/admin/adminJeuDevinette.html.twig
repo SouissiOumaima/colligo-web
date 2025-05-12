@@ -373,7 +373,6 @@
                 body: formData
             })
             .then(response => {
-                console.log('Response status:', response.status);
                 if (response.ok) {
                     window.location.href = redirectUrl + '?language=' + encodeURIComponent(language) + '&level=' + encodeURIComponent(level);
                 } else {

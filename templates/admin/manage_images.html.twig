@@ -224,7 +224,6 @@
         // Handle edit button click
         document.querySelectorAll('.edit-image').forEach(button => {
             button.addEventListener('click', () => {
-                console.log('Edit button clicked for image ID:', button.dataset.id); // Debugging log
                 const imageId = button.dataset.id;
                 document.querySelector('#image_id').value = imageId;
                 document.querySelector('#word').value = button.dataset.word;
