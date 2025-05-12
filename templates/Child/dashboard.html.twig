@@ -577,7 +577,7 @@
             </div>
             <div id="moodDialog" class="mood-dialog">
                 <div class="mood-dialog-message" id="moodDialogMessage"></div>
-                <button class="mood-dialog-button" id="moodDialogButton">تمام!</button>
+                <button class="mood-dialog-button" id="moodDialogButton">حسنا!</button>
             </div>
         </section>
 
@@ -593,11 +593,11 @@
                     {'name': 'لعبة الصوت', 'image': 'panda.jpg', 'index': 6}
                 ] %}
                 {% for game in gameData %}
-                    <a href="{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}" class="game-container">
-                        <img src="{{ asset('images/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
-                        <div class="game-name">{{ game.name }}</div>
-                    </a>
-                {% endfor %}
+            <a href="{% if game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
+                <img src="{{ asset('images/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
+                <div class="game-name">{{ game.name }}</div>
+            </a>
+        {% endfor %}
             </div>
             <button class="scroll-button right" onclick="scrollGames(200)">❯</button>
         </section>
@@ -608,8 +608,8 @@
                 <img src="{{ asset('gifs/progress.gif') | default('https://via.placeholder.com/400x100') }}" class="progress-gif" alt="Progress GIF">
                 {% for i in 1..5 %}
                     <div class="game-progress">
-                        <span class="details">المستوى {{ gameProgress[i] ? gameProgress[i].level : 0 }} - النقاط: {{ gameProgress[i] ? gameProgress[i].score : 0 }}</span>
                         <span class="name">{{ gameData[i-1].name }}:</span>
+                        <span class="details">المستوى {{ gameProgress[i] ? gameProgress[i].level : 0 }} - النقاط: {{ gameProgress[i] ? gameProgress[i].score : 0 }}</span>
                     </div>
                 {% endfor %}
                 <button class="close-button" id="closeButton">إغلاق</button>

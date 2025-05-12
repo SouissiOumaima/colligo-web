@@ -29,3 +29,10 @@ services:
       $jeudedevinetteRepository: '@App\Repository\JeudedevinetteRepository'
       $logger: "@monolog.logger"
       $googleApiKey: "%env(GOOGLE_AI_API_KEY)%"
+
+  App\Controller\JeuController:
+    arguments:
+      $childRepository: '@App\Repository\ChildRepository'
+      $pronunciationContentRepository: '@App\Repository\PronunciationContentRepository'
+      $gameRepository: '@App\Repository\GameRepository'
+      $entityManager: "@doctrine.orm.entity_manager"
