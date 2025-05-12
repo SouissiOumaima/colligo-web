@@ -43,14 +43,14 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Handle start game button click
-            document.getElementById('start-game').addEventListener('click', () => {
-                const selectedLevel = {{ selectedLevel|default(1) }}; // Use value from controller
-                const childId = {{ childId|default(3) }}; // Use value from controller
-                const gameId = {{ gameId|default(3) }}; // Use value from controller
-                const baseUrl = '{{ path('start_game', {'level': selectedLevel|default(1)}) }}' + `?childId=${childId}&gameId=${gameId}`;
-                window.location.href = baseUrl;
-            });
+    // Handle start game button click
+    document.getElementById('start-game').addEventListener('click', () => {
+        const selectedLevel = {{ selectedLevel }}; // Value from controller
+        const childId = {{ childId }}; // Value from controller
+        const gameId = {{ gameId }}; // Value from controller
+        const baseUrl = '{{ path('start_game', {'level': selectedLevel}) }}' + `?childId=${childId}&gameId=${gameId}`;
+        window.location.href = baseUrl;
+    });
 
             // Debug: Check if the GIF is loading and its natural dimensions
             const mascot = document.querySelector('.mascot');
