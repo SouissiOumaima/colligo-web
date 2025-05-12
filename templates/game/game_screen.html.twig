@@ -17,11 +17,11 @@
             </a>
             <div class="level-info">
                 <span class="level-label">المستوى <span id="current-level">{{ currentLevel }}</span></span>
-                <span class="stage-label">المرحلة <span id="current-stage">{{ currentStage }}</span> من <span id="total-stages">3</span></span>
+                <span class="stage-label">المرحلة <span id="current-stage">{{ currentStage }}</span> من <span id="total-stages">10</span></span>
             </div>
             <div class="score-display">
                 <span class="score-icon"></span>
-                <span class="score-value" id="current-score">{{ currentScore }}</span>
+                <span class="score-value" id="current-score">{{ currentScore }} / 50</span>
             </div>
         </header>
 
@@ -37,7 +37,7 @@
 
                 <div class="progress-indicator">
                     <div class="progress-bar">
-                        <div class="progress-fill" id="stage-progress" style="width: {{ (currentStage / 3) * 100 }}%"></div>
+                        <div class="progress-fill" id="stage-progress" style="width: {{ (currentStage / 10) * 100 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -107,7 +107,6 @@
                     </div>
                     <div class="result-body">
                         <div class="result-animation" id="result-animation">
-                            <!-- Reverted to show a single GIF for both correct and incorrect answers -->
                             <img src="{{ asset('images/' ~ (isCorrect ? 'yes' : 'no') ~ '.gif') }}" alt="{{ isCorrect ? 'Correct' : 'Incorrect' }}">
                         </div>
                         <p class="result-message" id="result-message">

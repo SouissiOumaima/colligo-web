@@ -22,13 +22,13 @@ class WordGameService
     private string $selectedLanguage; // Language preference for the child
     private string $uploadDir; // Directory for uploaded images
 
-    // Game rules defining stages, points, and target times per game
+    // Game rules defining stages and max points per game
     private array $gameRules = [
-        1 => ['stagesPerLevel' => 3, 'maxPointsPerStage' => 3, 'targetTimePerStage' => 6], // Game 1
-        2 => ['stagesPerLevel' => 3, 'maxPointsPerStage' => 4, 'targetTimePerStage' => 5], // Game 2
-        3 => ['stagesPerLevel' => 3, 'maxPointsPerStage' => 3, 'targetTimePerStage' => 6], // Picture Game
-        4 => ['stagesPerLevel' => 5, 'maxPointsPerStage' => 2, 'targetTimePerStage' => 4], // Game 4
-        5 => ['stagesPerLevel' => 4, 'maxPointsPerStage' => 5, 'targetTimePerStage' => 8], // Drag-and-Drop Game
+        1 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5], // Game 1: 10 stages, 50 max points
+        2 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5], // Game 2: 10 stages, 50 max points
+        3 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5], // Picture Game: 10 stages, 50 max points
+        4 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5], // Game 4: 10 stages, 50 max points
+        5 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5], // Drag-and-Drop Game: 10 stages, 50 max points
     ];
 
     /**
@@ -64,10 +64,10 @@ class WordGameService
 
         $conn = $this->em->getConnection();
         $games = [
-            ['id' => 1, 'name' => 'Game 1'],
-            ['id' => 2, 'name' => 'Game 2'],
+            ['id' => 1, 'name' => 'guessing game'],
+            ['id' => 2, 'name' => 'fill in the blank'],
             ['id' => 3, 'name' => 'Picture Game'],
-            ['id' => 4, 'name' => 'Game 4'],
+            ['id' => 4, 'name' => 'word game'],
             ['id' => 5, 'name' => 'Drag-and-Drop Game'],
         ];
 
@@ -89,7 +89,7 @@ class WordGameService
                 'currentLevel' => 1,
                 'currentStage' => 1,
                 'currentLevelPoints' => 0,
-                'totalTriesInLevel' => 0,
+                'totalTriesInLevel' => 1, // Start with 1 try
                 'totalTimeInLevel' => 0,
                 'currentImages' => [],
                 'correctWord' => null,
@@ -123,7 +123,7 @@ class WordGameService
             'currentLevel' => min(max(1, $level), 3),
             'currentStage' => 1,
             'currentLevelPoints' => 0,
-            'totalTriesInLevel' => 0,
+            'totalTriesInLevel' => 1, // Start with 1 try for the level
             'totalTimeInLevel' => 0,
             'currentImages' => [],
             'correctWord' => null,
@@ -205,11 +205,15 @@ class WordGameService
 
         $state = $this->session->get('game_state');
         $attemptTime = min((microtime(true) - $state['startTime']), 10);
-        $state['totalTriesInLevel']++;
         $state['totalTimeInLevel'] += $attemptTime;
         $isCorrect = $selectedImageUrl === $state['correctImageUrl'];
 
-        error_log("checkAnswer: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, stage={$state['currentStage']}, isCorrect=$isCorrect, attemptTime=$attemptTime, stagesPerLevel=" . $this->getStagesPerLevel());
+        // Increment tries only if the answer is incorrect
+        if (!$isCorrect) {
+            $state['totalTriesInLevel']++;
+        }
+
+        error_log("checkAnswer: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, stage={$state['currentStage']}, isCorrect=$isCorrect, attemptTime=$attemptTime, tries={$state['totalTriesInLevel']}, stagesPerLevel=" . $this->getStagesPerLevel());
 
         if ($isCorrect) {
             $points = $this->calculatePoints($attemptTime * 1000);
@@ -254,7 +258,7 @@ class WordGameService
             $state['currentLevel']++;
             $state['currentStage'] = 1;
             $state['currentLevelPoints'] = 0;
-            $state['totalTriesInLevel'] = 0;
+            $state['totalTriesInLevel'] = 1; // Start with 1 try for the new level
             $state['totalTimeInLevel'] = 0;
             $this->session->set('game_state', $state);
             $this->loadNextRound();
@@ -263,13 +267,6 @@ class WordGameService
         }
         return false;
     }
-
-    /**
-     * Resets the database for the current child and game.
-     *
-     * @throws \Exception If childId or gameId is not set
-     */
- 
 
     /**
      * Ensures a default parent exists in the database.
@@ -312,9 +309,6 @@ class WordGameService
         }
     }
 
-    
-    
-
     /**
      * Fetches the child's language preference.
      *
@@ -340,12 +334,12 @@ class WordGameService
     private function calculatePoints(float $elapsedTimeMillis): int
     {
         if ($elapsedTimeMillis <= 3000) {
-            return 3;
+            return 5; // 5 points for response within 3 seconds
+        } elseif ($elapsedTimeMillis <= 6000) {
+            return 3; // 3 points for response between 3 and 6 seconds
+        } else {
+            return 1; // 1 point for response after 6 seconds
         }
-        if ($elapsedTimeMillis <= 6000) {
-            return 2;
-        }
-        return 1;
     }
 
     /**
@@ -435,37 +429,24 @@ class WordGameService
     public function getStagesPerLevel(): int
     {
         if ($this->gameId === null) {
-            return 3; // Default if gameId not set
+            return 10; // Default to 10 if gameId not set
         }
-        return $this->gameRules[$this->gameId]['stagesPerLevel'] ?? 3;
+        return $this->gameRules[$this->gameId]['stagesPerLevel'] ?? 10;
     }
 
     /**
-     * Gets the maximum score possible per level.
+     * Gets the maximum score possible for a level.
      *
      * @return int Maximum score
      */
     public function getMaxScorePerLevel(): int
     {
         if ($this->gameId === null) {
-            return 9; // Default if gameId not set
+            return 0; // Default if gameId not set
         }
-        $rules = $this->gameRules[$this->gameId] ?? ['stagesPerLevel' => 3, 'maxPointsPerStage' => 3];
-        return $rules['stagesPerLevel'] * $rules['maxPointsPerStage'];
-    }
-
-    /**
-     * Gets the target maximum time per level.
-     *
-     * @return int Target time in seconds
-     */
-    public function getTargetMaxTimePerLevel(): int
-    {
-        if ($this->gameId === null) {
-            return 18; // Default if gameId not set
-        }
-        $rules = $this->gameRules[$this->gameId] ?? ['stagesPerLevel' => 3, 'targetTimePerStage' => 6];
-        return $rules['stagesPerLevel'] * $rules['targetTimePerStage'];
+        $stages = $this->gameRules[$this->gameId]['stagesPerLevel'] ?? 10;
+        $maxPointsPerStage = $this->gameRules[$this->gameId]['maxPointsPerStage'] ?? 5;
+        return $stages * $maxPointsPerStage;
     }
 
     /**

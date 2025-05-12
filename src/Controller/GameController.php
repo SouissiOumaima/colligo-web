@@ -23,7 +23,7 @@ class GameController extends AbstractController
     #[Route('/main', name: 'main_menu')]
     public function mainMenu(WordGameService $wordGameService): Response
 {
-    $childId = 1; // Default or dynamic childId, adjust as needed
+    $childId = 5; // Default or dynamic childId, adjust as needed
     $gameId = 3; // Default gameId for "Picture Game", adjust as needed
     $wordGameService->setChildId($childId);
     $wordGameService->setGameId($gameId);

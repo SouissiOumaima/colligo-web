@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class ProgressController extends AbstractController
 {
     /**
-     * Displays progress data for a child and game, including scores, times, and tries.
+     * Displays progress data for a child and game, including scores, times, tries, and max scores.
      *
      * @param Request $request HTTP request
      * @param WordGameService $wordGameService Word game service
@@ -37,10 +37,12 @@ class ProgressController extends AbstractController
         $scores = [1 => 0, 2 => 0, 3 => 0];
         $times = [1 => 0, 2 => 0, 3 => 0];
         $tries = [1 => 0, 2 => 0, 3 => 0];
-        $maxScores = [];
-        $targetMaxTimes = [];
-        $scoreComparisons = [];
-        $timeComparisons = [];
+        $maxScores = [1 => 0, 2 => 0, 3 => 0];
+        $scoreComparisons = [
+            1 => ['achieved' => 0, 'max' => 0, 'percentage' => 0],
+            2 => ['achieved' => 0, 'max' => 0, 'percentage' => 0],
+            3 => ['achieved' => 0, 'max' => 0, 'percentage' => 0]
+        ];
 
         if ($childId && $gameId) {
             if ($childId <= 0 || $gameId < 1 || $gameId > 5) {
@@ -49,14 +51,6 @@ class ProgressController extends AbstractController
 
             $wordGameService->setChildId($childId);
             $wordGameService->setGameId($gameId);
-
-            $maxScorePerLevel = $wordGameService->getMaxScorePerLevel();
-            $targetMaxTimePerLevel = 30; // Hardcoded to 30 seconds
-
-            for ($level = 1; $level <= 3; $level++) {
-                $maxScores[$level] = $maxScorePerLevel;
-                $targetMaxTimes[$level] = $targetMaxTimePerLevel;
-            }
 
             // Fetch level records ordered by ID
             $levels = $em->getRepository(Level::class)->findBy(
@@ -74,52 +68,26 @@ class ProgressController extends AbstractController
                 $scores[$levelNumber] = $level->getScore() ?? 0;
                 $times[$levelNumber] = $level->getTime() ?? 0;
                 $tries[$levelNumber] = $level->getNbtries() ?? 0;
-
-                $maxScore = $maxScores[$levelNumber] ?? $maxScorePerLevel;
-                $scoreComparisons[$levelNumber] = [
-                    'achieved' => $scores[$levelNumber],
-                    'max' => $maxScore,
-                    'percentage' => $maxScore > 0 ? round(($scores[$levelNumber] / $maxScore) * 100, 1) : 0,
-                ];
-
-                $targetMaxTime = $targetMaxTimes[$levelNumber] ?? $targetMaxTimePerLevel;
-                $actualTime = $times[$levelNumber];
-                $timePercentage = $targetMaxTime > 0 ? (($targetMaxTime - $actualTime) / $targetMaxTime) * 100 : 0;
-                $timeComparisons[$levelNumber] = [
-                    'actual' => $actualTime,
-                    'targetMax' => $targetMaxTime,
-                    'percentage' => round($timePercentage, 2),
-                ];
             }
 
-            // Ensure all levels have data
+            // Set max scores and score comparisons
+            $maxScorePerLevel = $wordGameService->getMaxScorePerLevel();
             for ($level = 1; $level <= 3; $level++) {
-                if (!isset($scores[$level])) {
-                    $scores[$level] = 0;
-                    $times[$level] = 0;
-                    $tries[$level] = 0;
-                    $maxScores[$level] = $maxScorePerLevel;
-                    $targetMaxTimes[$level] = $targetMaxTimePerLevel;
-                    $scoreComparisons[$level] = [
-                        'achieved' => 0,
-                        'max' => $maxScorePerLevel,
-                        'percentage' => 0,
-                    ];
-                    $timeComparisons[$level] = [
-                        'actual' => 0,
-                        'targetMax' => $targetMaxTimePerLevel,
-                        'percentage' => 0,
-                    ];
-                }
+                $maxScores[$level] = $maxScorePerLevel;
+                $scoreComparisons[$level] = [
+                    'achieved' => $scores[$level],
+                    'max' => $maxScores[$level],
+                    'percentage' => $maxScores[$level] > 0 ? round(($scores[$level] / $maxScores[$level]) * 100) : 0
+                ];
             }
         }
 
-        $maxScore = !empty($maxScores) ? max($maxScores) : 0;
-        $maxTime = !empty($targetMaxTimes) ? max($targetMaxTimes) : 0;
+        // Calculate yAxisMax for chart scaling
         $maxScoresValue = !empty($scores) ? max($scores) : 0;
         $maxTimesValue = !empty($times) ? max($times) : 0;
         $maxTriesValue = !empty($tries) ? max($tries) : 0;
-        $yAxisMax = ceil(max($maxScore, $maxTime, $maxScoresValue, $maxTimesValue, $maxTriesValue) * 1.1);
+        $maxMaxScoresValue = !empty($maxScores) ? max($maxScores) : 0;
+        $yAxisMax = ceil(max($maxScoresValue, $maxTimesValue, $maxTriesValue, $maxMaxScoresValue) * 1.1);
 
         if ($request->isXmlHttpRequest()) {
             return new JsonResponse([
@@ -127,9 +95,7 @@ class ProgressController extends AbstractController
                 'times' => $times,
                 'tries' => $tries,
                 'maxScores' => $maxScores,
-                'targetMaxTimes' => $targetMaxTimes,
                 'scoreComparisons' => $scoreComparisons,
-                'timeComparisons' => $timeComparisons,
                 'yAxisMax' => $yAxisMax,
             ]);
         }
@@ -147,14 +113,13 @@ class ProgressController extends AbstractController
             'times' => $times,
             'tries' => $tries,
             'maxScores' => $maxScores,
-            'targetMaxTimes' => $targetMaxTimes,
             'scoreComparisons' => $scoreComparisons,
-            'timeComparisons' => $timeComparisons,
             'yAxisMax' => $yAxisMax,
             'highestLevel' => $wordGameService->getHighestLevelReached(),
             'childId' => $childId,
             'gameId' => $gameId,
             'games' => $games,
+            'parentId' => $request->query->getInt('parentId', 1), // Default parentId
         ]);
     }
 

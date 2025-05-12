@@ -145,21 +145,20 @@
                                     <th>النقاط المحققة</th>
                                     <th>عدد المحاولات</th>
                                     <th>الوقت المستغرق (ثواني)</th>
-                                    <th>الوقت المستهدف الأقصى</th>
-                                    <th>النسبة المئوية (الوقت)</th>
+                                    <th>النقاط القصوى</th>
+                                    <th>النسبة المئوية (النقاط)</th>
                                 </tr>
                             </thead>
                             <tbody id="comparison-body">
                                 {% for level in 1..3 %}
-                                    {% set scoreComparison = scoreComparisons[level] ?? {'achieved': 0, 'max': (maxScores[level] ?? 9), 'percentage': 0} %}
-                                    {% set timeComparison = timeComparisons[level] ?? {'actual': 0, 'targetMax': 30, 'percentage': 0} %}
+                                    {% set scoreComparison = scoreComparisons[level] ?? {'achieved': 0, 'max': (maxScores[level] ?? 0), 'percentage': 0} %}
                                     <tr>
                                         <td>المستوى {{ level }}</td>
                                         <td>{{ scoreComparison.achieved }}</td>
                                         <td>{{ tries[level] ?? 0 }}</td>
-                                        <td>{{ timeComparison.actual }}</td>
-                                        <td>30</td>
-                                        <td>{{ timeComparison.percentage }}%</td>
+                                        <td>{{ times[level] ?? 0 }}</td>
+                                        <td>{{ scoreComparison.max }}</td>
+                                        <td>{{ scoreComparison.percentage }}%</td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -219,7 +218,7 @@
                 return gradient;
             }
 
-            function renderChart(scores = {}, times = {}, tries = {}, maxScores = {}, targetMaxTimes = {}) {
+            function renderChart(scores = {}, times = {}, tries = {}, maxScores = {}) {
                 const chartId = 'progress-chart';
                 destroyChart(chartId);
 
@@ -233,10 +232,9 @@
                     ...Object.values(scores).map(val => val || 0),
                     ...Object.values(times).map(val => val || 0),
                     ...Object.values(tries).map(val => val || 0),
-                    ...Object.values(maxScores).map(val => val || 9),
-                    ...Object.values(targetMaxTimes).map(val => val || 30)
+                    ...Object.values(maxScores).map(val => val || 0)
                 ];
-                const maxValue = Math.max(...allValues, 30);
+                const maxValue = Math.max(...allValues, 50);
 
                 const ctx = canvas.getContext('2d');
                 chartRegistry[chartId] = new Chart(ctx, {
@@ -256,7 +254,7 @@
                             {
                                 label: 'النقاط القصوى',
                                 type: 'line',
-                                data: [maxScores[1] || 9, maxScores[2] || 9, maxScores[3] || 9],
+                                data: [maxScores[1] || 0, maxScores[2] || 0, maxScores[3] || 0],
                                 borderColor: 'rgba(246, 224, 94, 1)',
                                 backgroundColor: 'rgba(246, 224, 94, 0.2)',
                                 borderWidth: 3,
@@ -274,19 +272,6 @@
                                 borderWidth: 2,
                                 borderRadius: 5,
                                 borderSkipped: false
-                            },
-                            {
-                                label: 'الوقت المستهدف الأقصى (ثواني)',
-                                type: 'line',
-                                data: [targetMaxTimes[1] || 30, targetMaxTimes[2] || 30, targetMaxTimes[3] || 30],
-                                borderColor: 'rgba(183, 148, 244, 1)',
-                                backgroundColor: 'rgba(183, 148, 244, 0.2)',
-                                borderWidth: 3,
-                                fill: true,
-                                pointRadius: 6,
-                                pointBackgroundColor: 'rgba(183, 148, 244, 1)',
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 2
                             },
                             {
                                 label: 'عدد المحاولات',
@@ -309,9 +294,9 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                max: Math.ceil(maxValue / 5) * 5,
+                                max: Math.ceil(maxValue / 10) * 10,
                                 title: { display: true, text: 'القيم', font: { family: 'Cairo', size: 14, weight: '600' } },
-                                ticks: { font: { family: 'Cairo', size: 12 }, stepSize: 5 },
+                                ticks: { font: { family: 'Cairo', size: 12 }, stepSize: 10 },
                                 grid: { color: 'rgba(0, 0, 0, 0.05)' }
                             },
                             x: {
@@ -402,7 +387,7 @@
                 });
             }
 
-            function renderTimeChart(times = {}, targetMaxTimes = {}) {
+            function renderTimeChart(times = {}) {
                 const chartId = 'time-chart';
                 destroyChart(chartId);
 
@@ -427,19 +412,6 @@
                                 fill: true,
                                 pointRadius: 6,
                                 pointBackgroundColor: 'rgba(104, 211, 145, 1)',
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 2,
-                                tension: 0.4
-                            },
-                            {
-                                label: 'الوقت المستهدف الأقصى (ثواني)',
-                                data: [targetMaxTimes[1] || 30, targetMaxTimes[2] || 30, targetMaxTimes[3] || 30],
-                                borderColor: 'rgba(183, 148, 244, 1)',
-                                backgroundColor: createGradient(ctx, 'rgba(183, 148, 244, 0.5)', 'rgba(183, 148, 244, 0.1)'),
-                                borderWidth: 3,
-                                fill: true,
-                                pointRadius: 6,
-                                pointBackgroundColor: 'rgba(183, 148, 244, 1)',
                                 pointBorderColor: '#fff',
                                 pointBorderWidth: 2,
                                 tension: 0.4
@@ -513,17 +485,19 @@
                                 borderWidth: 2,
                                 pointBackgroundColor: 'rgba(163, 191, 250, 1)',
                                 pointBorderColor: '#fff',
-                                pointBorderWidth: 2
+                                pointBorderWidth: 2,
+                                pointRadius: 3
                             },
                             {
                                 label: 'النقاط القصوى',
-                                data: [maxScores[1] || 9, maxScores[2] || 9, maxScores[3] || 9],
+                                data: [maxScores[1] || 0, maxScores[2] || 0, maxScores[3] || 0],
                                 backgroundColor: 'rgba(246, 224, 94, 0.2)',
                                 borderColor: 'rgba(246, 224, 94, 1)',
                                 borderWidth: 2,
                                 pointBackgroundColor: 'rgba(246, 224, 94, 1)',
                                 pointBorderColor: '#fff',
-                                pointBorderWidth: 2
+                                pointBorderWidth: 0,
+                                pointRadius: 1
                             }
                         ]
                     },
@@ -537,11 +511,9 @@
                         scales: {
                             r: {
                                 beginAtZero: true,
-                                max: 15,
+                                max: 60,
                                 title: { display: true, text: 'النقاط', font: { family: 'Cairo', size: 14, weight: '600' } },
-                                ticks: { 
-                                    display: false // Hide the radial axis labels (15, 12, 9, 6, 3)
-                                },
+                                ticks: { display: false },
                                 grid: { color: 'rgba(255, 255, 255, 0.1)' },
                                 angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
                                 pointLabels: { font: { family: 'Cairo', size: 12 } }
@@ -572,9 +544,12 @@
             const parentToggle = document.querySelector('.parent-toggle');
             const childrenList = document.getElementById('children-list');
             if (parentToggle && childrenList) {
-                parentToggle.addEventListener('click', async () => {
-                    if (isFetching) return;
+                parentToggle.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    if (isFetching || childrenList.classList.contains('active')) return;
                     isFetching = true;
+
+                    console.log('Parent toggle clicked, fetching children...');
 
                     try {
                         const parentId = parentToggle.getAttribute('data-parent-id');
@@ -587,9 +562,12 @@
                         }
 
                         const children = await response.json();
+                        console.log('Children fetched:', children);
+
                         if (children.length === 0) {
                             childrenList.innerHTML = '<li>لا يوجد أطفال</li>';
-                            childrenList.classList.toggle('active');
+                            childrenList.classList.add('active');
+                            console.log('No children, toggled list:', childrenList.classList.contains('active'));
                             return;
                         }
 
@@ -602,11 +580,13 @@
                             childrenList.appendChild(li);
 
                             li.addEventListener('click', () => {
+                                console.log(`Navigating to child ${child.id}`);
                                 window.location.href = `/progress?childId=${child.id}`;
                             });
                         });
 
-                        childrenList.classList.toggle('active');
+                        childrenList.classList.add('active');
+                        console.log('Children list toggled, active state:', childrenList.classList.contains('active'));
                     } catch (error) {
                         console.error('Error fetching children:', error);
                         alert('حدث خطأ أثناء جلب قائمة الأطفال. يرجى المحاولة مرة أخرى.');
@@ -675,17 +655,23 @@
                             const scores = data.scores || { 1: 0, 2: 0, 3: 0 };
                             const times = data.times || { 1: 0, 2: 0, 3: 0 };
                             const tries = data.tries || { 1: 0, 2: 0, 3: 0 };
-                            const maxScores = data.maxScores || { 1: 9, 2: 9, 3: 9 };
-                            const targetMaxTimes = { 1: 30, 2: 30, 3: 30 };
-                            const scoreComparisons = data.scoreComparisons || { 1: { achieved: 0, max: 9, percentage: 0 }, 2: { achieved: 0, max: 9, percentage: 0 }, 3: { achieved: 0, max: 9, percentage: 0 } };
-                            const timeComparisons = data.timeComparisons || { 1: { actual: 0, targetMax: 30, percentage: 0 }, 2: { actual: 0, targetMax: 30, percentage: 0 }, 3: { actual: 0, targetMax: 30, percentage: 0 } };
+                            const maxScores = data.maxScores || { 1: 0, 2: 0, 3: 0 };
+                            const scoreComparisons = data.scoreComparisons || {
+                                1: { achieved: 0, max: 0, percentage: 0 },
+                                2: { achieved: 0, max: 0, percentage: 0 },
+                                3: { achieved: 0, max: 0, percentage: 0 }
+                            };
 
+                            // Calculate total points, time, and attempts
                             const totalPoints = Object.values(scores).reduce((a, b) => a + b, 0);
                             const totalTime = Object.values(times).reduce((a, b) => a + b, 0);
                             const totalAttempts = Object.values(tries).reduce((a, b) => a + b, 0);
-                            const maxPointsPerAttempt = 9;
-                            const totalPossiblePoints = totalAttempts * maxPointsPerAttempt;
-                            const accuracy = totalPossiblePoints > 0 ? Math.round((totalPoints / totalPossiblePoints) * 100) : 0;
+
+                            // Calculate accuracy based only on played levels
+                            const playedLevels = Object.entries(scores).filter(([_, score]) => score > 0);
+                            const totalAchieved = playedLevels.reduce((sum, [_, score]) => sum + score, 0);
+                            const totalMaxForPlayed = playedLevels.length * 50; // 50 points per level
+                            const accuracy = totalMaxForPlayed > 0 ? Math.round((totalAchieved / totalMaxForPlayed) * 100) : 0;
 
                             document.getElementById('total-points').textContent = totalPoints;
                             document.getElementById('total-time').textContent = Math.round(totalTime / 60);
@@ -696,24 +682,23 @@
                             if (tbody) {
                                 tbody.innerHTML = '';
                                 for (let level = 1; level <= 3; level++) {
-                                    const scoreComparison = scoreComparisons[level] || { achieved: 0, max: maxScores[level] || 9, percentage: 0 };
-                                    const timeComparison = timeComparisons[level] || { actual: 0, targetMax: 30, percentage: 0 };
+                                    const scoreComparison = scoreComparisons[level] || { achieved: 0, max: maxScores[level] || 0, percentage: 0 };
                                     tbody.innerHTML += `
                                         <tr>
                                             <td>المستوى ${level}</td>
                                             <td>${scoreComparison.achieved}</td>
                                             <td>${tries[level] || 0}</td>
-                                            <td>${timeComparison.actual}</td>
-                                            <td>${timeComparison.targetMax}</td>
-                                            <td>${timeComparison.percentage}%</td>
+                                            <td>${times[level] || 0}</td>
+                                            <td>${scoreComparison.max}</td>
+                                            <td>${scoreComparison.percentage}%</td>
                                         </tr>
                                     `;
                                 }
                             }
 
-                            renderChart(scores, times, tries, maxScores, targetMaxTimes);
+                            renderChart(scores, times, tries, maxScores);
                             renderTriesChart(tries);
-                            renderTimeChart(times, targetMaxTimes);
+                            renderTimeChart(times);
                             renderPointsChart(scores, maxScores);
                         } catch (error) {
                             console.error('Error fetching progress data:', error);
@@ -740,23 +725,26 @@
                 const initialScores = {{ scores|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
                 const initialTimes = {{ times|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
                 const initialTries = {{ tries|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
-                const initialMaxScores = {{ maxScores|json_encode|raw }} || { 1: 9, 2: 9, 3: 9 };
-                const initialTargetMaxTimes = { 1: 30, 2: 30, 3: 30 };
+                const initialMaxScores = {{ maxScores|json_encode|raw }} || { 1: 0, 2: 0, 3: 0 };
 
                 const initialTotalPoints = Object.values(initialScores).reduce((a, b) => a + b, 0);
                 const initialTotalTime = Object.values(initialTimes).reduce((a, b) => a + b, 0);
                 const initialTotalAttempts = Object.values(initialTries).reduce((a, b) => a + b, 0);
-                const initialMaxPoints = Object.values(initialMaxScores).reduce((a, b) => a + b, 0);
-                const initialAccuracy = initialMaxPoints > 0 ? Math.round((initialTotalPoints / initialMaxPoints) * 100) : 0;
+
+                // Calculate initial accuracy based only on played levels
+                const initialPlayedLevels = Object.entries(initialScores).filter(([_, score]) => score > 0);
+                const initialTotalAchieved = initialPlayedLevels.reduce((sum, [_, score]) => sum + score, 0);
+                const initialTotalMaxForPlayed = initialPlayedLevels.length * 50; // 50 points per level
+                const initialAccuracy = initialTotalMaxForPlayed > 0 ? Math.round((initialTotalAchieved / initialTotalMaxForPlayed) * 100) : 0;
 
                 document.getElementById('total-points').textContent = initialTotalPoints;
                 document.getElementById('total-time').textContent = Math.round(initialTotalTime / 60);
                 document.getElementById('total-attempts').textContent = initialTotalAttempts;
                 document.getElementById('accuracy-percentage').textContent = initialAccuracy;
 
-                renderChart(initialScores, initialTimes, initialTries, initialMaxScores, initialTargetMaxTimes);
+                renderChart(initialScores, initialTimes, initialTries, initialMaxScores);
                 renderTriesChart(initialTries);
-                renderTimeChart(initialTimes, initialTargetMaxTimes);
+                renderTimeChart(initialTimes);
                 renderPointsChart(initialScores, initialMaxScores);
             {% endif %}
         });
@@ -847,31 +835,26 @@
         }
 
         .children-list {
+            display: none;
             list-style: none;
             padding: 0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
+            margin: 0;
         }
 
         .children-list.active {
-            max-height: 500px;
+            display: block;
         }
 
         .child-item {
             padding: 10px;
-            font-size: 16px;
-            color: #555;
             cursor: pointer;
-            border-radius: 5px;
-            margin-bottom: 5px;
-            transition: background 0.2s, transform 0.2s;
+            color: #333;
+            transition: background 0.3s;
             font-family: 'Cairo', sans-serif;
         }
 
         .child-item:hover {
-            background: #e0e7ff;
-            transform: translateX(5px);
+            background: rgba(123, 97, 255, 0.1);
         }
 
         .container {
@@ -924,6 +907,7 @@
         .game-card:hover .game-icon {
             transform: scale(1.1);
         }
+        
 
         .game-name {
             font-size: 16px;
@@ -1067,44 +1051,96 @@
             backdrop-filter: blur(10px);
         }
 
-        .comparison-table th, .comparison-table td {
+        .comparison-table th,
+        .comparison-table td {
             padding: 15px;
             text-align: center;
             font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            color: #333;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .comparison-table th {
             background: rgba(123, 97, 255, 0.3);
-            color: #333;
             font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
         }
 
-        .comparison-table td {
-            color: #555;
-        }
-
-        .comparison-table tr:last-child td {
-            border-bottom: none;
+        .comparison-table tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .comparison-table tr:hover {
-            background: rgba(123, 97, 255, 0.1);
+            background: rgba(123, 97, 255, 0.2);
+            transition: background 0.3s;
+        }
+
+        .achievement-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            animation: slideIn 0.5s ease;
+        }
+
+        .badge-icon {
+            width: 40px;
+            height: 40px;
+            background: url('{{ asset('images/badge-icon.png') }}') no-repeat center;
+            background-size: cover;
+        }
+
+        .badge-content h3 {
+            font-size: 18px;
+            color: #7b61ff;
+            margin-bottom: 5px;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        .badge-content p {
+            font-size: 14px;
+            color: #333;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+            }
+
             .sidebar {
-                transform: translateX(-100%);
-                width: 200px;
+                width: 100%;
+                position: relative;
+                transform: translateX(0);
             }
 
             .sidebar.collapsed {
-                transform: translateX(0);
+                transform: translateX(-100%);
             }
 
             .container {
                 margin-left: 0;
                 padding: 20px;
+            }
+
+            .game-cards {
+                flex-direction: column;
+                align-items: center;
             }
 
             .other-charts-section {
@@ -1115,15 +1151,39 @@
                 grid-template-columns: 1fr;
             }
 
-            .game-icon {
-                width: 120px;
-                height: 120px;
+            .comparison-table th,
+            .comparison-table td {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chart-container {
+                height: 300px;
+            }
+
+            .chart-container h3 {
+                font-size: 16px;
+            }
+
+            .stat-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stat-icon {
+                margin-bottom: 10px;
+            }
+
+            .comparison-table {
+                font-size: 12px;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 8px;
             }
         }
     </style>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script src="{{ asset('js/progress.js') }}"></script>
 {% endblock %}
