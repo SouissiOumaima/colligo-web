@@ -27,7 +27,6 @@ class DragdropType extends AbstractType
             ->add('niveau', ChoiceType::class, [
                 'label' => 'Niveau',
                 'choices' => [
-                    'Niveau 0' => 0,
                     'Niveau 1' => 1,
                     'Niveau 2' => 2,
                     'Niveau 3' => 3,

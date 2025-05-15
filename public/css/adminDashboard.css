@@ -157,7 +157,7 @@ html, body {
 .table-card {
     padding: 20px !important;
     background: #f7f5fa !important;
-    color: #2d3748 !important; /* Darker text color for readability */
+    color: #2d3748 !important;
     border-radius: 10px !important;
     border: 1px solid rgba(0, 0, 0, 0.05) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
@@ -173,7 +173,7 @@ html, body {
     font-size: 20px !important;
     font-weight: 600 !important;
     margin-bottom: 15px !important;
-    color: #333 !important; /* Match chart title color */
+    color: #333 !important; 
 }
 
 /* Glass Table */
@@ -326,6 +326,7 @@ html, body {
     margin-left: 180px !important;
     overflow-x: auto !important;
     padding-bottom: 10px !important;
+    flex-wrap: wrap !important; 
 }
 
 /* Game Card */
@@ -336,7 +337,7 @@ html, body {
     backdrop-filter: blur(5px) !important;
     -webkit-backdrop-filter: blur(5px) !important;
     border: 1px solid rgba(0, 0, 0, 0.05) !important;
-    width: 100 !important;
+    width: 150px !important; /* Fixed width for consistency */
     height: 150px !important;
     display: flex !important;
     flex-direction: column !important;
@@ -346,6 +347,8 @@ html, body {
     border-radius: 10px !important;
     padding: 10px !important;
     color: #2d3748 !important;
+    flex: 0 0 auto !important; 
+    box-sizing: border-box !important; 
 }
 
 .game-card i {
@@ -362,6 +365,7 @@ html, body {
     margin: 0 !important;
     white-space: normal !important;
     text-align: center !important;
+    overflow-wrap: break-word !important; 
 }
 
 .game-card:hover i {
@@ -488,16 +492,23 @@ html, body {
         height: 200px !important;
     }
 
+    .game-cards-container {
+        margin-left: 0 !important;
+        justify-content: center !important;
+        padding: 0 10px !important; 
+    }
+
     .game-card {
-        width: 100 !important;
-        height: 120px !important;
+        width: 100px !important;
+        height: 100px !important;
+        flex: 0 0 100px !important; 
     }
 
     .game-card i {
-        font-size: 30px !important;
+        font-size: 25px !important;
     }
 
     .game-card .card-label {
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
 }

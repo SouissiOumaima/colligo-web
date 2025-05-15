@@ -1298,6 +1298,122 @@ class AdminController extends AbstractController
         return $this->redirectToRoute('admin_themes');
     }
 
+
+
+    
+   #[Route('/dragdrop', name: 'admin_dragdrop_content', methods: ['GET', 'POST'])]
+    public function manageContent(Request $request, DragdropRepository $repository, EntityManagerInterface $entityManager): Response
+    {
+        // Define valid languages at the method level
+        $validLanguages = ['Français', 'English', 'Espagnol', 'Allemand'];
+
+        // Manual Creation Form
+        $dragdrop = new Dragdrop();
+        $form = $this->createForm(DragdropType::class, $dragdrop);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($dragdrop);
+            $entityManager->flush();
+            $this->addFlash('success', 'Phrase ajoutée avec succès !');
+            return $this->redirectToRoute('admin_dragdrop_content');
+        }
+
+        // AI Generation
+        $language = $request->request->get('language'); // Required, no default
+        $level = (int) $request->request->get('level', 1); // Default to 1 (Niveau 1)
+        $generatedSentences = [];
+
+        if ($request->isMethod('POST') && $request->request->has('generate')) {
+            if (!$language || !in_array($language, $validLanguages)) {
+                $this->addFlash('error', 'Veuillez sélectionner une langue valide.');
+                $language = 'Français';
+            }
+            $prompt = $this->buildPrompt($language, $level);
+            $result = $this->callApi($prompt);
+            $generatedSentences = $result ? $this->parseDualLanguageResponse($result, $level) : $this->getFallbackSentences($language, $level);
+        }
+
+        // Save Generated Sentences
+        $selectedSentences = $request->request->all('sentences');
+        $saveLanguage = $request->request->get('save_language', $language ?? 'Français');
+
+        if ($request->isMethod('POST') && $request->request->has('save_generated') && is_array($selectedSentences) && !empty($selectedSentences)) {
+            foreach ($selectedSentences as $sentenceText) {
+                if (is_string($sentenceText) && trim($sentenceText) !== '') {
+                    $sentenceParts = explode(' | ', $sentenceText, 2);
+                    $originalSentence = trim($sentenceParts[0]);
+                    $arabicTranslation = isset($sentenceParts[1]) ? trim($sentenceParts[1]) : 'ترجمة افتراضية';
+                    $dragdropEntity = new Dragdrop();
+                    $dragdropEntity->setPhrase($originalSentence);
+                    $dragdropEntity->setArabicTranslation($arabicTranslation);
+                    $dragdropEntity->setNiveau($level);
+                    $saveLanguage = $saveLanguage ?? 'Français';
+                    if (!in_array($saveLanguage, $validLanguages)) {
+                        $saveLanguage = 'Français';
+                    }
+                    $dragdropEntity->setLangue($saveLanguage);
+                    $entityManager->persist($dragdropEntity);
+                }
+            }
+            $entityManager->flush();
+            $this->addFlash('success', 'Phrases enregistrées avec succès !');
+            return $this->redirectToRoute('admin_dragdrop_content');
+        } elseif ($request->request->has('save_generated') && (!is_array($selectedSentences) || empty($selectedSentences))) {
+            $this->addFlash('error', 'Veuillez sélectionner au moins une phrase à enregistrer.');
+        }
+
+        $dragdrops = $repository->findAll();
+
+        return $this->render('admin/dragdrop_content.html.twig', [
+            'form' => $form->createView(),
+            'dragdrops' => $dragdrops,
+            'language' => $language ?? 'Français',
+            'level' => $level,
+            'generatedSentences' => $generatedSentences,
+        ]);
+    }
+
+    #[Route('/dragdrop/add', name: 'admin_dragdrop_add', methods: ['GET', 'POST'])]
+    public function addContent(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $dragdrop = new Dragdrop();
+        $form = $this->createForm(DragdropType::class, $dragdrop);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($dragdrop);
+            $entityManager->flush();
+            $this->addFlash('success', 'Phrase ajoutée avec succès !');
+            return $this->redirectToRoute('admin_dragdrop_content');
+        }
+
+        return $this->render('admin/add_dragdrop.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+    #[Route('/dragdrop/delete/{id}', name: 'admin_dragdrop_delete', methods: ['POST'])]
+    public function deleteContent(int $id, DragdropRepository $repository, EntityManagerInterface $entityManager): Response
+    {
+        $dragdrop = $repository->find($id);
+
+        if (!$dragdrop) {
+            $this->addFlash('error', 'Phrase non trouvée.');
+            return $this->redirectToRoute('admin_dragdrop_content');
+        }
+
+        try {
+            $entityManager->remove($dragdrop);
+            $entityManager->flush();
+            $this->addFlash('success', 'Phrase supprimée avec succès !');
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de la suppression de la phrase : ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('admin_dragdrop_content');
+    }
+
     private function buildPrompt(string $language, int $level): string
     {
         $langCode = match (strtolower($language)) {
@@ -1308,7 +1424,6 @@ class AdminController extends AbstractController
             default => 'fr',
         };
         return match ($level) {
-            0 => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to understand. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The cat sleeps\", \"arabicTranslation\": \"القط ينام\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
             1 => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
             2 => "Generate exactly 10 unique, slightly more complex but still child-friendly sentences in the language code '$langCode'. Each sentence must have 4 to 6 words suitable for drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The dog runs in the park\", \"arabicTranslation\": \"الكلب يركض في الحديقة\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
             3 => "Generate exactly 10 unique, moderately complex child-friendly sentences in the language code '$langCode'. Each sentence must have 5 to 7 words suitable for advanced drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The girl reads a book quietly\", \"arabicTranslation\": \"الفتاة تقرأ كتابًا بهدوء\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
@@ -1401,18 +1516,6 @@ class AdminController extends AbstractController
     private function getFallbackSentences(string $language, int $level): array
     {
         $fallbackSentences = [
-            0 => [
-                'The sun shines | الشمس تشرق',
-                'Je mange une pomme | أتناول تفاحة',
-                'El sol brilla | الشمس تشرق',
-                'Die Sonne scheint | الشمس تشرق',
-                'I eat an apple | أتناول تفاحة',
-                'The dog barks | الكلب ينبح',
-                'Nous jouons ensemble | نلعب معًا',
-                'Jugamos juntos | نلعب معًا',
-                'Wir spielen zusammen | نلعب معًا',
-                'Birds fly high | الطيور تطير عاليًا',
-            ],
             1 => [
                 'I like to play | أحب اللعب',
                 'J’aime jouer | أحب اللعب',
@@ -1452,73 +1555,5 @@ class AdminController extends AbstractController
         ];
 
         return $fallbackSentences[$level] ?? $fallbackSentences[1];
-    }
-     #[Route('/dragdrop', name: 'admin_dragdrop_content', methods: ['GET', 'POST'])]
-    public function manageContent(Request $request): Response
-    {
-        $validLanguages = ['Français', 'English', 'Espagnol', 'Allemand'];
-
-        $dragdrop = new Dragdrop();
-        $form = $this->createForm(DragdropType::class, $dragdrop);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $this->entityManager->persist($dragdrop);
-            $this->entityManager->flush();
-            $this->addFlash('success', 'Phrase ajoutée avec succès !');
-            return $this->redirectToRoute('admin_dragdrop_content');
-        }
-
-        $language = $request->request->get('language');
-        $level = (int) $request->request->get('level', 0);
-        $generatedSentences = [];
-
-        if ($request->isMethod('POST') && $request->request->has('generate')) {
-            if (!$language || !in_array($language, $validLanguages)) {
-                $this->addFlash('error', 'Veuillez sélectionner une langue valide.');
-                $language = 'Français';
-            }
-            $prompt = $this->buildPrompt($language, $level);
-            $result = $this->callApi($prompt);
-            $generatedSentences = $result ? $this->parseDualLanguageResponse($result, $level) : $this->getFallbackSentences($language, $level);
-        }
-
-        $selectedSentences = $request->request->all('sentences');
-        $saveLanguage = $request->request->get('save_language', $language ?? 'Français');
-
-        if ($request->isMethod('POST') && $request->request->has('save_generated') && is_array($selectedSentences) && !empty($selectedSentences)) {
-            foreach ($selectedSentences as $sentenceText) {
-                if (is_string($sentenceText) && trim($sentenceText) !== '') {
-                    $sentenceParts = explode(' | ', $sentenceText, 2);
-                    $originalSentence = trim($sentenceParts[0]);
-                    $arabicTranslation = isset($sentenceParts[1]) ? trim($sentenceParts[1]) : 'ترجمة افتراضية';
-                    $dragdropEntity = new Dragdrop();
-                    $dragdropEntity->setPhrase($originalSentence);
-                    $dragdropEntity->setArabicTranslation($arabicTranslation);
-                    $dragdropEntity->setNiveau($level);
-                    $saveLanguage = $saveLanguage ?? 'Français';
-                    if (!in_array($saveLanguage, $validLanguages)) {
-                        $saveLanguage = 'Français';
-                    }
-                    $dragdropEntity->setLangue($saveLanguage);
-                    $this->entityManager->persist($dragdropEntity);
-                }
-            }
-            $this->entityManager->flush();
-            $this->addFlash('success', 'Phrases enregistrées avec succès !');
-            return $this->redirectToRoute('admin_dragdrop_content');
-        } elseif ($request->request->has('save_generated') && (!is_array($selectedSentences) || empty($selectedSentences))) {
-            $this->addFlash('error', 'Veuillez sélectionner au moins une phrase à enregistrer.');
-        }
-
-        $dragdrops = $this->dragdropRepository->findAll();
-
-        return $this->render('admin/dragdrop_content.html.twig', [
-            'form' => $form->createView(),
-            'dragdrops' => $dragdrops,
-            'language' => $language ?? 'Français',
-            'level' => $level,
-            'generatedSentences' => $generatedSentences,
-        ]);
     }
 }
