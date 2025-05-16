@@ -593,11 +593,11 @@
                     {'name': 'لعبة الصوت', 'image': 'panda.jpg', 'index': 6}
                 ] %}
                 {% for game in gameData %}
-            <a href="{% if game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
-                <img src="{{ asset('images/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
-                <div class="game-name">{{ game.name }}</div>
-            </a>
-        {% endfor %}
+                    <a href="{% if game.index == 2 %}{{ path('fill_in_the_blank_cover', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% elseif game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
+                        <img src="{{ asset('images/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
+                        <div class="game-name">{{ game.name }}</div>
+                    </a>
+                {% endfor %}
             </div>
             <button class="scroll-button right" onclick="scrollGames(200)">❯</button>
         </section>

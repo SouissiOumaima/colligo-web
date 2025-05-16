@@ -2,102 +2,104 @@
 
 namespace App\Entity;
 
+use App\Repository\Fill_in_the_blankRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: Fill_in_the_blankRepository::class)]
+#[ORM\Table(name: 'fill_in_the_blank')]
 class Fill_in_the_blank
 {
-
     #[ORM\Id]
-    #[ORM\Column(type: "integer")]
-    private int $id;
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: 'id')]
+    private ?int $id = null;
 
-    #[ORM\Column(type: "text")]
-    private string $questionText;
+    #[ORM\Column(name: 'questionText', length: 255)]
+    private ?string $questionText = null;
 
-    #[ORM\Column(type: "string", length: 255)]
-    private string $correctAnswer;
+    #[ORM\Column(name: 'correctAnswer', length: 100)]
+    private ?string $correctAnswer = null;
 
-    #[ORM\Column(type: "integer")]
-    private int $level;
+    #[ORM\Column(name: 'allAnswers', type: 'json')]
+    private array $allAnswers = [];
 
-    #[ORM\Column(type: "string", length: 50)]
-    private string $language;
+    #[ORM\Column(name: 'theme', length: 100)]
+    private ?string $theme = null;
 
-    #[ORM\Column(type: "string", length: 50)]
-    private string $theme;
+    #[ORM\Column(name: 'level')]
+    private ?int $level = null;
 
-    #[ORM\Column(type: "string")]
-    private string $allAnswers;
+    #[ORM\Column(name: 'language', length: 50)]
+    private ?string $language = null;
 
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function setId($value)
-    {
-        $this->id = $value;
-    }
-
-    public function getQuestionText()
+    public function getQuestionText(): ?string
     {
         return $this->questionText;
     }
 
-    public function setQuestionText($value)
+    public function setQuestionText(string $questionText): static
     {
-        $this->questionText = $value;
+        $this->questionText = $questionText;
+        return $this;
     }
 
-    public function getCorrectAnswer()
+    public function getCorrectAnswer(): ?string
     {
         return $this->correctAnswer;
     }
 
-    public function setCorrectAnswer($value)
+    public function setCorrectAnswer(string $correctAnswer): static
     {
-        $this->correctAnswer = $value;
+        $this->correctAnswer = $correctAnswer;
+        return $this;
     }
 
-    public function getLevel()
-    {
-        return $this->level;
-    }
-
-    public function setLevel($value)
-    {
-        $this->level = $value;
-    }
-
-    public function getLanguage()
-    {
-        return $this->language;
-    }
-
-    public function setLanguage($value)
-    {
-        $this->language = $value;
-    }
-
-    public function getTheme()
-    {
-        return $this->theme;
-    }
-
-    public function setTheme($value)
-    {
-        $this->theme = $value;
-    }
-
-    public function getAllAnswers()
+    public function getAllAnswers(): array
     {
         return $this->allAnswers;
     }
 
-    public function setAllAnswers($value)
+    public function setAllAnswers(array $allAnswers): static
     {
-        $this->allAnswers = $value;
+        $this->allAnswers = $allAnswers;
+        return $this;
+    }
+
+    public function getTheme(): ?string
+    {
+        return $this->theme;
+    }
+
+    public function setTheme(string $theme): static
+    {
+        $this->theme = $theme;
+        return $this;
+    }
+
+    public function getLevel(): ?int
+    {
+        return $this->level;
+    }
+
+    public function setLevel(int $level): static
+    {
+        $this->level = $level;
+        return $this;
+    }
+
+    public function getLanguage(): ?string
+    {
+        return $this->language;
+    }
+
+    public function setLanguage(string $language): static
+    {
+        $this->language = $language;
+        return $this;
     }
 }
