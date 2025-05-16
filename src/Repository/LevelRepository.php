@@ -25,5 +25,17 @@ class LevelRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    // Add custom methods as needed
+    public function findMaxIdForGameAndChild(int $gameId, int $childId): ?int
+    {
+        $result = $this->createQueryBuilder('l')
+            ->select('MAX(l.id)')
+            ->andWhere('l.gameId = :gameId')
+            ->andWhere('l.childId = :childId')
+            ->setParameter('gameId', $gameId)
+            ->setParameter('childId', $childId)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $result ? (int) $result : 1;
+    }
 }

@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Repository\LevelRepository;
 
 class JeudedevinetteController extends AbstractController
 {
@@ -21,17 +22,21 @@ class JeudedevinetteController extends AbstractController
     private JeudedevinetteRepository $JeudedevinetteRepository;
     private EntityManagerInterface $entityManager;
     private LoggerInterface $logger;
+    private LevelRepository $levelRepository;
 
     public function __construct(
         ChildRepository $childRepository,
         JeudedevinetteRepository $JeudedevinetteRepository,
         EntityManagerInterface $entityManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        LevelRepository $levelRepository
     ) {
         $this->childRepository = $childRepository;
         $this->JeudedevinetteRepository = $JeudedevinetteRepository;
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+        $this->levelRepository = $levelRepository;
+
     }
 
     #[Route('/Jeudedevinette/{id}', name: 'Jeudedevinette_show', methods: ['GET'])]
@@ -71,7 +76,8 @@ class JeudedevinetteController extends AbstractController
             ]);
 
             // Récupérer le dernier niveau de l'enfant depuis la table level
-            $lastLevel = $child->getLevels()->last() ? $child->getLevels()->last()->getId() : 1;
+            $lastLevel = $this->levelRepository->findMaxIdForGameAndChild(1, $childId) ?? 1;
+
 
             // Initialize session
             $session->start();
