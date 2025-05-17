@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Level;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Exception as DBALException;
 
 /**
  * Service for managing game progress, including scores and metrics, and ensuring necessary entities exist.
@@ -26,30 +27,61 @@ class ProgressService
         $this->em = $em;
     }
 
-    private function ensureParentExists(int $parentId = 1): void
+    private function ensureParentExists(int $parentId): void
     {
         $conn = $this->em->getConnection();
-        $parentExists = $conn->executeQuery('SELECT 1 FROM parent WHERE parentId = ?', [$parentId])->fetchOne();
+        try {
+            $parentExists = $conn->executeQuery('SELECT 1 FROM parent WHERE parentId = ?', [$parentId])->fetchOne();
 
-        if (!$parentExists) {
-            $conn->executeStatement(
-                'INSERT INTO parent (parentId, email, password) VALUES (?, ?, ?)',
-                [$parentId, 'default@example.com', password_hash('defaultpassword', PASSWORD_DEFAULT)]
-            );
+            if (!$parentExists) {
+                $conn->executeStatement(
+                    'INSERT INTO parent (parentId, email, password) VALUES (?, ?, ?)',
+                    [$parentId, 'default@example.com', password_hash('defaultpassword', PASSWORD_DEFAULT)]
+                );
+            }
+        } catch (DBALException $e) {
+            throw new \RuntimeException('Failed to ensure parent exists: ' . $e->getMessage());
         }
     }
 
-    public function ensureChildExists(int $childId): void
+    public function ensureChildExists(int $childId, int $parentId, int $age, string $name = 'Default Child', string $language = 'English'): void
     {
         $conn = $this->em->getConnection();
-        $this->ensureParentExists();
-        $childExists = $conn->executeQuery('SELECT 1 FROM child WHERE childId = ?', [$childId])->fetchOne();
+        try {
+            $this->ensureParentExists($parentId);
+            $childExists = $conn->executeQuery('SELECT 1 FROM child WHERE childId = ?', [$childId])->fetchOne();
 
-        if (!$childExists) {
-            $conn->executeStatement(
-                'INSERT INTO child (childId, parentId, name, age, language) VALUES (?, ?, ?, ?, ?)',
-                [$childId, 1, 'Default Child', 8, 'English']
-            );
+            if (!$childExists) {
+                $conn->executeStatement(
+                    'INSERT INTO child (childId, parentId, name, age, language) VALUES (?, ?, ?, ?, ?)',
+                    [$childId, $parentId, $name, $age, $language]
+                );
+            }
+        } catch (DBALException $e) {
+            throw new \RuntimeException('Failed to ensure child exists: ' . $e->getMessage());
+        }
+    }
+
+    public function fetchChildDetails(int $childId): array
+    {
+        $conn = $this->em->getConnection();
+        try {
+            $result = $conn->executeQuery(
+                'SELECT parentId, age FROM child WHERE childId = ?',
+                [$childId]
+            )->fetchAssociative();
+
+            if (!$result) {
+                // If childId doesn't exist, return defaults
+                return ['parentId' => 1, 'age' => 8];
+            }
+
+            return [
+                'parentId' => $result['parentId'] ?? 1, // Default to 1 if NULL
+                'age' => $result['age'] ?? 8, // Default to 8 if NULL
+            ];
+        } catch (DBALException $e) {
+            throw new \RuntimeException('Failed to fetch child details: ' . $e->getMessage());
         }
     }
 
@@ -64,11 +96,15 @@ class ProgressService
             ['id' => 5, 'name' => 'Drag-and-Drop Game'],
         ];
 
-        foreach ($games as $game) {
-            $exists = $conn->executeQuery('SELECT 1 FROM game WHERE id = ?', [$game['id']])->fetchOne();
-            if (!$exists) {
-                $conn->executeStatement('INSERT INTO game (id, name) VALUES (?, ?)', [$game['id'], $game['name']]);
+        try {
+            foreach ($games as $game) {
+                $exists = $conn->executeQuery('SELECT 1 FROM game WHERE id = ?', [$game['id']])->fetchOne();
+                if (!$exists) {
+                    $conn->executeStatement('INSERT INTO game (id, name) VALUES (?, ?)', [$game['id'], $game['name']]);
+                }
             }
+        } catch (DBALException $e) {
+            throw new \RuntimeException('Failed to ensure games exist: ' . $e->getMessage());
         }
     }
 
@@ -97,46 +133,50 @@ class ProgressService
             3 => ['achieved' => 0, 'max' => 0, 'percentage' => 0]
         ];
 
-        $levels = $this->em->getRepository(Level::class)->findBy(
-            ['childId' => $childId, 'gameId' => $gameId],
-            ['id' => 'ASC']
-        );
+        try {
+            $levels = $this->em->getRepository(Level::class)->findBy(
+                ['childId' => $childId, 'gameId' => $gameId],
+                ['id' => 'ASC']
+            );
 
-        foreach ($levels as $index => $level) {
-            $levelNumber = $index + 1;
-            if ($levelNumber > 3) {
-                break;
+            foreach ($levels as $index => $level) {
+                $levelNumber = $index + 1;
+                if ($levelNumber > 3) {
+                    break;
+                }
+
+                $scores[$levelNumber] = $level->getScore() ?? 0;
+                $times[$levelNumber] = $level->getTime() ?? 0;
+                $tries[$levelNumber] = $level->getNbtries() ?? 0;
             }
 
-            $scores[$levelNumber] = $level->getScore() ?? 0;
-            $times[$levelNumber] = $level->getTime() ?? 0;
-            $tries[$levelNumber] = $level->getNbtries() ?? 0;
-        }
+            $maxScorePerLevel = $this->getMaxScorePerLevel();
+            for ($level = 1; $level <= 3; $level++) {
+                $maxScores[$level] = $maxScorePerLevel;
+                $scoreComparisons[$level] = [
+                    'achieved' => $scores[$level],
+                    'max' => $maxScores[$level],
+                    'percentage' => $maxScores[$level] > 0 ? round(($scores[$level] / $maxScores[$level]) * 100) : 0
+                ];
+            }
 
-        $maxScorePerLevel = $this->getMaxScorePerLevel();
-        for ($level = 1; $level <= 3; $level++) {
-            $maxScores[$level] = $maxScorePerLevel;
-            $scoreComparisons[$level] = [
-                'achieved' => $scores[$level],
-                'max' => $maxScores[$level],
-                'percentage' => $maxScores[$level] > 0 ? round(($scores[$level] / $maxScores[$level]) * 100) : 0
+            $maxScoresValue = !empty($scores) ? max($scores) : 0;
+            $maxTimesValue = !empty($times) ? max($times) : 0;
+            $maxTriesValue = !empty($tries) ? max($tries) : 0;
+            $maxMaxScoresValue = !empty($maxScores) ? max($maxScores) : 0;
+            $yAxisMax = ceil(max($maxScoresValue, $maxTimesValue, $maxTriesValue, $maxMaxScoresValue) * 1.1);
+
+            return [
+                'scores' => $scores,
+                'times' => $times,
+                'tries' => $tries,
+                'maxScores' => $maxScores,
+                'scoreComparisons' => $scoreComparisons,
+                'yAxisMax' => $yAxisMax,
             ];
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to retrieve progress data: ' . $e->getMessage());
         }
-
-        $maxScoresValue = !empty($scores) ? max($scores) : 0;
-        $maxTimesValue = !empty($times) ? max($times) : 0;
-        $maxTriesValue = !empty($tries) ? max($tries) : 0;
-        $maxMaxScoresValue = !empty($maxScores) ? max($maxScores) : 0;
-        $yAxisMax = ceil(max($maxScoresValue, $maxTimesValue, $maxTriesValue, $maxMaxScoresValue) * 1.1);
-
-        return [
-            'scores' => $scores,
-            'times' => $times,
-            'tries' => $tries,
-            'maxScores' => $maxScores,
-            'scoreComparisons' => $scoreComparisons,
-            'yAxisMax' => $yAxisMax,
-        ];
     }
 
     public function setChildId(int $childId): void

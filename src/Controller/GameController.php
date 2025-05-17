@@ -20,7 +20,8 @@ class GameController extends AbstractController
     {
         $childId = 1;
         $gameId = 3;
-        $progressService->ensureChildExists($childId);
+        $childDetails = $progressService->fetchChildDetails($childId);
+        $progressService->ensureChildExists($childId, $childDetails['parentId'], $childDetails['age']);
         $progressService->ensureGamesExist($gameId);
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
@@ -45,7 +46,8 @@ class GameController extends AbstractController
             throw new BadRequestHttpException('Invalid childId or gameId.');
         }
 
-        $progressService->ensureChildExists($childId);
+        $childDetails = $progressService->fetchChildDetails($childId);
+        $progressService->ensureChildExists($childId, $childDetails['parentId'], $childDetails['age']);
         $progressService->ensureGamesExist($gameId);
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
@@ -68,7 +70,8 @@ class GameController extends AbstractController
             throw new BadRequestHttpException('Invalid childId or gameId.');
         }
 
-        $progressService->ensureChildExists($childId);
+        $childDetails = $progressService->fetchChildDetails($childId);
+        $progressService->ensureChildExists($childId, $childDetails['parentId'], $childDetails['age']);
         $progressService->ensureGamesExist($gameId);
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
@@ -110,7 +113,8 @@ class GameController extends AbstractController
             throw new BadRequestHttpException('Invalid childId or gameId.');
         }
 
-        $progressService->ensureChildExists($childId);
+        $childDetails = $progressService->fetchChildDetails($childId);
+        $progressService->ensureChildExists($childId, $childDetails['parentId'], $childDetails['age']);
         $progressService->ensureGamesExist($gameId);
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
