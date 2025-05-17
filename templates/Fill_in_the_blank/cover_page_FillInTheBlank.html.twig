@@ -230,8 +230,10 @@
             <div class="info-text">
                 <span style="margin-left: 10px;">🌐</span> اللغة: {{ language|default('غير محدد') }}
             </div>
-            <img src="{{ asset('Gifs/salut_oumaima.gif') }}" class="gif-image" alt="Salut GIF">
-            <a href="{{ path('fill_in_the_blank_play', {'parentId': parent_id, 'childId': child_id}) }}" class="button start-button">ابدأ</a>
+            <video class="gif-image" autoplay muted loop playsinline>
+                <source src="{{ asset('videos/pilot.mp4') | default('https://www.w3schools.com/html/mov_bbb.mp4') }}" type="video/mp4">
+                متصفحك لا يدعم تشغيل الفيديو.
+            </video>            <a href="{{ path('fill_in_the_blank_play', {'parentId': parent_id, 'childId': child_id}) }}" class="button start-button">ابدأ</a>
             <a href="{{ path('child_dashboard', {'parentId': parent_id, 'childId': child_id}) }}" class="button back-button">ارجع للألعاب</a>
         </div>
     </div>

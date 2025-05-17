@@ -585,16 +585,16 @@
             <button class="scroll-button left" onclick="scrollGames(-200)">❮</button>
             <div class="games-grid">
                 {% set gameData = [
-                    {'name': 'لعبة الكلمة الدخيلة', 'image': 'cat.jpg', 'index': 1},
-                    {'name': 'لعبة الكلمات', 'image': 'bunny.png', 'index': 2},
-                    {'name': 'لعبة الجمل', 'image': 'dog.png', 'index': 3},
-                    {'name': 'لعبة الصور', 'image': 'elephant.jpg', 'index': 4},
-                    {'name': 'لعبة المطابقة', 'image': 'monkey.jpg', 'index': 5},
-                    {'name': 'لعبة الصوت', 'image': 'panda.jpg', 'index': 6}
+                    {'name': 'لعبة الكلمة الدخيلة', 'image': 'medecin.jpg', 'index': 1},
+                    {'name': 'لعبة الكلمات', 'image': 'pilote.jpg', 'index': 2},
+                    {'name': 'لعبة الجمل', 'image': 'dentist.png', 'index': 3},
+                    {'name': 'لعبة الصور', 'image': 'enseignant.jpg', 'index': 4},
+                    {'name': 'لعبة المطابقة', 'image': 'chauffeur.png', 'index': 5},
+                    {'name': 'لعبة الصوت', 'image': 'musicien.jpg', 'index': 6}
                 ] %}
                 {% for game in gameData %}
                     <a href="{% if game.index == 2 %}{{ path('fill_in_the_blank_cover', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% elseif game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
-                        <img src="{{ asset('images/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
+                        <img src="{{ asset('images/proffessions/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
                         <div class="game-name">{{ game.name }}</div>
                     </a>
                 {% endfor %}
