@@ -163,7 +163,7 @@ class AIService
         //$examples = $this->getExamplesForLanguage($language);
 
         return sprintf(
-            "You are an expert in generating educational content. Generate exactly 5 distinct and varied 'Fill in the Blanks' questions in %s on the theme '%s'. " .
+            "You are an expert in generating educational content. Generate exactly 10 distinct and varied 'Fill in the Blanks' questions in %s on the theme '%s'. " .
                 "Difficulty level: %d (1 = easy, 2 = medium, 3 = hard). " .
                 "Each question MUST be unique and cover different aspects of the theme. Do not repeat similar questions or concepts. " .
                 "Each question MUST have exactly one blank (represented as '____') and provide exactly three answer choices: one correct and two incorrect. " .

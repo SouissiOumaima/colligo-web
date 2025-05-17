@@ -95,19 +95,26 @@
             margin-bottom: 15px !important;
         }
 
-        .sentence-list {
-            list-style: none !important;
+        /* Three-column grid layout for generated sentences */
+        .content-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 15px !important;
+            width: 100% !important;
+            max-width: 600px !important;
             padding: 0 !important;
             margin: 0 !important;
-            width: 100% !important;
-            max-width: 600px !important; /* Limit width for better centering */
         }
 
-        .sentence-item {
-            margin-bottom: 10px !important;
+        .content-item {
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
+            padding: 10px !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+            word-break: break-word !important; /* Ensure long text wraps */
         }
 
         .custom-checkbox {
@@ -376,7 +383,20 @@
             min-width: 150px;
         }
 
-        /* Responsive Design */
+        /* Responsive Design for Three-Column Layout */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: repeat(2, 1fr) !important; /* Two columns on medium screens */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr !important; /* Single column on small screens */
+            }
+        }
+
+        /* General Responsive Design */
         @media (max-width: 1024px) {
             .main-content {
                 margin-left: 60px !important;
@@ -563,9 +583,9 @@
                         <div class="generated-sentences-section mb-4">
                             <form method="post">
                                 <h2 class="generated-title">Phrases générées</h2>
-                                <div class="sentence-list">
+                                <div class="content-grid">
                                     {% for sentence in generatedSentences %}
-                                        <div class="sentence-item">
+                                        <div class="content-item">
                                             {% set parts = sentence|split(' | ', 2) %}
                                             <input type="checkbox" name="sentences[]" value="{{ sentence }}" id="sentence_{{ loop.index }}" class="custom-checkbox">
                                             <label for="sentence_{{ loop.index }}" class="sentence-label">

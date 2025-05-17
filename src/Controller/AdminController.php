@@ -40,6 +40,9 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use App\Entity\PronunciationContent;
+use App\Form\PronunciationContentType;
+use App\Repository\PronunciationContentRepository;
 
 #[Route('/admin')]
 class AdminController extends AbstractController
@@ -1300,8 +1303,8 @@ class AdminController extends AbstractController
 
 
 
-    
-   #[Route('/dragdrop', name: 'admin_dragdrop_content', methods: ['GET', 'POST'])]
+
+    #[Route('/dragdrop', name: 'admin_dragdrop_content', methods: ['GET', 'POST'])]
     public function manageContent(Request $request, DragdropRepository $repository, EntityManagerInterface $entityManager): Response
     {
         // Define valid languages at the method level
@@ -1424,10 +1427,10 @@ class AdminController extends AbstractController
             default => 'fr',
         };
         return match ($level) {
-            1 => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
-            2 => "Generate exactly 10 unique, slightly more complex but still child-friendly sentences in the language code '$langCode'. Each sentence must have 4 to 6 words suitable for drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The dog runs in the park\", \"arabicTranslation\": \"الكلب يركض في الحديقة\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
-            3 => "Generate exactly 10 unique, moderately complex child-friendly sentences in the language code '$langCode'. Each sentence must have 5 to 7 words suitable for advanced drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The girl reads a book quietly\", \"arabicTranslation\": \"الفتاة تقرأ كتابًا بهدوء\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
-            default => "Generate exactly 10 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            1 => "Generate exactly 12 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            2 => "Generate exactly 12 unique, slightly more complex but still child-friendly sentences in the language code '$langCode'. Each sentence must have 4 to 6 words suitable for drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The dog runs in the park\", \"arabicTranslation\": \"الكلب يركض في الحديقة\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            3 => "Generate exactly 12 unique, moderately complex child-friendly sentences in the language code '$langCode'. Each sentence must have 5 to 7 words suitable for advanced drag-and-drop learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"The girl reads a book quietly\", \"arabicTranslation\": \"الفتاة تقرأ كتابًا بهدوء\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
+            default => "Generate exactly 12 unique, simple, child-friendly sentences in the language code '$langCode'. Each sentence must have 3 to 5 words and be easy to drag-and-drop for learning. For each sentence, provide an accurate translation in Arabic ('ar'). Return the result as a JSON array of objects, each with 'sentence' and 'arabicTranslation' keys (e.g., [{\"sentence\": \"I like to play\", \"arabicTranslation\": \"أحب اللعب\"}]). Do not include any additional text, markdown, or formatting outside the JSON array.",
         };
     }
 
@@ -1555,5 +1558,200 @@ class AdminController extends AbstractController
         ];
 
         return $fallbackSentences[$level] ?? $fallbackSentences[1];
+    }
+
+
+   #[Route('/pronunciation-content', name: 'admin_pronunciation_content', methods: ['GET', 'POST'])]
+    public function managePronunciationContent(Request $request, PronunciationContentRepository $repository, EntityManagerInterface $entityManager): Response
+    {
+        $content = new PronunciationContent();
+        $form = $this->createForm(PronunciationContentType::class, $content);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($content);
+            $entityManager->flush();
+            $this->addFlash('success', 'Contenu ajouté avec succès !');
+            return $this->redirectToRoute('admin_pronunciation_content');
+        }
+
+        $langue = $request->request->get('langue');
+        $niveau = (int) $request->request->get('niveau', 1);
+        $generatedContents = [];
+
+        if ($request->isMethod('POST') && $request->request->has('generate')) {
+            if (!$langue || !in_array($langue, ['Français', 'Anglais', 'Espagnol', 'Allemand'])) {
+                $this->addFlash('error', 'Veuillez sélectionner une langue valide.');
+                $langue = 'Français';
+            }
+            $prompt = $this->buildPronunciationPrompt($langue, $niveau);
+            $result = $this->callPronunciationApi($prompt);
+            $generatedContents = $result ? $this->parsePronunciationDualLanguageResponse($result, $niveau) : $this->getPronunciationFallbackContent($langue, $niveau);
+        }
+
+        $selectedContents = $request->request->all('contents');
+        $saveLangue = $request->request->get('save_langue', $langue ?? 'Français');
+        $saveNiveau = (int) $request->request->get('niveau', 1);
+
+        if ($request->isMethod('POST') && $request->request->has('save_generated') && is_array($selectedContents) && !empty($selectedContents)) {
+            foreach ($selectedContents as $contentText) {
+                if (is_string($contentText) && trim($contentText) !== '') {
+                    $contentParts = explode(' | ', $contentText, 2);
+                    $originalContent = trim($contentParts[0]);
+                    $content = new PronunciationContent();
+                    $content->setContent($contentText);
+                    $content->setLevel($saveNiveau);
+                    $saveLangue = $saveLangue ?? 'Français';
+                    if (!in_array($saveLangue, ['Français', 'Anglais', 'Espagnol', 'Allemand'])) {
+                        $saveLangue = 'Français';
+                    }
+                    $content->setLangue($saveLangue);
+                    $entityManager->persist($content);
+                }
+            }
+            $entityManager->flush();
+            $this->addFlash('success', 'Contenus enregistrés avec succès !');
+            return $this->redirectToRoute('admin_pronunciation_content');
+        } elseif ($request->request->has('save_generated') && (!is_array($selectedContents) || empty($selectedContents))) {
+            $this->addFlash('error', 'Veuillez sélectionner au moins un contenu à enregistrer.');
+        }
+
+        $contents = $repository->findAll();
+
+        return $this->render('admin/pronunciation_content.html.twig', [
+            'form' => $form->createView(),
+            'contents' => $contents,
+            'langue' => $langue ?? 'Français',
+            'niveau' => $niveau,
+            'generatedContents' => $generatedContents,
+        ]);
+    }
+
+    #[Route('/pronunciation-content/delete/{id}', name: 'admin_pronunciation_content_delete', methods: ['POST'])]
+    public function deletePronunciationContent(int $id, PronunciationContentRepository $repository, EntityManagerInterface $entityManager): Response
+    {
+        $content = $repository->find($id);
+
+        if (!$content) {
+            $this->addFlash('error', 'Contenu non trouvé.');
+            return $this->redirectToRoute('admin_pronunciation_content');
+        }
+
+        try {
+            $entityManager->remove($content);
+            $entityManager->flush();
+            $this->addFlash('success', 'Contenu supprimé avec succès !');
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de la suppression du contenu : ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('admin_pronunciation_content');
+    }
+
+    #[Route('/add-pronunciation-content', name: 'admin_add_pronunciation_content', methods: ['GET', 'POST'])]
+    public function addPronunciationContent(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $content = new PronunciationContent();
+        $form = $this->createForm(PronunciationContentType::class, $content);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            if ($content->getLevel() !== 1) {
+                $arabicTranslation = $request->request->get('pronunciation_content')['arabic_translation'];
+                if ($arabicTranslation) {
+                    $content->setContent($content->getContent() . ' | ' . $arabicTranslation);
+                }
+            }
+            $entityManager->persist($content);
+            $entityManager->flush();
+            $this->addFlash('success', 'Contenu ajouté avec succès !');
+            return $this->redirectToRoute('admin_pronunciation_content');
+        }
+
+        return $this->render('admin/add_pronunciation_content.html.twig', [
+            'form' => $form->createView(),
+        ]);
+    }
+
+    private function buildPronunciationPrompt(string $langue, int $niveau): string
+    {
+        $langCode = match (strtolower($langue)) {
+            'anglais' => 'en',
+            'espagnol' => 'es',
+            'allemand' => 'de',
+            'français' => 'fr',
+            default => 'fr',
+        };
+        return match ($niveau) {
+            1 => "Generate a list of 26 unique letters (A to Z) in uppercase for the language code '$langCode', suitable for children to learn pronunciation. Return only the list as plain text, one letter per line (e.g., 'A'). Do not include Arabic translations.",
+            2 => "Generate a list of 12 unique, simple, child-friendly words in the language code '$langCode'. Each word should be short (1-2 syllables) and common. For each word, provide an accurate Arabic translation next to it (e.g., 'apple | تفاحة'). Return only the list as plain text, one entry per line with the format 'word | Arabic translation'.",
+            3 => "Generate a list of 12 unique, short, simple sentences suitable for children in the language code '$langCode'. Each sentence should have 3 to 5 words and be easy to pronounce. For each sentence, provide an accurate Arabic translation next to it (e.g., 'Hello, how are you? | مرحبًا، كيف حالك؟'). Return only the list as plain text, one entry per line with the format 'sentence | Arabic translation'.",
+            default => "Generate a list of 12 unique, simple, child-friendly words in the language code '$langCode'. Each word should be short (1-2 syllables) and common. For each word, provide an accurate Arabic translation next to it (e.g., 'apple | تفاحة'). Return only the list as plain text, one entry per line with the format 'word | Arabic translation'.",
+        };
+    }
+
+    private function callPronunciationApi(string $prompt): ?string
+    {
+        $apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' . $this->aiApiKey;
+        $client = HttpClient::create();
+
+        try {
+            $response = $client->request('POST', $apiUrl, [
+                'json' => [
+                    'contents' => [
+                        ['parts' => [['text' => $prompt]]]
+                    ]
+                ]
+            ]);
+            $data = $response->toArray();
+            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            if (!$text) {
+                $this->logger->error('API Gemini: No text returned', ['response' => $data, 'prompt' => $prompt]);
+                return null;
+            }
+            $this->logger->debug('API Gemini Response', ['response' => $data, 'prompt' => $prompt]);
+            return trim($text);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur API Gemini', ['exception' => $e->getMessage(), 'prompt' => $prompt]);
+            return null;
+        }
+    }
+
+    private function parsePronunciationDualLanguageResponse(string $response, int $niveau): array
+    {
+        $lines = array_filter(explode("\n", trim($response)));
+        $contents = [];
+        foreach ($lines as $line) {
+            if ($niveau === 1) {
+                $contents[] = trim($line);
+            } else {
+                $parts = explode(' | ', trim($line), 2);
+                if (count($parts) == 2) {
+                    $contents[] = $line;
+                } elseif (count($parts) == 1) {
+                    $contents[] = $parts[0];
+                }
+            }
+        }
+        return $contents;
+    }
+
+    private function getPronunciationFallbackContent(string $langue, int $niveau): array
+    {
+        $langCode = match (strtolower($langue)) {
+            'anglais' => 'en',
+            'espagnol' => 'es',
+            'allemand' => 'de',
+            'français' => 'fr',
+            default => 'fr',
+        };
+        $fallbackPrompt = match ($niveau) {
+            1 => "Generate a minimal list of 5 unique letters (A to E) in uppercase for the language code '$langCode'. Return only the list as plain text, one letter per line (e.g., 'A'). Do not include Arabic translations.",
+            2 => "Generate a minimal list of 5 unique, simple, child-friendly words in the language code '$langCode', each short (1-2 syllables) and common, with basic Arabic translations (e.g., 'apple | تفاحة'). Return only the list as plain text, one entry per line with the format 'word | Arabic translation'.",
+            3 => "Generate a minimal list of 5 unique, short, simple sentences suitable for children in the language code '$langCode', each with 3 to 5 words, with basic Arabic translations (e.g., 'Hello, how are you? | مرحبًا، كيف حالك؟'). Return only the list as plain text, one entry per line with the format 'sentence | Arabic translation'.",
+            default => "Generate a minimal list of 5 unique, simple, child-friendly words in the language code '$langCode', each short (1-2 syllables) and common, with basic Arabic translations (e.g., 'apple | تفاحة'). Return only the list as plain text, one entry per line with the format 'word | Arabic translation'.",
+        };
+        $result = $this->callPronunciationApi($fallbackPrompt);
+        return $result ? $this->parsePronunciationDualLanguageResponse($result, $niveau) : ['error | خطأ'];
     }
 }
