@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Images;
-use App\Service\WordGameService;
+use App\Service\AdminService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,21 +15,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
  */
 class AdminController extends AbstractController
 {
-    /**
-     * Manages images (add, edit, delete) for the game.
-     *
-     * @param WordGameService $wordGameService Word game service
-     * @param Request $request HTTP request
-     * @return Response Rendered image management page
-     */
     #[Route('/admin', name: 'admin_manage_images')]
     #[IsGranted('ROLE_USER')]
-    public function manageImages(WordGameService $wordGameService, Request $request): Response
+    public function manageImages(AdminService $adminService, Request $request): Response
     {
-        // Get all images from the database
-        $images = $wordGameService->getAllImages();
+        $images = $adminService->getAllImages();
 
-        // Handle form submission for adding/editing images
         if ($request->isMethod('POST')) {
             $imageId = $request->request->getInt('image_id');
             $word = $request->request->get('word');
@@ -45,18 +36,16 @@ class AdminController extends AbstractController
             } else {
                 try {
                     if ($imageId) {
-                        // Update existing image
-                        $image = $wordGameService->getImageById($imageId);
+                        $image = $adminService->getImageById($imageId);
                         if (!$image) {
                             $this->addFlash('error', 'L\'image n\'existe pas.');
                             return $this->redirectToRoute('admin_manage_images');
                         }
-                        $imageUrl = $wordGameService->handleImageUpload($file, $image->getImage_url());
+                        $imageUrl = $adminService->handleImageUpload($file, $image->getImage_url());
                     } else {
-                        // Create new image
                         $image = new Images();
-                        $image->setId($this->generateUniqueImageId($wordGameService));
-                        $imageUrl = $wordGameService->handleImageUpload($file);
+                        $image->setId($this->generateUniqueImageId($adminService));
+                        $imageUrl = $adminService->handleImageUpload($file);
                     }
 
                     $image->setWord($word);
@@ -65,7 +54,7 @@ class AdminController extends AbstractController
                     $image->setSpanish_translation($spanish ?: $word);
                     $image->setGerman_translation($german ?: $word);
 
-                    $wordGameService->saveImage($image);
+                    $adminService->saveImage($image);
                     $this->addFlash('success', 'L\'image a été enregistrée avec succès.');
                 } catch (\Exception $e) {
                     $this->addFlash('error', $e->getMessage());
@@ -74,10 +63,9 @@ class AdminController extends AbstractController
             }
         }
 
-        // Handle image deletion
         if ($request->query->has('delete')) {
             $imageId = $request->query->getInt('delete');
-            $wordGameService->deleteImage($imageId);
+            $adminService->deleteImage($imageId);
             $this->addFlash('success', 'L\'image a été supprimée avec succès.');
             return $this->redirectToRoute('admin_manage_images');
         }
@@ -87,17 +75,11 @@ class AdminController extends AbstractController
         ]);
     }
 
-    /**
-     * Generates a unique ID for a new image.
-     *
-     * @param WordGameService $wordGameService Word game service
-     * @return int Unique image ID
-     */
-    private function generateUniqueImageId(WordGameService $wordGameService): int
+    private function generateUniqueImageId(AdminService $adminService): int
     {
         do {
             $id = random_int(1, 999999);
-            $exists = $wordGameService->getImageById($id);
+            $exists = $adminService->getImageById($id);
         } while ($exists);
         return $id;
     }

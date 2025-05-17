@@ -2,7 +2,8 @@
 
 namespace App\Controller;
 
-use App\Service\WordGameService;
+use App\Service\GameService;
+use App\Service\ProgressService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,39 +15,26 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class GameController extends AbstractController
 {
-    /**
-     * Displays the main menu with game options.
-     *
-     * @param WordGameService $wordGameService Word game service
-     * @return Response Rendered main menu page
-     */
     #[Route('/main', name: 'main_menu')]
-    public function mainMenu(WordGameService $wordGameService): Response
-{
-    $childId = 5; // Default or dynamic childId, adjust as needed
-    $gameId = 3; // Default gameId for "Picture Game", adjust as needed
-    $wordGameService->setChildId($childId);
-    $wordGameService->setGameId($gameId);
+    public function mainMenu(GameService $gameService, ProgressService $progressService): Response
+    {
+        $childId = 1;
+        $gameId = 3;
+        $progressService->ensureChildExists($childId);
+        $progressService->ensureGamesExist($gameId);
+        $gameService->setChildId($childId);
+        $gameService->setGameId($gameId);
 
-    return $this->render('game/main_menu.html.twig', [
-        'highestLevel' => $wordGameService->getHighestLevelReached(),
-        'childId' => $childId,
-        'gameId' => $gameId,
-        'selectedLevel' => $wordGameService->getHighestLevelReached(), // Use highest level reached
-    ]);
-}
+        return $this->render('game/main_menu.html.twig', [
+            'highestLevel' => $gameService->getHighestLevelReached(),
+            'childId' => $childId,
+            'gameId' => $gameId,
+            'selectedLevel' => $gameService->getHighestLevelReached(),
+        ]);
+    }
 
-    /**
-     * Starts a new game at the specified level.
-     *
-     * @param int $level Level to start
-     * @param WordGameService $wordGameService Word game service
-     * @param Request $request HTTP request
-     * @return Response Rendered game screen
-     * @throws BadRequestHttpException If childId or gameId is invalid
-     */
     #[Route('/start/{level}', name: 'start_game', requirements: ['level' => '\d+'])]
-    public function startGame(int $level, WordGameService $wordGameService, Request $request): Response
+    public function startGame(int $level, GameService $gameService, ProgressService $progressService, Request $request): Response
     {
         $childId = $request->query->getInt('childId', 1);
         $gameId = $request->query->getInt('gameId', 3);
@@ -57,23 +45,17 @@ class GameController extends AbstractController
             throw new BadRequestHttpException('Invalid childId or gameId.');
         }
 
-        $wordGameService->setChildId($childId);
-        $wordGameService->setGameId($gameId);
-        $wordGameService->startGame($level);
+        $progressService->ensureChildExists($childId);
+        $progressService->ensureGamesExist($gameId);
+        $gameService->setChildId($childId);
+        $gameService->setGameId($gameId);
+        $gameService->startGame($level);
 
-        return $this->renderGameScreen($wordGameService, $childId, $gameId);
+        return $this->renderGameScreen($gameService, $childId, $gameId);
     }
 
-    /**
-     * Checks the player's answer and updates the game state.
-     *
-     * @param Request $request HTTP request
-     * @param WordGameService $wordGameService Word game service
-     * @return Response Rendered game screen with answer result
-     * @throws BadRequestHttpException If parameters are invalid
-     */
     #[Route('/check', name: 'check_answer', methods: ['POST'])]
-    public function checkAnswer(Request $request, WordGameService $wordGameService): Response
+    public function checkAnswer(Request $request, GameService $gameService, ProgressService $progressService): Response
     {
         $childId = $request->request->getInt('child_id', 1);
         $gameId = $request->request->getInt('game_id', 3);
@@ -86,8 +68,10 @@ class GameController extends AbstractController
             throw new BadRequestHttpException('Invalid childId or gameId.');
         }
 
-        $wordGameService->setChildId($childId);
-        $wordGameService->setGameId($gameId);
+        $progressService->ensureChildExists($childId);
+        $progressService->ensureGamesExist($gameId);
+        $gameService->setChildId($childId);
+        $gameService->setGameId($gameId);
 
         if ($timeout) {
             $result = [
@@ -99,30 +83,22 @@ class GameController extends AbstractController
             if (!$selectedImageUrl) {
                 throw new BadRequestHttpException('Missing selectedImageUrl parameter.');
             }
-            $result = $wordGameService->checkAnswer($selectedImageUrl);
+            $result = $gameService->checkAnswer($selectedImageUrl);
         }
 
         return $this->render('game/game_screen.html.twig', array_merge($result, [
-            'currentImages' => $wordGameService->getCurrentImages(),
-            'correctWord' => $wordGameService->getCorrectWord(),
-            'currentLevel' => $wordGameService->getCurrentLevel(),
-            'currentStage' => $wordGameService->getCurrentStage(),
-            'currentScore' => $wordGameService->getCurrentLevelPoints(),
+            'currentImages' => $gameService->getCurrentImages(),
+            'correctWord' => $gameService->getCorrectWord(),
+            'currentLevel' => $gameService->getCurrentLevel(),
+            'currentStage' => $gameService->getCurrentStage(),
+            'currentScore' => $gameService->getCurrentLevelPoints(),
             'childId' => $childId,
             'gameId' => $gameId,
         ]));
     }
 
-    /**
-     * Proceeds to the next stage or level, or retries if incorrect.
-     *
-     * @param Request $request HTTP request
-     * @param WordGameService $wordGameService Word game service
-     * @return Response Rendered game screen or redirect to main menu
-     * @throws BadRequestHttpException If parameters are invalid
-     */
     #[Route('/proceed', name: 'proceed_or_retry', methods: ['POST'])]
-    public function proceedOrRetry(Request $request, WordGameService $wordGameService): Response
+    public function proceedOrRetry(Request $request, GameService $gameService, ProgressService $progressService): Response
     {
         $childId = $request->request->getInt('child_id', 1);
         $gameId = $request->request->getInt('game_id', 3);
@@ -134,33 +110,27 @@ class GameController extends AbstractController
             throw new BadRequestHttpException('Invalid childId or gameId.');
         }
 
-        $wordGameService->setChildId($childId);
-        $wordGameService->setGameId($gameId);
-        $completed = $wordGameService->proceedOrRetry($isCorrect);
+        $progressService->ensureChildExists($childId);
+        $progressService->ensureGamesExist($gameId);
+        $gameService->setChildId($childId);
+        $gameService->setGameId($gameId);
+        $completed = $gameService->proceedOrRetry($isCorrect);
 
         if ($completed) {
             return $this->redirectToRoute('main_menu');
         }
 
-        return $this->renderGameScreen($wordGameService, $childId, $gameId);
+        return $this->renderGameScreen($gameService, $childId, $gameId);
     }
 
-    /**
-     * Renders the game screen with current game state.
-     *
-     * @param WordGameService $wordGameService Word game service
-     * @param int $childId Child ID
-     * @param int $gameId Game ID
-     * @return Response Rendered game screen
-     */
-    private function renderGameScreen(WordGameService $wordGameService, int $childId, int $gameId): Response
+    private function renderGameScreen(GameService $gameService, int $childId, int $gameId): Response
     {
         return $this->render('game/game_screen.html.twig', [
-            'currentImages' => $wordGameService->getCurrentImages(),
-            'correctWord' => $wordGameService->getCorrectWord(),
-            'currentLevel' => $wordGameService->getCurrentLevel(),
-            'currentStage' => $wordGameService->getCurrentStage(),
-            'currentScore' => $wordGameService->getCurrentLevelPoints(),
+            'currentImages' => $gameService->getCurrentImages(),
+            'correctWord' => $gameService->getCorrectWord(),
+            'currentLevel' => $gameService->getCurrentLevel(),
+            'currentStage' => $gameService->getCurrentStage(),
+            'currentScore' => $gameService->getCurrentLevelPoints(),
             'childId' => $childId,
             'gameId' => $gameId,
             'isCorrect' => null,

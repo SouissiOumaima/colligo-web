@@ -14,14 +14,21 @@ services:
             - '../src/Kernel.php'
             - '../src/Tests/'
 
-    # Explicitly define Session service (optional, as Symfony provides it by default)
     Symfony\Component\HttpFoundation\Session\Session:
         public: true
 
-    # Alias SessionInterface to the Session service
     Symfony\Component\HttpFoundation\Session\SessionInterface: '@Symfony\Component\HttpFoundation\Session\Session'
 
-    # Explicitly configure GameService with the uploadDir parameter
-    App\Service\WordGameService:
+    App\Service\GameService:
         arguments:
+            $em: '@doctrine.orm.entity_manager'
+            $session: '@Symfony\Component\HttpFoundation\Session\SessionInterface'
+
+    App\Service\ProgressService:
+        arguments:
+            $em: '@doctrine.orm.entity_manager'
+
+    App\Service\AdminService:
+        arguments:
+            $em: '@doctrine.orm.entity_manager'
             $uploadDir: '%app.upload_dir%'
