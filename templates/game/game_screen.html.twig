@@ -67,7 +67,7 @@
                 {% if isCorrect is defined and isCorrect is not null %}
                     <p class="feedback-text {% if isCorrect %}text-success{% else %}text-danger{% endif %}">
                         {% if isCorrect %}
-                            إجابة صحيحة! لقد حصلت على {{ points }} نقاط.
+                            إجابة صحيحة! لقد حصلت على {{ points|default(0) }} نقاط.
                         {% else %}
                             {% if timeout is defined and timeout %}
                                 انتهى الوقت! حاول مرة أخرى.
