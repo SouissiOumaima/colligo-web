@@ -11,7 +11,7 @@
 
     <div class="container">
         <header class="game-header">
-            <a href="{{ path('main_menu') }}" class="back-button">
+            <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="back-button">
                 <span class="back-icon"></span>
                 <span>الرئيسية</span>
             </a>
@@ -45,9 +45,8 @@
             <div class="game-grid" id="game-grid">
                 {% for image in currentImages %}
                     <div class="image-option">
-                        <form method="post" action="{{ path('check_answer') }}" class="image-form">
+                        <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" class="image-form">
                             <input type="hidden" name="image_url" value="{{ image.url }}">
-                            <input type="hidden" name="child_id" value="{{ childId }}">
                             <input type="hidden" name="game_id" value="{{ gameId }}">
                             <button type="submit" class="image-button">
                                 <div class="image-container">
@@ -59,15 +58,8 @@
                 {% endfor %}
             </div>
 
-            <!-- Check button -->
-            <div class="check-button-container">
-                <button id="check-answer" class="check-button">تحقق</button>
-            </div>
-
-            <!-- Hidden form for timeout failure -->
-            <form method="post" action="{{ path('check_answer') }}" id="timeout-form" style="display: none;">
+            <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" id="timeout-form" style="display: none;">
                 <input type="hidden" name="timeout" value="1">
-                <input type="hidden" name="child_id" value="{{ childId }}">
                 <input type="hidden" name="game_id" value="{{ gameId }}">
             </form>
 
@@ -88,7 +80,6 @@
             </div>
         </main>
 
-        <!-- Result Modal -->
         {% if isCorrect is defined and isCorrect is not null %}
             <div class="modal" id="result-modal">
                 <div class="modal-content result-modal-content">
@@ -121,15 +112,14 @@
                             {% endif %}
                         </p>
                         <div class="result-buttons">
-                            <form method="post" action="{{ path('proceed_or_retry') }}">
+                            <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}">
                                 <input type="hidden" name="is_correct" value="{{ isCorrect ? '1' : '0' }}">
-                                <input type="hidden" name="child_id" value="{{ childId }}">
                                 <input type="hidden" name="game_id" value="{{ gameId }}">
                                 <button type="submit" class="btn primary-btn" id="continue-btn">
                                     {% if isCorrect %}المتابعة{% else %}إعادة المحاولة{% endif %}
                                 </button>
                             </form>
-                            <a href="{{ path('main_menu') }}" class="btn secondary-btn" id="home-btn">العودة للرئيسية</a>
+                            <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="btn secondary-btn" id="home-btn">العودة للرئيسية</a>
                         </div>
                     </div>
                 </div>
@@ -143,84 +133,29 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script>
-        const TIME_LIMIT = 10000; // 10 seconds
-        const timerProgress = document.getElementById('timer-progress');
-        let startTime = Date.now();
-        let timerActive = {% if isCorrect is defined and isCorrect is not null %}false{% else %}true{% endif %};
-        
-        // Add selection functionality
-        const imageButtons = document.querySelectorAll('.image-button');
-        let selectedImage = null;
-        
-        imageButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault(); // Prevent form submission
-                
-                // Remove selection from all buttons
-                imageButtons.forEach(btn => btn.classList.remove('selected'));
-                
-                // Add selection to clicked button
-                this.classList.add('selected');
-                selectedImage = this;
-            });
-        });
-        
-        // Handle check button
-        const checkButton = document.getElementById('check-answer');
-        if (checkButton) {
-            checkButton.addEventListener('click', function() {
-                if (selectedImage) {
-                    // Submit the parent form of the selected image
-                    selectedImage.closest('form').submit();
-                }
-            });
-        }
-
-        function updateTimer() {
-            if (!timerActive) return;
-
-            const elapsed = Date.now() - startTime;
-            const progress = Math.max(0, 1 - elapsed / TIME_LIMIT);
-            timerProgress.style.width = (progress * 100) + '%';
-
-            if (progress <= 0) {
-                timerActive = false;
-                // Disable image buttons to prevent further clicks
-                document.querySelectorAll('.image-button').forEach(button => {
-                    button.disabled = true;
-                });
-                // Submit the timeout form
-                document.getElementById('timeout-form').submit();
-            } else {
-                requestAnimationFrame(updateTimer);
-            }
-        }
-
-        if (timerActive) {
-            requestAnimationFrame(updateTimer);
-        }
-    </script>
-
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/game.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Main container styles */
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             font-family: 'Cairo', sans-serif;
         }
-        
-        /* Question text styles */
         .question-text {
             font-size: 24px;
             text-align: center;
             margin-bottom: 30px;
             font-weight: bold;
         }
-        
-        /* Grid layout for options */
         .game-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -230,8 +165,6 @@
             margin-left: auto;
             margin-right: auto;
         }
-        
-        /* Image option styles */
         .image-option {
             position: relative;
             border-radius: 15px;
@@ -240,8 +173,6 @@
             aspect-ratio: 1/1;
             background-color: #f0f4f8;
         }
-        
-        /* Image button styles */
         .image-button {
             width: 100%;
             height: 100%;
@@ -253,16 +184,9 @@
             cursor: pointer;
             overflow: hidden;
         }
-        
         .image-button:hover {
             opacity: 0.9;
         }
-        
-        .image-button.selected {
-            box-shadow: 0 0 0 4px #58cc02;
-        }
-        
-        /* Image container styles */
         .image-container {
             width: 100%;
             height: 100%;
@@ -271,50 +195,15 @@
             align-items: center;
             padding: 0;
         }
-        
-        /* Game image styles */
         .game-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
             background-color: transparent;
         }
-        
-        /* Check button styles */
-        .check-button-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .check-button {
-            background-color: #34c759;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            width: 100%;
-            max-width: 300px;
-        }
-        
-        .check-button:hover {
-            background-color: #2db34a;
-        }
-        
-        .check-button:active {
-            transform: translateY(2px);
-        }
-        
-        /* Timer styles */
         .timer-container {
             margin-bottom: 20px;
         }
-        
         .timer-bar {
             width: 100%;
             height: 10px;
@@ -322,19 +211,15 @@
             border-radius: 5px;
             overflow: hidden;
         }
-        
         .timer-progress {
             height: 100%;
             background-color: #58cc02;
             width: 100%;
             transition: width 0.1s linear;
         }
-        
-        /* Progress indicator */
         .progress-indicator {
             margin-bottom: 20px;
         }
-        
         .progress-bar {
             width: 100%;
             height: 8px;
@@ -342,14 +227,11 @@
             border-radius: 4px;
             overflow: hidden;
         }
-        
         .progress-fill {
             height: 100%;
             background-color: #ff4b4b;
             transition: width 0.3s ease;
         }
-
-        /* Modal styles */
         .modal {
             display: flex;
             justify-content: center;
@@ -362,7 +244,6 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
-
         .modal-content {
             background-color: white;
             border-radius: 15px;
@@ -372,33 +253,28 @@
             text-align: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-
         .result-header h3 {
             font-size: 24px;
             font-weight: bold;
             color: #333;
             margin-bottom: 20px;
         }
-
         .result-animation {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
         }
-
         .result-message {
             font-size: 18px;
             color: #666;
             margin-bottom: 20px;
         }
-
         .result-buttons {
             display: flex;
             justify-content: center;
             gap: 10px;
         }
-
         .primary-btn {
             background-color: #b19cd9;
             color: white;
@@ -410,11 +286,9 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-
         .primary-btn:hover {
             background-color: #9b83c1;
         }
-
         .secondary-btn {
             background-color: #66d9d1;
             color: white;
@@ -427,24 +301,49 @@
             transition: background-color 0.2s;
             text-decoration: none;
         }
-
         .secondary-btn:hover {
             background-color: #55c1b9;
         }
+        .text-success {
+            color: green;
+            font-weight: bold;
+        }
+        .text-danger {
+            color: red;
+            font-weight: bold;
+        }
     </style>
-{% endblock %}
-
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/game.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;707&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script src="{{ asset('js/animations.js') }}"></script>
+    <script>
+        const TIME_LIMIT = 10000; // 10 seconds
+        const timerProgress = document.getElementById('timer-progress');
+        let startTime = Date.now();
+        let timerActive = {% if isCorrect is defined and isCorrect is not null %}false{% else %}true{% endif %};
+
+        function updateTimer() {
+            if (!timerActive) return;
+
+            const elapsed = Date.now() - startTime;
+            const progress = Math.max(0, 1 - elapsed / TIME_LIMIT);
+            timerProgress.style.width = (progress * 100) + '%';
+
+            if (progress <= 0) {
+                timerActive = false;
+                document.querySelectorAll('.image-button').forEach(button => {
+                    button.disabled = true;
+                });
+                document.getElementById('timeout-form').submit();
+            } else {
+                requestAnimationFrame(updateTimer);
+            }
+        }
+
+        if (timerActive) {
+            requestAnimationFrame(updateTimer);
+        }
+    </script>
 {% endblock %}

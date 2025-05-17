@@ -12,8 +12,7 @@
     </div>
 
     <div class="container" style="background-color: transparent !important;">
-        <header>
-        </header>
+        <header></header>
 
         <main class="home-content" style="background-color: transparent !important;">
             <div class="welcome-card" style="background-color: transparent !important;">
@@ -28,12 +27,11 @@
                     {% endfor %}
 
                     <div class="action-buttons">
-                        <button class="btn primary-btn" id="start-game">بدء اللعب</button>
-                        <button class="btn secondary-btn" onclick="window.history.back()">رجوع</button>
+                        <a href="{{ path('start_game', {'childId': childId, 'parentId': parentId, 'level': selectedLevel}) }}" class="btn primary-btn">بدء اللعب</a>
+                        <a href="{{ path('select_child') }}" class="btn secondary-btn">رجوع</a>
                     </div>
                 </div>
 
-                <!-- Keep the hello.gif -->
                 <div class="mascot-container">
                     <img src="{{ asset('images/hello.gif') }}" alt="صورة متحركة" class="mascot">
                 </div>
@@ -43,15 +41,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-    // Handle start game button click
-    document.getElementById('start-game').addEventListener('click', () => {
-        const selectedLevel = {{ selectedLevel }}; // Value from controller
-        const childId = {{ childId }}; // Value from controller
-        const gameId = {{ gameId }}; // Value from controller
-        const baseUrl = '{{ path('start_game', {'level': selectedLevel}) }}' + `?childId=${childId}&gameId=${gameId}`;
-        window.location.href = baseUrl;
-    });
-
             // Debug: Check if the GIF is loading and its natural dimensions
             const mascot = document.querySelector('.mascot');
             mascot.addEventListener('load', () => {
@@ -79,7 +68,6 @@
             min-height: 100vh;
             background-color: transparent !important;
         }
-
         .home-content {
             display: flex;
             justify-content: center;
@@ -87,7 +75,6 @@
             flex-direction: column;
             background-color: transparent !important;
         }
-
         .welcome-card {
             display: flex;
             justify-content: center;
@@ -96,61 +83,65 @@
             background-color: transparent !important;
             text-align: center;
         }
-
         .card-content {
             background-color: transparent !important;
         }
-
         .section-title {
-            font-size: 48px; /* Increased font size */
+            font-size: 48px;
             font-family: 'Cairo', sans-serif;
             color: #333;
             margin-bottom: 20px;
-            border-bottom: 4px solid #7b61ff; /* Purple underline */
+            border-bottom: 4px solid #7b61ff;
             padding-bottom: 10px;
         }
-
         .action-buttons {
             display: flex;
-            gap: 15px; /* Reduced gap for closer buttons */
+            gap: 15px;
             margin-bottom: 30px;
-            justify-content: center; /* Keep buttons centered within the container */
+            justify-content: center;
         }
-
         .btn {
-            padding: 8px 16px; /* Reduced padding to make buttons smaller */
-            font-size: 16px; /* Reduced font size */
+            padding: 8px 16px;
+            font-size: 16px;
             font-family: 'Cairo', sans-serif;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s;
+            text-decoration: none;
         }
-
         .primary-btn {
-            background-color: #7b61ff; /* Purple */
+            background-color: #7b61ff;
             color: #fff;
         }
-
         .secondary-btn {
-            background-color: #68d391; /* Green */
+            background-color: #68d391;
             color: #fff;
         }
-
         .btn:hover {
             transform: scale(1.05);
         }
-
         .mascot-container {
             display: flex;
             justify-content: center;
             margin-top: 20px;
         }
-
         .mascot {
-            width: 540px; /* Increased by 20% (450 * 1.2) */
-            height: 180px; /* Increased by 20% (150 * 1.2) */
-            object-fit: contain; /* Maintain aspect ratio */
+            width: 540px;
+            height: 180px;
+            object-fit: contain;
+        }
+        .alert-success {
+            color: green;
+            border: 1px solid green;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .alert-danger {
+            color: red;
+            border: 1px solid red;
+            padding: 10px;
+            margin-bottom: 10px;
         }
     </style>
 {% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Select Child{% endblock %}
+
+{% block body %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .alert-danger {
+            color: red;
+            border: 1px solid red;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .form-errors {
+            color: red;
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <h1>Select Child</h1>
+    {% for message in app.flashes('error') %}
+        <div class="alert-danger">{{ message }}</div>
+    {% endfor %}
+    {{ form_errors(form) }}
+    {{ form_start(form) }}
+        <div class="form-group">
+            {{ form_label(form.childId) }}
+            {{ form_widget(form.childId) }}
+        </div>
+        {{ form_widget(form.submit) }}
+    {{ form_end(form) }}
+{% endblock %}
