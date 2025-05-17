@@ -19,31 +19,34 @@ class GameController extends AbstractController
     public function home(Request $request): Response
     {
         $childId = $request->query->getInt('childId', 0);
-        if ($childId <= 0) {
-            throw new BadRequestHttpException('Child ID must be provided in the URL, e.g., /?childId=1');
+        $parentId = $request->query->getInt('parentId', 0);
+        if ($childId <= 0 || $parentId <= 0) {
+            throw new BadRequestHttpException('Child ID and Parent ID must be provided in the URL, e.g., /?childId=1&parentId=1');
         }
         return $this->redirectToRoute('main_menu', [
             'childId' => $childId,
-            'parentId' => 0, // Will be validated in mainMenu
+            'parentId' => $parentId,
         ]);
     }
 
     #[Route('/main/{childId}/{parentId}', name: 'main_menu', requirements: ['childId' => '\d+', 'parentId' => '\d+'])]
     public function mainMenu(int $childId, int $parentId, GameService $gameService, ProgressService $progressService): Response
     {
-        if ($childId <= 0) {
-            throw new BadRequestHttpException('Invalid childId.');
+        if ($childId <= 0 || $parentId <= 0) {
+            throw new BadRequestHttpException('Invalid childId or parentId.');
         }
 
         $gameId = 3;
+        // Ensure the child exists with the given parentId
         $childDetails = $progressService->fetchChildDetails($childId);
-        if (!$childDetails || ($parentId > 0 && $childDetails['parentId'] != $parentId)) {
-            throw new BadRequestHttpException('Invalid Child ID or Parent ID mismatch.');
+        if (!$childDetails) {
+            // If child doesn't exist, create it with the provided parentId
+            $progressService->ensureChildExists($childId, $parentId, 8); // Default age 8
+            $childDetails = $progressService->fetchChildDetails($childId);
         }
 
-        $parentId = $childDetails['parentId'];
-        if ($parentId <= 0) {
-            throw new BadRequestHttpException('No valid Parent ID associated with Child ID.');
+        if ($childDetails['parentId'] != $parentId) {
+            throw new BadRequestHttpException('Parent ID mismatch for Child ID.');
         }
 
         $progressService->ensureChildExists($childId, $parentId, $childDetails['age']);
@@ -65,19 +68,14 @@ class GameController extends AbstractController
     {
         error_log("startGame: childId=$childId, parentId=$parentId, level=$level");
 
-        if ($childId <= 0) {
-            throw new BadRequestHttpException('Invalid childId.');
+        if ($childId <= 0 || $parentId <= 0) {
+            throw new BadRequestHttpException('Invalid childId or parentId.');
         }
 
         $gameId = 3;
         $childDetails = $progressService->fetchChildDetails($childId);
-        if (!$childDetails || ($parentId > 0 && $childDetails['parentId'] != $parentId)) {
+        if (!$childDetails || $childDetails['parentId'] != $parentId) {
             throw new BadRequestHttpException('Invalid Child ID or Parent ID mismatch.');
-        }
-
-        $parentId = $childDetails['parentId'];
-        if ($parentId <= 0) {
-            throw new BadRequestHttpException('No valid Parent ID associated with Child ID.');
         }
 
         $progressService->ensureChildExists($childId, $parentId, $childDetails['age']);
@@ -98,18 +96,13 @@ class GameController extends AbstractController
 
         error_log("checkAnswer: childId=$childId, parentId=$parentId, gameId=$gameId, timeout=$timeout");
 
-        if ($childId <= 0 || $gameId < 1 || $gameId > 5) {
-            throw new BadRequestHttpException('Invalid childId or gameId.');
+        if ($childId <= 0 || $parentId <= 0 || $gameId < 1 || $gameId > 5) {
+            throw new BadRequestHttpException('Invalid childId, parentId, or gameId.');
         }
 
         $childDetails = $progressService->fetchChildDetails($childId);
-        if (!$childDetails || ($parentId > 0 && $childDetails['parentId'] != $parentId)) {
+        if (!$childDetails || $childDetails['parentId'] != $parentId) {
             throw new BadRequestHttpException('Invalid Child ID or Parent ID mismatch.');
-        }
-
-        $parentId = $childDetails['parentId'];
-        if ($parentId <= 0) {
-            throw new BadRequestHttpException('No valid Parent ID associated with Child ID.');
         }
 
         $progressService->ensureChildExists($childId, $parentId, $childDetails['age']);
@@ -150,18 +143,13 @@ class GameController extends AbstractController
 
         error_log("proceedOrRetry: childId=$childId, parentId=$parentId, gameId=$gameId, isCorrect=$isCorrect");
 
-        if ($childId <= 0 || $gameId < 1 || $gameId > 5) {
-            throw new BadRequestHttpException('Invalid childId or gameId.');
+        if ($childId <= 0 || $parentId <= 0 || $gameId < 1 || $gameId > 5) {
+            throw new BadRequestHttpException('Invalid childId, parentId, or gameId.');
         }
 
         $childDetails = $progressService->fetchChildDetails($childId);
-        if (!$childDetails || ($parentId > 0 && $childDetails['parentId'] != $parentId)) {
+        if (!$childDetails || $childDetails['parentId'] != $parentId) {
             throw new BadRequestHttpException('Invalid Child ID or Parent ID mismatch.');
-        }
-
-        $parentId = $childDetails['parentId'];
-        if ($parentId <= 0) {
-            throw new BadRequestHttpException('No valid Parent ID associated with Child ID.');
         }
 
         $progressService->ensureChildExists($childId, $parentId, $childDetails['age']);

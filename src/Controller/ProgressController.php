@@ -18,11 +18,15 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ProgressController extends AbstractController
 {
-    #[Route('/progress', name: 'show_progress')]
-    public function showProgress(Request $request, ProgressService $progressService, GameService $gameService, EntityManagerInterface $em): Response
+    #[Route('/progress/{parentId}', name: 'show_progress', requirements: ['parentId' => '\d+'])]
+    public function showProgress(int $parentId, Request $request, ProgressService $progressService, GameService $gameService, EntityManagerInterface $em): Response
     {
         $childId = $request->query->getInt('childId');
         $gameId = $request->query->getInt('gameId', 3);
+
+        if ($parentId <= 0) {
+            throw new BadRequestHttpException('Invalid parentId.');
+        }
 
         $scores = [1 => 0, 2 => 0, 3 => 0];
         $times = [1 => 0, 2 => 0, 3 => 0];
@@ -84,7 +88,7 @@ class ProgressController extends AbstractController
             'childId' => $childId,
             'gameId' => $gameId,
             'games' => $games,
-            'parentId' => $request->query->getInt('parentId', 1),
+            'parentId' => $parentId,
         ]);
     }
 
