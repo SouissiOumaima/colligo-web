@@ -37,11 +37,9 @@ class GameController extends AbstractController
         }
 
         $gameId = 3;
-        // Ensure the child exists with the given parentId
         $childDetails = $progressService->fetchChildDetails($childId);
         if (!$childDetails) {
-            // If child doesn't exist, create it with the provided parentId
-            $progressService->ensureChildExists($childId, $parentId, 8); // Default age 8
+            $progressService->ensureChildExists($childId, $parentId, 8);
             $childDetails = $progressService->fetchChildDetails($childId);
         }
 
@@ -92,9 +90,8 @@ class GameController extends AbstractController
     {
         $gameId = $request->request->getInt('game_id', 3);
         $selectedImageUrl = $request->request->get('image_url');
-        $timeout = $request->request->getBoolean('timeout');
 
-        error_log("checkAnswer: childId=$childId, parentId=$parentId, gameId=$gameId, timeout=$timeout");
+        error_log("checkAnswer: childId=$childId, parentId=$parentId, gameId=$gameId");
 
         if ($childId <= 0 || $parentId <= 0 || $gameId < 1 || $gameId > 5) {
             throw new BadRequestHttpException('Invalid childId, parentId, or gameId.');
@@ -110,18 +107,11 @@ class GameController extends AbstractController
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
 
-        if ($timeout) {
-            $result = [
-                'isCorrect' => false,
-                'points' => 0,
-                'timeout' => true,
-            ];
-        } else {
-            if (!$selectedImageUrl) {
-                throw new BadRequestHttpException('Missing selectedImageUrl parameter.');
-            }
-            $result = $gameService->checkAnswer($selectedImageUrl);
+        if (!$selectedImageUrl) {
+            throw new BadRequestHttpException('Missing selectedImageUrl parameter.');
         }
+
+        $result = $gameService->checkAnswer($selectedImageUrl);
 
         return $this->render('game/game_screen.html.twig', array_merge($result, [
             'currentImages' => $gameService->getCurrentImages(),
@@ -129,6 +119,8 @@ class GameController extends AbstractController
             'currentLevel' => $gameService->getCurrentLevel(),
             'currentStage' => $gameService->getCurrentStage(),
             'currentScore' => $gameService->getCurrentLevelPoints(),
+            'currentStageTries' => $gameService->getCurrentStageTries(),
+            'maxTriesPerStage' => $gameService->getMaxTriesPerStage(),
             'childId' => $childId,
             'parentId' => $parentId,
             'gameId' => $gameId,
@@ -140,8 +132,9 @@ class GameController extends AbstractController
     {
         $gameId = $request->request->getInt('game_id', 3);
         $isCorrect = $request->request->getBoolean('is_correct');
+        $maxTriesReached = $request->request->getBoolean('max_tries_reached');
 
-        error_log("proceedOrRetry: childId=$childId, parentId=$parentId, gameId=$gameId, isCorrect=$isCorrect");
+        error_log("proceedOrRetry: childId=$childId, parentId=$parentId, gameId=$gameId, isCorrect=$isCorrect, maxTriesReached=$maxTriesReached");
 
         if ($childId <= 0 || $parentId <= 0 || $gameId < 1 || $gameId > 5) {
             throw new BadRequestHttpException('Invalid childId, parentId, or gameId.');
@@ -156,7 +149,7 @@ class GameController extends AbstractController
         $progressService->ensureGamesExist($gameId);
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
-        $completed = $gameService->proceedOrRetry($isCorrect);
+        $completed = $gameService->proceedOrRetry($isCorrect, $maxTriesReached);
 
         if ($completed) {
             return $this->redirectToRoute('main_menu', [
@@ -176,6 +169,8 @@ class GameController extends AbstractController
             'currentLevel' => $gameService->getCurrentLevel(),
             'currentStage' => $gameService->getCurrentStage(),
             'currentScore' => $gameService->getCurrentLevelPoints(),
+            'currentStageTries' => $gameService->getCurrentStageTries(),
+            'maxTriesPerStage' => $gameService->getMaxTriesPerStage(),
             'childId' => $childId,
             'parentId' => $parentId,
             'gameId' => $gameId,

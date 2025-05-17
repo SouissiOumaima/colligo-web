@@ -29,10 +29,8 @@
             <div class="question-container">
                 <h2 class="question-text" id="question-text">هل هذا "{{ correctWord }}"؟</h2>
 
-                <div class="timer-container">
-                    <div class="timer-bar">
-                        <div class="timer-progress" id="timer-progress"></div>
-                    </div>
+                <div class="tries-container">
+                    <span class="tries-label">المحاولات المتبقية: <span id="tries-remaining">{{ maxTriesPerStage - currentStageTries }}</span> من {{ maxTriesPerStage }}</span>
                 </div>
 
                 <div class="progress-indicator">
@@ -58,24 +56,26 @@
                 {% endfor %}
             </div>
 
-            <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" id="timeout-form" style="display: none;">
-                <input type="hidden" name="timeout" value="1">
-                <input type="hidden" name="game_id" value="{{ gameId }}">
-            </form>
-
             <div class="feedback-container" id="feedback-container">
                 {% if isCorrect is defined and isCorrect is not null %}
                     <p class="feedback-text {% if isCorrect %}text-success{% else %}text-danger{% endif %}">
                         {% if isCorrect %}
                             إجابة صحيحة! لقد حصلت على {{ points|default(0) }} نقاط.
                         {% else %}
-                            {% if timeout is defined and timeout %}
-                                انتهى الوقت! حاول مرة أخرى.
+                            {% if maxTriesReached is defined and maxTriesReached %}
+                                لقد نفدت المحاولات! الانتقال إلى المرحلة التالية.
                             {% else %}
-                                إجابة خاطئة! حاول مرة أخرى.
+                                إجابة خاطئة! لديك {{ maxTriesPerStage - currentStageTries }} محاولات متبقية.
                             {% endif %}
                         {% endif %}
                     </p>
+                    {% if maxTriesReached is defined and maxTriesReached %}
+                        <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}" id="auto-proceed-form" style="display: none;">
+                            <input type="hidden" name="is_correct" value="0">
+                            <input type="hidden" name="max_tries_reached" value="1">
+                            <input type="hidden" name="game_id" value="{{ gameId }}">
+                        </form>
+                    {% endif %}
                 {% endif %}
             </div>
         </main>
@@ -88,8 +88,8 @@
                             {% if isCorrect %}
                                 إجابة صحيحة!!
                             {% else %}
-                                {% if timeout is defined and timeout %}
-                                    انتهى الوقت!
+                                {% if maxTriesReached is defined and maxTriesReached %}
+                                    نفدت المحاولات!
                                 {% else %}
                                     إجابة خاطئة!
                                 {% endif %}
@@ -104,19 +104,20 @@
                             {% if isCorrect %}
                                 ممتاز جدًا! استمر هكذا
                             {% else %}
-                                {% if timeout is defined and timeout %}
-                                    انتهى الوقت! حاول مرة أخرى.
+                                {% if maxTriesReached is defined and maxTriesReached %}
+                                    لقد نفدت المحاولات! حاول مرة أخرى في المرحلة التالية.
                                 {% else %}
-                                    حاول مرة أخرى!
+                                    حاول مرة أخرى! لديك {{ maxTriesPerStage - currentStageTries }} محاولات متبقية.
                                 {% endif %}
                             {% endif %}
                         </p>
                         <div class="result-buttons">
                             <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}">
                                 <input type="hidden" name="is_correct" value="{{ isCorrect ? '1' : '0' }}">
+                                <input type="hidden" name="max_tries_reached" value="{{ maxTriesReached ? '1' : '0' }}">
                                 <input type="hidden" name="game_id" value="{{ gameId }}">
                                 <button type="submit" class="btn primary-btn" id="continue-btn">
-                                    {% if isCorrect %}المتابعة{% else %}إعادة المحاولة{% endif %}
+                                    {% if isCorrect or (maxTriesReached is defined and maxTriesReached) %}المتابعة{% else %}إعادة المحاولة{% endif %}
                                 </button>
                             </form>
                             <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="btn secondary-btn" id="home-btn">العودة للرئيسية</a>
@@ -201,21 +202,14 @@
             object-fit: cover;
             background-color: transparent;
         }
-        .timer-container {
+        .tries-container {
+            text-align: center;
             margin-bottom: 20px;
         }
-        .timer-bar {
-            width: 100%;
-            height: 10px;
-            background-color: #e5e5e5;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .timer-progress {
-            height: 100%;
-            background-color: #58cc02;
-            width: 100%;
-            transition: width 0.1s linear;
+        .tries-label {
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
         }
         .progress-indicator {
             margin-bottom: 20px;
@@ -319,31 +313,17 @@
     {{ parent() }}
     <script src="{{ asset('js/animations.js') }}"></script>
     <script>
-        const TIME_LIMIT = 10000; // 10 seconds
-        const timerProgress = document.getElementById('timer-progress');
-        let startTime = Date.now();
-        let timerActive = {% if isCorrect is defined and isCorrect is not null %}false{% else %}true{% endif %};
-
-        function updateTimer() {
-            if (!timerActive) return;
-
-            const elapsed = Date.now() - startTime;
-            const progress = Math.max(0, 1 - elapsed / TIME_LIMIT);
-            timerProgress.style.width = (progress * 100) + '%';
-
-            if (progress <= 0) {
-                timerActive = false;
-                document.querySelectorAll('.image-button').forEach(button => {
-                    button.disabled = true;
-                });
-                document.getElementById('timeout-form').submit();
-            } else {
-                requestAnimationFrame(updateTimer);
+        document.addEventListener('DOMContentLoaded', function() {
+            const feedbackContainer = document.getElementById('feedback-container');
+            if (feedbackContainer) {
+                const maxTriesReached = {{ maxTriesReached|default(false) | json_encode }};
+                if (maxTriesReached) {
+                    const autoProceedForm = document.getElementById('auto-proceed-form');
+                    if (autoProceedForm) {
+                        setTimeout(() => autoProceedForm.submit(), 2000); // Auto-submit after 2 seconds
+                    }
+                }
             }
-        }
-
-        if (timerActive) {
-            requestAnimationFrame(updateTimer);
-        }
+        });
     </script>
 {% endblock %}

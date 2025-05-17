@@ -72,13 +72,12 @@ class ProgressService
             )->fetchAssociative();
 
             if (!$result) {
-                // If childId doesn't exist, return defaults
                 return ['parentId' => 1, 'age' => 8];
             }
 
             return [
-                'parentId' => $result['parentId'] ?? 1, // Default to 1 if NULL
-                'age' => $result['age'] ?? 8, // Default to 8 if NULL
+                'parentId' => $result['parentId'] ?? 1,
+                'age' => $result['age'] ?? 8,
             ];
         } catch (DBALException $e) {
             throw new \RuntimeException('Failed to fetch child details: ' . $e->getMessage());
@@ -146,7 +145,7 @@ class ProgressService
                 }
 
                 $scores[$levelNumber] = $level->getScore() ?? 0;
-                $times[$levelNumber] = $level->getTime() ?? 0;
+                $times[$levelNumber] = $level->getTime() ?? 0; // Retrieve time from database
                 $tries[$levelNumber] = $level->getNbtries() ?? 0;
             }
 
