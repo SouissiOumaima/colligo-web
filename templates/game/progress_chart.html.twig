@@ -28,7 +28,7 @@
         <!-- Main Content -->
         <div class="container">
             <header>
-                <a href="{{ path('main_menu') }}" class="back-button">
+                <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="back-button">
                     <span class="back-icon"></span>
                     <span>الرئيسية</span>
                 </a>
@@ -907,7 +907,6 @@
         .game-card:hover .game-icon {
             transform: scale(1.1);
         }
-        
 
         .game-name {
             font-size: 16px;
