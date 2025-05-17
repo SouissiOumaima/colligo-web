@@ -125,65 +125,70 @@ class GameService
     }
 
     public function checkAnswer(string $selectedImageUrl): array
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before checking answers.');
-        }
-
-        $state = $this->session->get('game_state');
-        $attemptTime = min((microtime(true) - $state['startTime']), 10);
-        $state['totalTimeInLevel'] += $attemptTime;
-        $isCorrect = $selectedImageUrl === $state['correctImageUrl'];
-
-        if (!$isCorrect) {
-            $state['totalTriesInLevel']++;
-        }
-
-        error_log("checkAnswer: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, stage={$state['currentStage']}, isCorrect=$isCorrect, attemptTime=$attemptTime, tries={$state['totalTriesInLevel']}, stagesPerLevel=" . $this->getStagesPerLevel());
-
-        if ($isCorrect) {
-            $points = $this->calculatePoints($attemptTime * 1000);
-            $state['currentLevelPoints'] += $points;
-
-            if ($state['currentStage'] === $this->getStagesPerLevel()) {
-                error_log("Level completed, saving: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}");
-                $this->saveLevelCompletion();
-                if ($state['currentLevel'] >= $state['highestLevelReached'] && $state['currentLevel'] < 3) {
-                    $state['highestLevelReached'] = $state['currentLevel'] + 1;
-                }
-            }
-        }
-
-        $this->session->set('game_state', $state);
-
-        return [
-            'isCorrect' => $isCorrect,
-            'currentStage' => $state['currentStage'],
-            'currentLevel' => $state['currentLevel'],
-            'points' => $state['currentLevelPoints'],
-            'attemptTime' => $attemptTime,
-        ];
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before checking answers.');
     }
 
-    public function proceedOrRetry(bool $isCorrect): bool
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before proceeding or retrying.');
-        }
+    $state = $this->session->get('game_state');
+    $attemptTime = min((microtime(true) - $state['startTime']), 10);
+    $state['totalTimeInLevel'] += $attemptTime;
+    $isCorrect = $selectedImageUrl === $state['correctImageUrl'];
 
-        // Ensure the language is set before proceeding
-        if ($this->selectedLanguage === null) {
-            $this->selectedLanguage = $this->fetchChildLanguage();
-        }
+    if (!$isCorrect) {
+        $state['totalTriesInLevel']++;
+    }
 
-        $state = $this->session->get('game_state');
-        if (!$isCorrect) {
-            $this->loadNextRound();
-        } elseif ($state['currentStage'] < $this->getStagesPerLevel()) {
-            $state['currentStage']++;
-            $this->session->set('game_state', $state);
-            $this->loadNextRound();
-        } elseif ($state['currentLevel'] < 3) {
+    error_log("checkAnswer: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, stage={$state['currentStage']}, isCorrect=$isCorrect, attemptTime=$attemptTime, tries={$state['totalTriesInLevel']}, stagesPerLevel=" . $this->getStagesPerLevel());
+
+    if ($isCorrect) {
+        $points = $this->calculatePoints($attemptTime * 1000);
+        $state['currentLevelPoints'] += $points;
+        // Update session state immediately to ensure points are saved
+        $this->session->set('game_state', $state);
+
+        // Save level completion if this is the last stage, after updating points
+        if ($state['currentStage'] === $this->getStagesPerLevel()) {
+            error_log("Level completed, saving: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}");
+            $this->saveLevelCompletion();
+            if ($state['currentLevel'] >= $state['highestLevelReached'] && $state['currentLevel'] < 3) {
+                $state['highestLevelReached'] = $state['currentLevel'] + 1;
+            }
+        }
+    }
+
+    // Update session state again for any other changes (e.g., tries, highestLevelReached)
+    $this->session->set('game_state', $state);
+
+    return [
+        'isCorrect' => $isCorrect,
+        'currentStage' => $state['currentStage'],
+        'currentLevel' => $state['currentLevel'],
+        'points' => $state['currentLevelPoints'],
+        'attemptTime' => $attemptTime,
+    ];
+}
+
+public function proceedOrRetry(bool $isCorrect): bool
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before proceeding or retrying.');
+    }
+
+    // Ensure the language is set before proceeding
+    if ($this->selectedLanguage === null) {
+        $this->selectedLanguage = $this->fetchChildLanguage();
+    }
+
+    $state = $this->session->get('game_state');
+    if (!$isCorrect) {
+        $this->loadNextRound();
+    } elseif ($state['currentStage'] < $this->getStagesPerLevel()) {
+        $state['currentStage']++;
+        $this->session->set('game_state', $state);
+        $this->loadNextRound();
+    } else {
+        if ($state['currentLevel'] < 3) {
             $state['currentLevel']++;
             $state['currentStage'] = 1;
             $state['currentLevelPoints'] = 0;
@@ -192,10 +197,12 @@ class GameService
             $this->session->set('game_state', $state);
             $this->loadNextRound();
         } else {
-            return true; // Game completed
+            // Game fully completed (Level 3, Stage 10), return true to redirect
+            return true;
         }
-        return false;
     }
+    return false;
+}
 
     private function fetchChildLanguage(): string
     {
