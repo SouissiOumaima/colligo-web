@@ -2,7 +2,9 @@
 
 namespace App\Service;
 
-use App\Entity\GameResult;
+use App\Entity\Child;
+use App\Entity\Game;
+use App\Entity\Level;
 use App\Entity\Theme;
 use App\Entity\Word;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,9 +26,10 @@ class GameService
 
     public function getThemes(string $language, string $level): array
     {
+        $levelText = $this->convertLevel($level);
         $themes = $this->entityManager->getRepository(Theme::class)->findBy([
             'language' => $language,
-            'level' => $level,
+            'level' => $levelText,
             'isValidated' => true,
         ], ['stage' => 'ASC']);
 
@@ -42,7 +45,7 @@ class GameService
         return $themesData;
     }
 
-    public function generateThemes(string $language, string $level, int $themeCount = 5, int $wordsPerTheme = 5): array
+    public function generateThemes(string $language, string $level, int $themeCount = 30, int $wordsPerTheme = 5): array
     {
         $generatedThemes = [];
         $themeNames = $this->generateThemeNames($level, $themeCount);
@@ -51,35 +54,52 @@ class GameService
             $theme = new Theme();
             $theme->setName($themeName);
             $theme->setLanguage($language);
-            $theme->setLevel($level);
+            $theme->setLevel($this->convertLevel($level));
             $theme->setStage($index + 1);
-            $theme->setIsValidated(isValidated: false);
+            $theme->setIsValidated(false);
 
-            $words = $this->generateWordsForTheme($themeName, $language, $level, $wordsPerTheme);
-            foreach ($words as $wordData) {
-                $word = new Word();
-                $word->setWord($wordData['mot']);
-                $word->setSynonym($wordData['synonyme']['ar']);
-                $word->setTheme($theme);
-                $theme->addWord($word);
-                $this->entityManager->persist($word);
+            try {
+                $words = $this->generateWordsForTheme($themeName, $language, $level, $wordsPerTheme);
+                if (empty($words)) {
+                    continue;
+                }
+
+                foreach ($words as $wordData) {
+                    if (preg_match('/^Mot\d+$/', $wordData['mot'])) {
+                        throw new \RuntimeException("Mot invalide détecté : {$wordData['mot']}");
+                    }
+
+                    $word = new Word();
+                    $word->setWord($wordData['mot']);
+                    $word->setSynonym($wordData['synonyme']['ar']);
+                    $word->setTheme($theme);
+                    $theme->addWord($word);
+                    $this->entityManager->persist($word);
+                }
+
+                $this->entityManager->persist($theme);
+                $generatedThemes[] = $theme;
+            } catch (\Exception $e) {
+                error_log("Erreur lors de la génération du thème '$themeName': " . $e->getMessage());
+                continue;
             }
-
-            $this->entityManager->persist($theme);
-            $generatedThemes[] = $theme;
         }
 
-        $this->entityManager->flush();
+        if (!empty($generatedThemes)) {
+            $this->entityManager->flush();
+        }
+
         return $generatedThemes;
     }
 
     private function generateThemeNames(string $level, int $count): array
     {
+        $levelText = $this->convertLevel($level);
         $prompt = sprintf(
-    "Génère %d noms de thèmes adaptés au niveau '%s' pour un jeu éducatif destiné aux enfants de 4 à 12 ans. Les thèmes doivent être simples, engageants et liés à des sujets quotidiens ou scolaires, même pour le niveau 'Difficile', qui doit rester compréhensible et accessible pour cet âge. Retourne une liste au format JSON.",
-    $count,
-    $level
-);
+            "Génère %d noms de thèmes uniques et variés adaptés au niveau '%s' pour un jeu éducatif destiné aux enfants de 4 à 12 ans. Les thèmes doivent être simples, engageants et liés à des sujets quotidiens, scolaires ou aux centres d'intérêt des enfants (par exemple, la nature, les animaux, les sciences, les fêtes, les sports, etc.). Assure-toi qu'il n'y a aucune répétition dans les noms des thèmes. Même pour le niveau 'Difficile', les thèmes doivent rester compréhensibles et accessibles pour cet âge. Retourne une liste au format JSON.",
+            $count,
+            $levelText
+        );
 
         $data = [
             'contents' => [
@@ -108,11 +128,26 @@ class GameService
             return array_slice($themeNames, 0, $count);
         } catch (\Exception $e) {
             $themesByLevel = [
-                'Facile' => ['Couleurs', 'Nombres', 'Famille', 'Animaux', 'Fruits', 'Jouets', 'Formes'],
-                'Moyen' => ['Vêtements', 'Légumes', 'Maison', 'École', 'Sports', 'Aliments', 'Météo'],
-                'Difficile' => ['Professions', 'Voyages', 'Amis', 'Nature', 'Technologie', 'Culture', 'Histoire'],
+                'Facile' => [
+                    'Couleurs', 'Nombres', 'Famille', 'Animaux', 'Fruits', 'Jouets', 'Formes', 'Véhicules', 'Saisons', 'Émotions',
+                    'Fleurs', 'Étoiles', 'Lune', 'Soleil', 'Arc-en-ciel', 'Arbres', 'Rivières', 'Montagnes', 'Plages', 'Forêts',
+                    'Oiseaux', 'Insectes', 'Poissons', 'Chiens', 'Chats', 'Ciel', 'Nuages', 'Pluie', 'Neige', 'Vent'
+                ],
+                'Moyen' => [
+                    'Vêtements', 'Légumes', 'Maison', 'École', 'Sports', 'Aliments', 'Météo', 'Voyages', 'Amis', 'Jardin',
+                    'Musique', 'Livres', 'Jeux', 'Fêtes', 'Océan', 'Camping', 'Plantes', 'Bateaux', 'Voitures', 'Avions',
+                    'Trains', 'Films', 'Théâtre', 'Danse', 'Cuisine', 'Marché', 'Parc', 'Zoo', 'Cirque', 'Foire'
+                ],
+                'Difficile' => [
+                    'Cultures du monde', 'Livres célèbres', 'Artistes connus', 'Musique classique', 'Sciences amusantes', 'Histoire des jouets',
+                    'Contes traditionnels', 'Peinture', 'Théâtre pour enfants', 'Danses du monde', 'Instruments de musique', 'Écrivains célèbres',
+                    'Fêtes culturelles', 'Histoire des costumes', 'Animaux légendaires', 'Découverte des planètes', 'Inventions simples',
+                    'Explorateurs célèbres', 'Monuments célèbres', 'Jeux anciens', 'Nature et environnement', 'Étoiles et constellations',
+                    'Histoire des sports', 'Cuisine du monde', 'Chansons traditionnelles', 'Artisanat', 'Jardins célèbres', 'Récits d’aventure',
+                    'Symboles culturels', 'Mythes et légendes'
+                ],
             ];
-            $availableThemes = $themesByLevel[$level] ?? ['Divers'];
+            $availableThemes = $themesByLevel[$levelText] ?? ['Divers'];
             shuffle($availableThemes);
             return array_slice($availableThemes, 0, $count);
         }
@@ -120,13 +155,13 @@ class GameService
 
     private function generateWordsForTheme(string $theme, string $language, string $level, int $count): array
     {
+        $levelText = $this->convertLevel($level);
         $prompt = sprintf(
             "Génère %d paires mot-synonyme pour le thème '%s' en langue '%s' pour un jeu éducatif de niveau '%s'. Chaque mot doit être adapté au niveau (Facile : mots simples, Moyen : mots intermédiaires, Difficile : mots complexes). Le synonyme doit être en arabe. Retourne un tableau JSON avec la structure : [{'mot': 'mot', 'synonyme': {'ar': 'synonyme'}}].",
             $count,
             $theme,
             $language,
-
-            $level
+            $levelText
         );
 
         $data = [
@@ -155,15 +190,18 @@ class GameService
             }
             return array_slice($words, 0, $count);
         } catch (\Exception $e) {
-            $defaultWords = [
-                ['mot' => 'Mot1', 'synonyme' => ['ar' => 'مرادف1']],
-                ['mot' => 'Mot2', 'synonyme' => ['ar' => 'مرادف2']],
-                ['mot' => 'Mot3', 'synonyme' => ['ar' => 'مرادف3']],
-                ['mot' => 'Mot4', 'synonyme' => ['ar' => 'مرادف4']],
-                ['mot' => 'Mot5', 'synonyme' => ['ar' => 'مرادف5']],
-            ];
-            return array_slice($defaultWords, 0, $count);
+            throw new \RuntimeException("Échec de la génération des mots pour le thème '$theme': " . $e->getMessage());
         }
+    }
+
+    public function convertLevel(string $level): string
+    {
+        $levelMap = [
+            '1' => 'Facile',
+            '2' => 'Moyen',
+            '3' => 'Difficile',
+        ];
+        return $levelMap[$level] ?? 'Facile';
     }
 
     public function calculateScore(int $attemptsUsed): int
@@ -171,19 +209,33 @@ class GameService
         return max(0, 100 - ($attemptsUsed * 10));
     }
 
-    public function saveLevelResult(int $childId, int $gameId, int $totalScore, int $totalAttemptsUsed, int $totalTimeSpent, string $language, string $level): void
+    public function saveLevelResult(int $childId, int $gameId, int $totalScore, int $totalAttemptsUsed, int $totalTimeSpent): void
     {
-        $gameResult = new GameResult();
-        $gameResult->setChildId($childId);
-        $gameResult->setGameId($gameId);
-        $gameResult->setTotalScore($totalScore);
-        $gameResult->setTotalAttemptsUsed($totalAttemptsUsed);
-        $gameResult->setTotalTimeSpent($totalTimeSpent);
-        $gameResult->setLanguage($language);
-        $gameResult->setLevel($level);
-        $gameResult->setPlayedAt(new \DateTime());
+        $child = $this->entityManager->getRepository(Child::class)->find($childId);
+        $game = $this->entityManager->getRepository(Game::class)->find($gameId);
 
-        $this->entityManager->persist($gameResult);
+        if (!$child || !$game) {
+            throw new \RuntimeException('Child or Game not found');
+        }
+
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('COALESCE(MAX(l.id), 0) + 1')
+           ->from(Level::class, 'l')
+           ->where('l.childId = :child')
+           ->andWhere('l.gameId = :game')
+           ->setParameter('child', $child)
+           ->setParameter('game', $game);
+        $nextId = $qb->getQuery()->getSingleScalarResult();
+
+        $level = new Level();
+        $level->setId($nextId);
+        $level->setChildId($child);
+        $level->setGameId($game);
+        $level->setScore($totalScore);
+        $level->setNbtries($totalAttemptsUsed);
+        $level->setTime($totalTimeSpent);
+
+        $this->entityManager->persist($level);
         $this->entityManager->flush();
     }
 }

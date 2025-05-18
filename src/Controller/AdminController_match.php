@@ -40,33 +40,29 @@ class AdminController_match extends AbstractController
         ]);
     }
 
-    #[Route('/generate-themes', name: 'admin_generate_themes', methods: ['GET', 'POST'])]
+    #[Route('/generate-themes', name: 'admin_generate_themes', methods: ['POST'])]
     public function generateThemes(Request $request, GameService $gameService, SessionInterface $session): Response
     {
         $language = $request->request->get('language');
         $level = $request->request->get('level');
+
         $validLanguages = ['fr', 'en', 'de', 'es'];
-        $validLevels = ['Facile', 'Moyen', 'Difficile'];
-
-        if ($request->isMethod('POST')) {
-            if (!in_array($language, $validLanguages) || !in_array($level, $validLevels)) {
-                $this->addFlash('error', 'Langue ou niveau invalide.');
-                return $this->redirectToRoute('admin_themes');
-            }
-
-            $themeCount = 5; // Default value
-            $wordsPerTheme = 5; // Default value
-            $themes = $gameService->generateThemes($language, $level, $themeCount, $wordsPerTheme);
-            $session->set('admin_filter_language', $language);
-            $session->set('admin_filter_level', $level);
-            $this->addFlash('success', 'Thèmes générés avec succès. Veuillez les valider.');
+        if (!in_array($language, $validLanguages) || !in_array($level, ['1', '2', '3'])) {
+            $this->addFlash('error', 'Langue ou niveau invalide.');
             return $this->redirectToRoute('admin_themes');
         }
 
-        return $this->render('admin/generate_themes.html.twig', [
-            'validLanguages' => $validLanguages,
-            'validLevels' => $validLevels,
-        ]);
+        try {
+            $generatedThemes = $gameService->generateThemes($language, $level, 30); // Générer 30 thèmes
+            $this->addFlash('success', 'Thèmes générés avec succès.');
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de la génération des thèmes : ' . $e->getMessage());
+        }
+
+        $session->set('admin_filter_language', $language);
+        $session->set('admin_filter_level', $gameService->convertLevel($level));
+
+        return $this->redirectToRoute('admin_themes');
     }
 
     #[Route('/add-theme', name: 'admin_add_theme', methods: ['GET'])]
@@ -76,9 +72,8 @@ class AdminController_match extends AbstractController
     }
 
     #[Route('/save-theme', name: 'admin_save_theme', methods: ['POST'])]
-    public function saveTheme(Request $request, EntityManagerInterface $entityManager, CsrfTokenManagerInterface $csrfTokenManager): Response
+    public function saveTheme(Request $request, EntityManagerInterface $entityManager, CsrfTokenManagerInterface $csrfTokenManager, GameService $gameService): Response
     {
-        // Validate CSRF token
         $token = new CsrfToken('save_theme', $request->request->get('_csrf_token'));
         if (!$csrfTokenManager->isTokenValid($token)) {
             $this->addFlash('error', 'Jeton CSRF invalide.');
@@ -89,14 +84,12 @@ class AdminController_match extends AbstractController
         $language = $request->request->get('language');
         $level = $request->request->get('level');
         $stage = $request->request->get('stage', 1);
-        // Retrieve the 'words' parameter as an array
         $allParams = $request->request->all();
         $wordsData = isset($allParams['words']) && is_array($allParams['words']) ? $allParams['words'] : [];
 
         $validLanguages = ['fr', 'en', 'de', 'es'];
-        $validLevels = ['Facile', 'Moyen', 'Difficile'];
+        $validLevels = ['1', '2', '3'];
 
-        // Validation
         if (empty($name) || !in_array($language, $validLanguages) || !in_array($level, $validLevels)) {
             $this->addFlash('error', 'Données invalides. Vérifiez le nom, la langue ou le niveau.');
             return $this->redirectToRoute('admin_add_theme');
@@ -107,17 +100,14 @@ class AdminController_match extends AbstractController
             return $this->redirectToRoute('admin_add_theme');
         }
 
-        // Create new Theme entity
         $theme = new Theme();
         $theme->setName($name);
         $theme->setLanguage($language);
-        $theme->setLevel($level);
+        $theme->setLevel($gameService->convertLevel($level));
         $theme->setStage((int)$stage);
         $theme->setIsValidated(false);
 
-        // Process words
         foreach ($wordsData as $wordData) {
-            // Ensure $wordData is an array with 'word' and 'synonym' keys
             if (is_array($wordData) && !empty($wordData['word']) && !empty($wordData['synonym'])) {
                 $word = new Word();
                 $word->setWord($wordData['word']);

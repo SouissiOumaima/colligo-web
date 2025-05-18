@@ -69,63 +69,52 @@
             <div class="mb-6">
                 <label for="level" class="block text-gray-700 font-medium mb-2">Niveau</label>
                 <select name="level" id="level" class="border-2 border-gray-400 rounded-lg p-4 w-full bg-white shadow-sm focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
-                    <option value="Facile">Facile</option>
-                    <option value="Moyen">Moyen</option>
-                    <option value="Difficile">Difficile</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
                 </select>
-            </div>
-
-            <div class="mb-6">
-                <label for="stage" class="block text-gray-700 font-medium mb-2">Étape</label>
-                <input type="number" name="stage" id="stage" value="1" min="1" class="border-2 border-gray-400 rounded-lg p-4 w-full bg-white shadow-sm focus:ring-4 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
             <div id="words-container" class="mb-6">
                 <h3 class="text-xl font-semibold text-gray-700 mb-4">Mots et synonymes</h3>
+                <!-- 5 paires de champs mot/synonyme -->
                 <div class="word-entry flex space-x-4 mb-4">
                     <input type="text" name="words[0][word]" placeholder="Mot" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
                     <input type="text" name="words[0][synonym]" placeholder="Synonyme" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
                 </div>
+                <div class="word-entry flex space-x-4 mb-4">
+                    <input type="text" name="words[1][word]" placeholder="Mot" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                    <input type="text" name="words[1][synonym]" placeholder="Synonyme" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="word-entry flex space-x-4 mb-4">
+                    <input type="text" name="words[2][word]" placeholder="Mot" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                    <input type="text" name="words[2][synonym]" placeholder="Synonyme" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="word-entry flex space-x-4 mb-4">
+                    <input type="text" name="words[3][word]" placeholder="Mot" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                    <input type="text" name="words[3][synonym]" placeholder="Synonyme" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                <div class="word-entry flex space-x-4 mb-4">
+                    <input type="text" name="words[4][word]" placeholder="Mot" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                    <input type="text" name="words[4][synonym]" placeholder="Synonyme" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
             </div>
 
             <div class="flex space-x-4">
-                <button type="button" id="add-word" class="bg-yellow-500 text-black px-6 py-2 rounded-lg hover:bg-yellow-600 transition duration-200">Ajouter</button>
+                <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition duration-200">Confirmer</button>
                 <a href="{{ path('admin_themes') }}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-200">Retour</a>
             </div>
         </form>
     </div>
 
     <script>
-        let wordIndex = 1;
-        let isAdding = true; // Flag to toggle between adding a word and submitting
-
-        document.getElementById('add-word').addEventListener('click', () => {
-            if (isAdding) {
-                // Add a new word/synonym entry
-                const container = document.getElementById('words-container');
-                const newEntry = document.createElement('div');
-                newEntry.className = 'word-entry flex space-x-4 mb-4';
-                newEntry.innerHTML = `
-                    <input type="text" name="words[${wordIndex}][word]" placeholder="Mot" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
-                    <input type="text" name="words[${wordIndex}][synonym]" placeholder="Synonyme" class="border-2 border-gray-400 rounded-lg p-4 w-1/2 bg-white shadow-sm placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500" required>
-                `;
-                container.appendChild(newEntry);
-                wordIndex++;
-                // Change button text to indicate submission
-                document.getElementById('add-word').textContent = 'Confirmer';
-                isAdding = false;
-            } else {
-                // Submit the form
-                document.getElementById('themeForm').submit();
-            }
-        });
-
         document.addEventListener('DOMContentLoaded', function() {
             const flashMessages = {
                 success: '{{ app.flashes("success")|join("|")|escape("js") }}',
                 error: '{{ app.flashes("error")|join("|")|escape("js") }}'
             };
 
+           
             const modal = document.getElementById('flashModal');
             const modalMessage = document.getElementById('modalMessage');
             const closeModal = document.getElementById('closeModal');

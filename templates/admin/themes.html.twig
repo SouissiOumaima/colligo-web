@@ -1,290 +1,621 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Administration des thèmes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Custom styles for subtle enhancements */
-        .table-hover tr:hover {
-            background-color: #f9fafb;
-            transition: background-color 0.2s;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 50;
-        }
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .modal-close {
-            cursor: pointer;
-            float: right;
-            font-size: 1.5rem;
-            color: #6b7280;
-        }
-        .modal-close:hover {
-            color: #ef4444;
-        }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-    <div class="container mx-auto p-6 max-w-7xl">
-        <h1 class="text-4xl font-bold text-gray-900 mb-6 text-center">Gestion des thèmes</h1>
+{% extends 'base.html.twig' %}
 
-        <!-- Modal for flash messages -->
-        <div id="flashModal" class="modal">
-            <div class="modal-content">
-                <span id="closeModal" class="modal-close">×</span>
-                <div id="modalMessage"></div>
-            </div>
-        </div>
+{% block title %}Administration des thèmes{% endblock %}
 
-        <!-- Modal for validation confirmation -->
-        <div id="validateModal" class="modal">
-            <div class="modal-content">
-                <span class="modal-close" onclick="closeValidateModal()">×</span>
-                <h2 class="text-xl font-semibold mb-4">Confirmer la validation</h2>
-                <p class="mb-4">Êtes-vous sûr de vouloir valider ce thème ?</p>
-                <div class="flex justify-end space-x-4">
-                    <button onclick="closeValidateModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Annuler</button>
-                    <button id="confirmValidate" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Valider</button>
-                </div>
-            </div>
-        </div>
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
 
-        <!-- Modal for deletion confirmation -->
-        <div id="deleteModal" class="modal">
-            <div class="modal-content">
-                <span class="modal-close" onclick="closeDeleteModal()">×</span>
-                <h2 class="text-xl font-semibold mb-4">Confirmer la suppression</h2>
-                <p class="mb-4">Êtes-vous sûr de vouloir supprimer ce thème ?</p>
-                <div class="flex justify-end space-x-4">
-                    <button onclick="closeDeleteModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Annuler</button>
-                    <button id="confirmDelete" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Supprimer</button>
-                </div>
-            </div>
-        </div>
+{% block body %}
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        {# {% include 'admin/sidebar.html.twig' %} #}
 
-        <div class="mb-8">
-            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Filtre appliqué</h2>
-            {% if filter_language or filter_level %}
-                <p class="text-gray-600 mb-2">
-                    Langue : <span class="font-medium">{{ filter_language|default('Aucune') }}</span> | 
-                    Niveau : <span class="font-medium">{{ filter_level|default('Aucun') }}</span>
-                    <a href="{{ path('admin_clear_filter') }}" class="text-indigo-600 hover:text-indigo-800 ml-4 font-medium">Effacer le filtre</a>
-                </p>
-            {% else %}
-                <p class="text-gray-500">Aucun filtre appliqué.</p>
-            {% endif %}
-        </div>
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="container py-5">
+                <h1 class="dashboard-title">Gestion des thèmes</h1>
 
-        <form action="{{ path('admin_generate_themes') }}" method="post" class="mb-8 bg-white p-6 rounded-lg shadow-md">
-            <div class="flex space-x-6 items-center">
-                <select name="language" class="border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="fr">Français</option>
-                    <option value="en">Anglais</option>
-                    <option value="de">Allemand</option>
-                    <option value="es">Espagnol</option>
-                </select>
-                <select name="level" class="border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="Facile">Facile</option>
-                    <option value="Moyen">Moyen</option>
-                    <option value="Difficile">Difficile</option>
-                </select>
-                <button type="submit" class="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition duration-200">Générer thèmes</button>
-                <a href="{{ path('admin_add_theme') }}" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition duration-200">Ajouter un thème</a>
-            </div>
-        </form>
+                <div class="dashboard-container glass-card">
+                    <!-- Filter Section -->
+                    <div class="filter-section mb-4">
+                        <div class="row">
+                            <!-- Name Filter -->
+                            <div class="col-md-3">
+                                <label for="name-filter" class="form-label">Nom</label>
+                                <input type="text" id="name-filter" class="form-select glass-input" placeholder="Rechercher par nom">
+                            </div>
+                            <!-- Language Filter -->
+                            <div class="col-md-3">
+                                <label for="language-filter" class="form-label">Langue</label>
+                                <select id="language-filter" class="form-select glass-input">
+                                    <option value="">Toutes les langues</option>
+                                    <option value="fr" {% if filter_language == 'fr' %}selected{% endif %}>Français</option>
+                                    <option value="en" {% if filter_language == 'en' %}selected{% endif %}>Anglais</option>
+                                    <option value="de" {% if filter_language == 'de' %}selected{% endif %}>Allemand</option>
+                                    <option value="es" {% if filter_language == 'es' %}selected{% endif %}>Espagnol</option>
+                                </select>
+                            </div>
+                            <!-- Level Filter -->
+                            <div class="col-md-3">
+                                <label for="level-filter" class="form-label">Niveau</label>
+                                <select id="level-filter" class="form-select glass-input">
+                                    <option value="">Tous les niveaux</option>
+                                    <option value="Facile" {% if filter_level == 'Facile' %}selected{% endif %}>1</option>
+                                    <option value="Moyen" {% if filter_level == 'Moyen' %}selected{% endif %}>2</option>
+                                    <option value="Difficile" {% if filter_level == 'Difficile' %}selected{% endif %}>3</option>
+                                </select>
+                            </div>
+                            <!-- Clear Filters Button -->
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button id="clear-filters" class="creative-button w-100">Effacer les filtres</button>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- Search Bar -->
-        <div class="mb-6">
-            <input type="text" id="themeSearch" placeholder="Rechercher un thème par nom..." class="w-full max-w-md border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-        </div>
+                    <!-- Form for Generating Themes -->
+                    <div class="filter-section mb-4">
+                        <form action="{{ path('admin_generate_themes') }}" method="post" class="flex flex-wrap items-end gap-4">
+                            <div class="flex-1 min-w-[200px]">
+                                <label for="language" class="form-label">Langue</label>
+                                <select name="language" id="language" class="form-select">
+                                    <option value="fr" {% if filter_language == 'fr' %}selected{% endif %}>Français</option>
+                                    <option value="en" {% if filter_language == 'en' %}selected{% endif %}>Anglais</option>
+                                    <option value="de" {% if filter_language == 'de' %}selected{% endif %}>Allemand</option>
+                                    <option value="es" {% if filter_language == 'es' %}selected{% endif %}>Espagnol</option>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-[200px]">
+                                <label for="level" class="form-label">Niveau</label>
+                                <select name="level" id="level" class="form-select">
+                                    <option value="1" {% if filter_level == 'Facile' %}selected{% endif %}>1</option>
+                                    <option value="2" {% if filter_level == 'Moyen' %}selected{% endif %}>2</option>
+                                    <option value="3" {% if filter_level == 'Difficile' %}selected{% endif %}>3</option>
+                                </select>
+                            </div>
+                            <div class="flex gap-4">
+                                <button type="submit" class="creative-button">Générer thèmes</button>
+                                <a href="{{ path('admin_add_theme') }}" class="creative-button">Ajouter un thème</a>
+                            </div>
+                        </form>
+                    </div>
 
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <table class="w-full table-hover" id="themesTable">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Nom</th>
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Langue</th>
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Niveau</th>
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Stage</th>
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Mots</th>
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Validé</th>
-                        <th class="border-b border-gray-200 p-4 text-left text-gray-600 font-medium">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if themes|length == 0 %}
-                        <tr>
-                            <td colspan="7" class="border-b border-gray-200 p-4 text-center text-gray-500">Aucun thème disponible avec les filtres actuels.</td>
-                        </tr>
-                    {% else %}
-                        {% for theme in themes %}
-                            <tr>
-                                <td class="border-b border-gray-200 p-4">{{ theme.name }}</td>
-                                <td class="border-b border-gray-200 p-4">{{ theme.language }}</td>
-                                <td class="border-b border-gray-200 p-4">{{ theme.level }}</td>
-                                <td class="border-b border-gray-200 p-4">{{ theme.stage }}</td>
-                                <td class="border-b border-gray-200 p-4">
-                                    {% for word in theme.words %}
-                                        {{ word.word }} ({{ word.synonym }})<br>
+                    <!-- Themes Table -->
+                    <div class="table-responsive">
+                        <table class="table glass-table w-full" id="themesTable">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Langue</th>
+                                    <th>Niveau</th>
+                                    <th>Stage</th>
+                                    <th>Mots</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if themes|length == 0 %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">Aucun thème disponible avec les filtres actuels.</td>
+                                    </tr>
+                                {% else %}
+                                    {% for theme in themes %}
+                                        <tr>
+                                            <td>{{ theme.name }}</td>
+                                            <td>{{ theme.language }}</td>
+                                            <td>
+                                                {% if theme.level == 'Facile' %}1
+                                                {% elseif theme.level == 'Moyen' %}2
+                                                {% elseif theme.level == 'Difficile' %}3
+                                                {% else %}{{ theme.level }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ theme.stage }}</td>
+                                            <td>
+                                                {% for word in theme.words %}
+                                                    {{ word.word }} ({{ word.synonym }})<br>
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {% if not theme.isValidated %}
+                                                    <form action="{{ path('admin_validate_theme', {'id': theme.id}) }}" method="post" class="d-inline-block me-2 validate-form">
+                                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('validate_theme') }}">
+                                                        <button type="button" class="action-icon validate-btn" title="Valider" data-theme="{{ theme.name }}">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <form action="{{ path('admin_delete_theme', {'id': theme.id}) }}" method="post" class="d-inline-block delete-form">
+                                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('delete_theme') }}">
+                                                    <button type="button" class="action-icon delete-btn" title="Supprimer" data-theme="{{ theme.name }}">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
                                     {% endfor %}
-                                </td>
-                                <td class="border-b border-gray-200 p-4">{{ theme.isValidated ? 'Oui' : 'Non' }}</td>
-                                <td class="border-b border-gray-200 p-4">
-                                    {% if not theme.isValidated %}
-                                        <form action="{{ path('admin_validate_theme', {'id': theme.id}) }}" method="post" class="inline-block mr-2 validate-form">
-                                            <input type="hidden" name="_csrf_token" value="{{ csrf_token('validate_theme') }}">
-                                            <button type="button" onclick="showValidateModal(this.form)" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200">Valider</button>
-                                        </form>
-                                    {% endif %}
-                                    <form action="{{ path('admin_delete_theme', {'id': theme.id}) }}" method="post" class="inline-block delete-form">
-                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('delete_theme') }}">
-                                        <button type="button" onclick="showDeleteModal(this.form)" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200">Supprimer</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    {% endif %}
-                </tbody>
-            </table>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const flashMessages = {
-                success: '{{ app.flashes("success")|join("|")|escape("js") }}',
-                error: '{{ app.flashes("error")|join("|")|escape("js") }}'
-            };
+        <!-- JavaScript -->
+        <script>
+            try {
+                // Filter Functionality
+                const nameFilter = document.getElementById('name-filter');
+                const languageFilter = document.getElementById('language-filter');
+                const levelFilter = document.getElementById('level-filter');
+                const clearFiltersBtn = document.getElementById('clear-filters');
+                const table = document.getElementById('themesTable');
+                const rows = table.querySelectorAll('tbody tr');
 
-            const flashModal = document.getElementById('flashModal');
-            const modalMessage = document.getElementById('modalMessage');
-            const closeModal = document.getElementById('closeModal');
+                function applyFilters() {
+                    const nameTerm = nameFilter.value.toLowerCase().trim();
+                    const selectedLanguage = languageFilter.value;
+                    const selectedLevel = levelFilter.value;
 
-            function showModal(type, messages) {
-                if (messages) {
-                    modalMessage.innerHTML = messages.split('|').map(msg => `<p class="${type === 'success' ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'} p-3 rounded mb-2">${msg}</p>`).join('');
-                    flashModal.style.display = 'block';
-                }
-            }
+                    rows.forEach(row => {
+                        const themeName = row.cells[0].textContent.toLowerCase();
+                        const themeLanguage = row.cells[1].textContent;
+                        const themeLevelText = row.cells[2].textContent.trim();
+                        const themeLevel = themeLevelText === '1' ? 'Facile' : themeLevelText === '2' ? 'Moyen' : themeLevelText === '3' ? 'Difficile' : themeLevelText;
 
-            if (flashMessages.success) showModal('success', flashMessages.success);
-            else if (flashMessages.error) showModal('error', flashMessages.error);
+                        const matchesName = !nameTerm || themeName.includes(nameTerm);
+                        const matchesLanguage = !selectedLanguage || themeLanguage === selectedLanguage;
+                        const matchesLevel = !selectedLevel || themeLevel === selectedLevel;
 
-            closeModal.onclick = function() {
-                flashModal.style.display = 'none';
-            };
+                        if (matchesName && matchesLanguage && matchesLevel) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
 
-            window.onclick = function(event) {
-                if (event.target === flashModal) {
-                    flashModal.style.display = 'none';
-                }
-            };
-
-            // Search functionality
-            const searchInput = document.getElementById('themeSearch');
-            const table = document.getElementById('themesTable');
-            const rows = table.querySelectorAll('tbody tr');
-
-            searchInput.addEventListener('input', function() {
-                const searchTerm = searchInput.value.toLowerCase();
-
-                rows.forEach(row => {
-                    const themeName = row.cells[0].textContent.toLowerCase();
-                    if (themeName.includes(searchTerm)) {
-                        row.style.display = '';
+                    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+                    if (visibleRows.length === 0) {
+                        const noResultsRow = table.querySelector('tbody tr td[colspan="7"]');
+                        if (noResultsRow) {
+                            noResultsRow.parentElement.style.display = '';
+                        }
                     } else {
-                        row.style.display = 'none';
+                        const noResultsRow = table.querySelector('tbody tr td[colspan="7"]');
+                        if (noResultsRow) {
+                            noResultsRow.parentElement.style.display = 'none';
+                        }
                     }
-                });
+                }
 
-                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-                if (visibleRows.length === 0) {
-                    const noResultsRow = table.querySelector('tbody tr td[colspan="7"]');
-                    if (noResultsRow) {
-                        noResultsRow.parentElement.style.display = '';
-                    }
-                } else {
+                nameFilter.addEventListener('input', applyFilters);
+                languageFilter.addEventListener('change', applyFilters);
+                levelFilter.addEventListener('change', applyFilters);
+
+                clearFiltersBtn.addEventListener('click', () => {
+                    nameFilter.value = '';
+                    languageFilter.value = '';
+                    levelFilter.value = '';
+                    rows.forEach(row => {
+                        row.style.display = '';
+                    });
                     const noResultsRow = table.querySelector('tbody tr td[colspan="7"]');
                     if (noResultsRow) {
                         noResultsRow.parentElement.style.display = 'none';
                     }
+                });
+
+                document.addEventListener('click', function(e) {
+                    const validateBtn = e.target.closest('.validate-btn');
+                    const deleteBtn = e.target.closest('.delete-btn');
+
+                    if (validateBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const form = validateBtn.closest('form');
+                        const themeName = validateBtn.getAttribute('data-theme');
+                        if (form) {
+                            Swal.fire({
+                                title: 'Êtes-vous sûr ?',
+                                text: `Voulez-vous valider le thème "${themeName}" ? Cette action est irréversible !`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#28a745',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Oui, valider !',
+                                cancelButtonText: 'Annuler'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    form.submit();
+                                }
+                            });
+                        }
+                    }
+
+                    if (deleteBtn) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const form = deleteBtn.closest('form');
+                        const themeName = deleteBtn.getAttribute('data-theme');
+                        if (form) {
+                            Swal.fire({
+                                title: 'Êtes-vous sûr ?',
+                                text: `Vous êtes sur le point de supprimer le thème "${themeName}". Cette action est irréversible !`,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#dc3545',
+                                cancelButtonColor: '#3085d6',
+                                confirmButtonText: 'Oui, supprimer !',
+                                cancelButtonText: 'Annuler'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    form.submit();
+                                }
+                            });
+                        }
+                    }
+                });
+
+                const successMessages = {{ app.flashes('success')|json_encode|raw }};
+                const errorMessages = {{ app.flashes('error')|json_encode|raw }};
+
+                if (successMessages.length > 0) {
+                    successMessages.forEach(message => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: message,
+                            confirmButtonColor: '#6c757d',
+                            confirmButtonText: 'OK'
+                        });
+                    });
                 }
-            });
 
-            // Validation Modal Logic
-            const validateModal = document.getElementById('validateModal');
-            const confirmValidate = document.getElementById('confirmValidate');
-            let currentValidateForm = null;
-
-            window.showValidateModal = function(form) {
-                currentValidateForm = form;
-                validateModal.style.display = 'block';
-            };
-
-            window.closeValidateModal = function() {
-                validateModal.style.display = 'none';
-                currentValidateForm = null;
-            };
-
-            confirmValidate.onclick = function() {
-                if (currentValidateForm) {
-                    currentValidateForm.submit();
+                if (errorMessages.length > 0) {
+                    errorMessages.forEach(message => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: message,
+                            confirmButtonColor: '#6c757d',
+                            confirmButtonText: 'OK'
+                        });
+                    });
                 }
-                closeValidateModal();
-            };
 
-            window.onclick = function(event) {
-                if (event.target === validateModal) {
-                    closeValidateModal();
+            } catch (error) {
+                console.error('JavaScript error:', error);
+            }
+        </script>
+
+        <style>
+            html,
+            body {
+                height: 100vh !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #f7f5fa !important;
+                font-family: 'Poppins', sans-serif !important;
+                overflow-x: hidden !important;
+                color: #2d3748 !important;
+            }
+
+            .main-content {
+                margin-left: 250px !important;
+                width: calc(100% - 250px) !important;
+                padding: 30px !important;
+                min-height: 100vh !important;
+                transition: all 0.3s ease !important;
+                background: #f7f5fa !important;
+            }
+
+            .main-content.expanded {
+                margin-left: 60px !important;
+                width: calc(100% - 60px) !important;
+            }
+
+            .sidebar.collapsed ~ .main-content {
+                margin-left: 60px !important;
+                width: calc(100% - 60px) !important;
+            }
+
+            .dashboard-title {
+                font-size: 36px !important;
+                font-weight: 700 !important;
+                color: #2d3748 !important;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+                text-align: center !important;
+                margin-bottom: 30px !important;
+            }
+
+            .glass-card {
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-radius: 12px !important;
+                padding: 25px !important;
+                backdrop-filter: blur(8px) !important;
+                -webkit-backdrop-filter: blur(8px) !important;
+                border: 1px solid rgba(0, 0, 0, 0.03) !important;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+                transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+            }
+
+            .glass-card:hover {
+                transform: translateY(-4px) !important;
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+            }
+
+            .filter-section {
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-radius: 10px !important;
+                padding: 15px !important;
+                margin-bottom: 20px !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+            }
+
+            .form-label {
+                color: #2d3748 !important;
+                font-weight: 500 !important;
+                font-size: 14px !important;
+                margin-bottom: 5px !important;
+                display: block !important;
+            }
+
+            .form-select {
+                background: rgba(255, 255, 255, 0.95) !important;
+                border: 1px solid rgba(0, 0, 0, 0.05) !important;
+                color: #2d3748 !important;
+                border-radius: 8px !important;
+                padding: 10px 30px 10px 15px !important;
+                font-size: 14px !important;
+                transition: all 0.3s ease !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+                width: 100% !important;
+                appearance: none !important;
+                background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%232d3748' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 0.753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 10px center !important;
+                background-size: 12px !important;
+            }
+
+            .form-select:focus {
+                background: rgba(255, 255, 255, 0.98) !important;
+                border-color: rgba(52, 152, 219, 0.5) !important;
+                box-shadow: 0 0 8px rgba(52, 152, 219, 0.15) !important;
+                outline: none !important;
+            }
+
+            .glass-input {
+                background: rgba(255, 255, 255, 0.9) !important;
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                color: #2d3748 !important;
+                border-radius: 8px !important;
+                padding: 8px !important;
+                font-size: 14px !important;
+                transition: all 0.3s ease !important;
+            }
+
+            .glass-input:focus {
+                background: rgba(255, 255, 255, 0.95) !important;
+                border-color: rgba(0, 0, 0, 0.2) !important;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+                outline: none !important;
+            }
+
+            .glass-table {
+                background: rgba(255, 255, 255, 0.9) !important;
+                border-radius: 10px !important;
+                overflow: hidden !important;
+                color: #2d3748 !important;
+            }
+
+            .glass-table thead {
+                background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+            }
+
+            .glass-table th {
+                background: transparent !important;
+                color: #ffffff !important;
+                text-transform: uppercase !important;
+                font-weight: 600 !important;
+                font-size: 14px !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+                padding: 12px !important;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+            }
+
+            .glass-table tbody {
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .glass-table td {
+                vertical-align: middle !important;
+                color: #2d3748 !important;
+                font-size: 14px !important;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+                background: transparent !important;
+                padding: 12px !important;
+                transition: background 0.3s ease !important;
+                position: relative !important;
+            }
+
+            .glass-table tr:nth-child(even) {
+                background: rgba(52, 152, 219, 0.05) !important;
+            }
+
+            .glass-table tr:nth-child(odd) {
+                background: rgba(46, 204, 113, 0.05) !important;
+            }
+
+            .glass-table tr:hover {
+                background: rgba(241, 196, 15, 0.1) !important;
+                box-shadow: 0 0 10px rgba(241, 196, 15, 0.2) !important;
+            }
+
+            .glass-table tr:last-child td {
+                border-bottom: none !important;
+            }
+
+            .creative-button {
+                background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+                color: #ffffff !important;
+                border: none !important;
+                border-radius: 20px !important;
+                padding: 12px 25px !important;
+                font-size: 16px !important;
+                font-weight: 600 !important;
+                transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+                text-decoration: none !important;
+                display: inline-block !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+                min-width: 120px !important;
+                text-align: center !important;
+            }
+
+            .creative-button:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
+                background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+            }
+
+            .creative-button:active {
+                transform: scale(0.97) !important;
+            }
+
+            .action-icon {
+                font-size: 20px !important;
+                transition: transform 0.3s ease, color 0.3s ease !important;
+                margin: 0 5px !important;
+                background: none !important;
+                border: none !important;
+                padding: 5px !important;
+                cursor: pointer !important;
+                width: 30px !important;
+                height: 30px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 50% !important;
+                position: relative !important;
+                z-index: 10 !important;
+            }
+
+            .action-icon:focus {
+                outline: none !important;
+                box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2) !important;
+            }
+
+            .validate-btn .fas.fa-check {
+                color: #27ae60 !important;
+                background: rgba(39, 174, 96, 0.1) !important;
+                width: 100% !important;
+                height: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            .validate-btn .fas.fa-check:hover {
+                color: #219653 !important;
+                transform: scale(1.1) !important;
+                background: rgba(39, 174, 96, 0.2) !important;
+            }
+
+            .delete-btn .fas.fa-trash-alt {
+                color: #e74c3c !important;
+                background: rgba(231, 76, 60, 0.1) !important;
+                width: 100% !important;
+                height: 100% !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            .delete-btn .fas.fa-trash-alt:hover {
+                color: #c0392b !important;
+                transform: scale(1.1) !important;
+                background: rgba(231, 76, 60, 0.2) !important;
+            }
+
+            @media(max-width: 1024px) {
+                .main-content {
+                    margin-left: 60px !important;
+                    width: calc(100% - 60px) !important;
+                    padding: 20px !important;
                 }
-            };
 
-            // Deletion Modal Logic
-            const deleteModal = document.getElementById('deleteModal');
-            const confirmDelete = document.getElementById('confirmDelete');
-            let currentDeleteForm = null;
-
-            window.showDeleteModal = function(form) {
-                currentDeleteForm = form;
-                deleteModal.style.display = 'block';
-            };
-
-            window.closeDeleteModal = function() {
-                deleteModal.style.display = 'none';
-                currentDeleteForm = null;
-            };
-
-            confirmDelete.onclick = function() {
-                if (currentDeleteForm) {
-                    currentDeleteForm.submit();
+                .dashboard-title {
+                    font-size: 28px !important;
                 }
-                closeDeleteModal();
-            };
 
-            window.onclick = function(event) {
-                if (event.target === deleteModal) {
-                    closeDeleteModal();
-                } else if (event.target === flashModal) {
-                    flashModal.style.display = 'none';
+                .glass-card {
+                    padding: 15px !important;
                 }
-            };
-        });
-    </script>
-</body>
-</html>
+
+                .creative-button {
+                    padding: 10px 20px !important;
+                    font-size: 14px !important;
+                    min-width: 120px !important;
+                }
+
+                .form-select {
+                    padding: 8px 25px 8px 12px !important;
+                    background-size: 10px !important;
+                }
+
+                .action-icon {
+                    font-size: 18px !important;
+                    width: 25px !important;
+                    height: 25px !important;
+                    padding: 4px !important;
+                }
+            }
+
+            @media(max-width: 768px) {
+                .main-content {
+                    margin-left: 0 !important;
+                    width: 100% !important;
+                    padding: 15px !important;
+                }
+
+                .dashboard-title {
+                    font-size: 24px !important;
+                }
+
+                .glass-card {
+                    padding: 10px !important;
+                }
+
+                .filter-section .row > div {
+                    margin-bottom: 10px !important;
+                }
+
+                .creative-button {
+                    padding: 8px 15px !important;
+                    font-size: 12px !important;
+                }
+
+                .form-select {
+                    padding: 6px 20px 6px 10px !important;
+                    background-size: 8px !important;
+                    font-size: 12px !important;
+                }
+
+                .glass-table th,
+                .glass-table td {
+                    font-size: 12px !important;
+                    padding: 8px !important;
+                }
+
+                .action-icon {
+                    font-size: 16px !important;
+                    width: 20px !important;
+                    height: 20px !important;
+                    padding: 3px !important;
+                }
+            }
+        </style>
+    {% endblock %}
