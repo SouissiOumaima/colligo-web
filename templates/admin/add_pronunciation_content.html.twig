@@ -116,13 +116,13 @@
         .glass-input:focus {
             background: rgba(255, 255, 255, 0.95) !important;
             border-color: rgba(0, 0, 0, 0.2) !important;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.1) !important; /* Updated to blue theme */
             outline: none !important;
         }
 
         /* Creative Button */
         .creative-button {
-            background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
             color: #ffffff !important;
             border: none !important;
             border-radius: 20px !important;
@@ -141,7 +141,7 @@
         .creative-button:hover {
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-            background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+            background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Updated to darker blue gradient */
         }
 
         .creative-button:active {
@@ -228,13 +228,6 @@
                 <h1 class="dashboard-title">Ajouter le contenu</h1>
 
                 <div class="dashboard-container glass-card max-w-2xl mx-auto">
-                    {% for message in app.flashes('success') %}
-                        <div class="alert alert-success">{{ message }}</div>
-                    {% endfor %}
-                    {% for message in app.flashes('error') %}
-                        <div class="alert alert-danger">{{ message }}</div>
-                    {% endfor %}
-
                     <form method="post" class="p-6">
                         {{ form_start(form) }}
                         <div class="mb-6">
@@ -278,6 +271,34 @@
                 sidebarToggle.addEventListener('click', function() {
                     document.getElementById('sidebar').classList.toggle('collapsed');
                     document.getElementById('mainContent').classList.toggle('expanded');
+                });
+            }
+
+            // Flash Messages with SweetAlert (replacing default alerts)
+            const successMessages = {{ app.flashes('success')|json_encode|raw }};
+            const errorMessages = {{ app.flashes('error')|json_encode|raw }};
+
+            if (successMessages.length > 0) {
+                successMessages.forEach(message => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Succès',
+                        text: message,
+                        confirmButtonColor: '#6c757d',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            }
+
+            if (errorMessages.length > 0) {
+                errorMessages.forEach(message => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: message,
+                        confirmButtonColor: '#6c757d',
+                        confirmButtonText: 'OK'
+                    });
                 });
             }
         } catch (error) {

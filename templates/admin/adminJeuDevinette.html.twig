@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Reset and Global Styles */
         html,
         body {
             height: 100vh !important;
@@ -83,7 +84,7 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
             width: 100% !important;
             appearance: none !important;
-            background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%232d3748' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 0.753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%232d3748' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
             background-repeat: no-repeat !important;
             background-position: right 10px center !important;
             background-size: 12px !important;
@@ -104,7 +105,7 @@
         }
 
         .glass-table thead {
-            background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important;
         }
 
         .glass-table th {
@@ -137,12 +138,12 @@
         }
 
         .glass-table tr:nth-child(odd) {
-            background: rgba(46, 204, 113, 0.05) !important;
+            background: rgba(135, 206, 235, 0.05) !important;
         }
 
         .glass-table tr:hover {
-            background: rgba(241, 196, 15, 0.1) !important;
-            box-shadow: 0 0 10px rgba(241, 196, 15, 0.2) !important;
+            background: rgba(52, 152, 219, 0.1) !important;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2) !important;
         }
 
         .glass-table tr:last-child td {
@@ -150,7 +151,7 @@
         }
 
         .creative-button {
-            background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important;
             color: #ffffff !important;
             border: none !important;
             border-radius: 20px !important;
@@ -168,7 +169,7 @@
         .creative-button:hover {
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-            background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+            background: linear-gradient(135deg, #2980b9, #76c0de) !important;
         }
 
         .creative-button:active {
@@ -189,6 +190,7 @@
             border-radius: 8px !important;
         }
 
+        /* Responsive Design */
         @media(max-width: 1024px) {
             .main-content {
                 margin-left: 60px !important;
@@ -451,8 +453,8 @@
                 text: 'Vous êtes sur le point de supprimer les mots sélectionnés. Cette action est irréversible !',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
+                confirmButtonColor: '#e74c3c', 
+                cancelButtonColor: '#6c757d',
                 confirmButtonText: 'Oui, supprimer !',
                 cancelButtonText: 'Annuler'
             }).then((result) => result.isConfirmed);

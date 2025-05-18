@@ -5,7 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     gemini_api_key: '%env(GEMINI_API_KEY)%'
-    app.upload_dir: '%kernel.project_dir%/public/uploads/images'
+    upload_dir: '%kernel.project_dir%/public/uploads/images'
     ai_api_key: '%env(AI_API_KEY)%'
 
 services:
@@ -13,6 +13,8 @@ services:
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $uploadDir: '%upload_dir%'
     App\Repository\JeudedevinetteRepository:
         arguments:
             $logger: '@monolog.logger'
@@ -49,7 +51,9 @@ services:
             $logger: '@monolog.logger'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-
+    App\Service\AdminService:   
+        arguments:
+            $uploadDir: '%upload_dir%'
 
     
     App\Service\DragdropGameService:

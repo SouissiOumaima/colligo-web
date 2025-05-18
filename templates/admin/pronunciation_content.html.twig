@@ -121,7 +121,7 @@
             width: 18px !important;
             height: 18px !important;
             margin-right: 10px !important;
-            border: 2px solid #ff7f50 !important;
+            border: 2px solid #3498db !important; /* Updated to blue theme */
             border-radius: 4px !important;
             background-color: #fff !important;
             cursor: pointer !important;
@@ -129,8 +129,8 @@
         }
 
         .custom-checkbox:checked {
-            background-color: #ff7f50 !important;
-            border-color: #ff6f40 !important;
+            background-color: #3498db !important; /* Updated to blue theme */
+            border-color: #2980b9 !important; /* Updated to darker blue */
         }
 
         .custom-checkbox:checked::after {
@@ -197,7 +197,7 @@
         .glass-input:focus {
             background: rgba(255, 255, 255, 0.95) !important;
             border-color: rgba(0, 0, 0, 0.2) !important;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.1) !important; /* Updated to blue theme */
             outline: none !important;
         }
 
@@ -210,7 +210,7 @@
         }
 
         .glass-table thead {
-            background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
         }
 
         .glass-table th {
@@ -248,8 +248,8 @@
         }
 
         .glass-table tr:hover {
-            background: rgba(241, 196, 15, 0.1) !important;
-            box-shadow: 0 0 10px rgba(241, 196, 15, 0.2) !important;
+            background: rgba(52, 152, 219, 0.1) !important; /* Updated to blue theme */
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.2) !important; /* Updated to blue theme */
         }
 
         .glass-table tr:last-child td {
@@ -258,7 +258,7 @@
 
         /* Creative Button (Add Content, Generate, Save, Clear Filters) */
         .creative-button {
-            background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
             color: #ffffff !important;
             border: none !important;
             border-radius: 20px !important;
@@ -276,7 +276,7 @@
         .creative-button:hover {
             transform: translateY(-2px) !important;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-            background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+            background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Updated to darker blue gradient */
         }
 
         .creative-button:active {
@@ -373,8 +373,8 @@
         }
 
         .ai-generation-form .form-select:focus {
-            border-color: #ff7f50;
-            box-shadow: 0 0 8px rgba(255, 127, 80, 0.3);
+            border-color: #3498db; /* Updated to blue theme */
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3); /* Updated to blue theme */
         }
 
         .ai-generation-form .creative-button {
@@ -596,7 +596,7 @@
                                     {% endfor %}
                                 </div>
                                 <div class="text-center mt-4">
-                                    <button type="submit" name="save_generated" value="1" class="creative-button" style="background: #ff7f50; width: 200px;">Enregistrer les sélections</button>
+                                    <button type="submit" name="save_generated" value="1" class="creative-button" style="background: #3498db; width: 200px;">Enregistrer les sélections</button>
                                 </div>
                                 <input type="hidden" name="save_langue" value="{{ langue is defined ? langue : '' }}">
                                 <input type="hidden" name="save_niveau" value="{{ niveau is defined ? niveau : '' }}">

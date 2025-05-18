@@ -12,14 +12,14 @@ html, body {
 /* Sidebar Styling */
 .sidebar {
     width: 250px !important;
-    background: linear-gradient(135deg, #e6e6fa, #8e8c9b) !important;
-    color: #2d3748 !important;
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
+    color: #ffffff !important; /* Changed to white for better contrast */
     position: fixed !important;
     height: 100% !important;
     transition: width 0.3s ease, box-shadow 0.3s ease !important;
     box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15) !important;
     z-index: 1000 !important;
-    border-right: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important; /* Adjusted border for contrast */
 }
 
 .sidebar.collapsed {
@@ -43,7 +43,7 @@ html, body {
     align-items: center !important;
     justify-content: space-between !important;
     padding: 20px !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* Adjusted for contrast */
     background: rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -51,7 +51,7 @@ html, body {
     margin: 0 !important;
     font-size: 20px !important;
     font-weight: 700 !important;
-    color: #2d3748 !important;
+    color: #ffffff !important; /* Changed to white for contrast */
     text-transform: uppercase !important;
     letter-spacing: 1px !important;
 }
@@ -59,14 +59,14 @@ html, body {
 .sidebar-toggle {
     background: none !important;
     border: none !important;
-    color: #2d3748 !important;
+    color: #ffffff !important; /* Changed to white for contrast */
     font-size: 20px !important;
     cursor: pointer !important;
     transition: transform 0.3s ease, color 0.3s ease !important;
 }
 
 .sidebar-toggle:hover {
-    color: #3498db !important;
+    color: #d1eaff !important; /* Lighter blue for hover */
     transform: rotate(90deg) !important;
 }
 
@@ -77,14 +77,14 @@ html, body {
 }
 
 .menu-item {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; /* Adjusted for contrast */
 }
 
 .menu-link {
     display: flex !important;
     align-items: center !important;
     padding: 15px 20px !important;
-    color: #4a5568 !important;
+    color: #ffffff !important; /* Changed to white for contrast */
     text-decoration: none !important;
     transition: all 0.3s ease !important;
     position: relative !important;
@@ -93,14 +93,14 @@ html, body {
 
 .menu-link:hover {
     color: #ffffff !important;
-    background: rgba(52, 152, 219, 0.15) !important;
+    background: rgba(255, 255, 255, 0.15) !important; /* Adjusted hover background */
     padding-left: 25px !important;
-    box-shadow: 0 0 8px rgba(52, 152, 219, 0.2) !important;
-    border-left-color: #3498db !important;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.2) !important; /* Adjusted shadow for contrast */
+    border-left-color: #ffffff !important;
 }
 
 .menu-link.active {
-    background: linear-gradient(135deg, #3498db, #2980b9) !important;
+    background: linear-gradient(135deg, #2980b9, #1e6a9b) !important; /* Darker blue for active state */
     color: #ffffff !important;
     font-weight: 600 !important;
     border-left-color: #ffffff !important;
@@ -125,7 +125,7 @@ html, body {
 .toggle-submenu-btn {
     background: none !important;
     border: none !important;
-    color: #4a5568 !important;
+    color: #ffffff !important; /* Changed to white for contrast */
     font-size: 14px !important;
     cursor: pointer !important;
     padding: 0 10px !important;
@@ -137,7 +137,7 @@ html, body {
 }
 
 .toggle-submenu-btn:hover {
-    color: #3498db !important;
+    color: #d1eaff !important; /* Lighter blue for hover */
 }
 
 .toggle-submenu-btn i {
@@ -151,7 +151,7 @@ html, body {
 .submenu {
     list-style: none !important;
     padding: 0 !important;
-    background: rgba(0, 0, 0, 0.05) !important;
+    background: rgba(255, 255, 255, 0.1) !important; /* Adjusted for contrast */
     overflow: hidden !important;
     transition: max-height 0.3s ease !important;
     max-height: 0 !important;
@@ -169,7 +169,7 @@ html, body {
     display: flex !important;
     align-items: center !important;
     padding: 10px 20px 10px 40px !important;
-    color: #4a5568 !important;
+    color: #ffffff !important; /* Changed to white for contrast */
     text-decoration: none !important;
     transition: all 0.3s ease !important;
     position: relative !important;
@@ -177,9 +177,9 @@ html, body {
 
 .submenu-link:hover {
     color: #ffffff !important;
-    background: rgba(52, 152, 219, 0.1) !important;
+    background: rgba(255, 255, 255, 0.2) !important; /* Adjusted hover background */
     padding-left: 45px !important;
-    box-shadow: 0 0 6px rgba(52, 152, 219, 0.15) !important;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.15) !important; /* Adjusted shadow for contrast */
 }
 
 /* Main Content Styling */
@@ -278,7 +278,7 @@ html, body {
 
 /* Buttons */
 .creative-button {
-    background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
     color: #ffffff !important;
     border: none !important;
     border-radius: 20px !important;
@@ -296,7 +296,7 @@ html, body {
 .creative-button:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-    background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+    background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Updated to darker blue gradient */
 }
 
 .creative-button:active {

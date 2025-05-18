@@ -117,7 +117,7 @@ html, body {
 .glass-input:focus {
     background: rgba(255, 255, 255, 0.95) !important;
     border-color: rgba(0, 0, 0, 0.2) !important;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.1) !important; /* Updated to blue theme */
     outline: none !important;
 }
 
@@ -130,7 +130,7 @@ html, body {
 }
 
 .glass-table thead {
-    background: linear-gradient(135deg, #ff7f50, #ff9999) !important; /* Vibrant orange gradient */
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
 }
 
 .glass-table th {
@@ -159,16 +159,16 @@ html, body {
 }
 
 .glass-table tr:nth-child(even) {
-    background: rgba(52, 152, 219, 0.05) !important; /* Light blue for even rows */
+    background: rgba(52, 152, 219, 0.05) !important; /* Light blue for even rows (unchanged) */
 }
 
 .glass-table tr:nth-child(odd) {
-    background: rgba(46, 204, 113, 0.05) !important; /* Light green for odd rows */
+    background: rgba(135, 206, 235, 0.05) !important; /* Light sky blue for odd rows */
 }
 
 .glass-table tr:hover {
-    background: rgba(241, 196, 15, 0.1) !important; /* Yellow glow on hover */
-    box-shadow: 0 0 10px rgba(241, 196, 15, 0.2) !important;
+    background: rgba(52, 152, 219, 0.1) !important; /* Updated to blue glow on hover */
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.2) !important; /* Updated to blue shadow */
 }
 
 .glass-table tr:last-child td {
@@ -177,7 +177,7 @@ html, body {
 
 /* Creative Button (Add Question, Clear Filters) */
 .creative-button {
-    background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
     color: #ffffff !important;
     border: none !important;
     border-radius: 20px !important;
@@ -195,7 +195,7 @@ html, body {
 .creative-button:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-    background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+    background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Updated to darker blue gradient */
 }
 
 .creative-button:active {
@@ -213,35 +213,35 @@ html, body {
 }
 
 .edit-btn .fa-pencil-alt {
-    color: #3498db !important; /* Blue for edit pencil */
+    color: #3498db !important; /* Blue for edit pencil (unchanged) */
 }
 
 .edit-btn .fa-pencil-alt:hover {
-    color: #2980b9 !important;
+    color: #2980b9 !important; /* Darker blue on hover (unchanged) */
 }
 
 .save-btn .fa-check {
-    color: #27ae60 !important; /* Green checkmark for confirm */
+    color: #27ae60 !important; /* Green checkmark for confirm (unchanged) */
 }
 
 .save-btn .fa-check:hover {
-    color: #219653 !important;
+    color: #219653 !important; /* Darker green on hover (unchanged) */
 }
 
 .cancel-btn .fa-times {
-    color: #e74c3c !important; /* Red 'X' for cancel */
+    color: #e74c3c !important; /* Red 'X' for cancel (unchanged) */
 }
 
 .cancel-btn .fa-times:hover {
-    color: #c0392b !important;
+    color: #c0392b !important; /* Darker red on hover (unchanged) */
 }
 
 .delete-question .fa-trash-alt {
-    color: #e74c3c !important; /* Red trash can for delete */
+    color: #e74c3c !important; /* Red trash can for delete (unchanged) */
 }
 
 .delete-question .fa-trash-alt:hover {
-    color: #c0392b !important;
+    color: #c0392b !important; /* Darker red on hover (unchanged) */
 }
 
 /* Alert Styling */

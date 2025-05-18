@@ -9,7 +9,6 @@ html, body {
     color: #2d3748 !important;
 }
 
-
 .menu-item {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -173,7 +172,7 @@ html, body {
 .glass-input:focus {
     background: rgba(255, 255, 255, 0.95) !important;
     border-color: rgba(0, 0, 0, 0.2) !important;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.1) !important;
     outline: none !important;
 }
 
@@ -203,7 +202,7 @@ html, body {
 }
 
 .glass-table thead {
-    background: linear-gradient(135deg, #ff7f50, #ff9999) !important; /* Vibrant orange gradient */
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
 }
 
 .glass-table th {
@@ -297,6 +296,7 @@ html, body {
 .delete-user .fa-trash-alt {
     color: #e74c3c !important; /* Red trash can for delete */
 }
+
 /* Cancel Button */
 .cancel-button {
     background: linear-gradient(135deg, #6c757d, #adb5bd) !important;
@@ -322,14 +322,13 @@ html, body {
     transform: scale(0.95) !important;
 }
 
-
 .delete-user .fa-trash-alt:hover {
     color: #c0392b !important;
 }
 
 /* Creative Button */
 .creative-button {
-    background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
     color: #ffffff !important;
     border: none !important;
     border-radius: 20px !important;
@@ -347,7 +346,7 @@ html, body {
 .creative-button:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
-    background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+    background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Slightly darker blue gradient for hover */
 }
 
 .creative-button:active {
