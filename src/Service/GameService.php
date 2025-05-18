@@ -51,11 +51,14 @@ class GameService
         $themeNames = $this->generateThemeNames($level, $themeCount);
 
         foreach ($themeNames as $index => $themeName) {
+            // Limiter les stages entre 1 et 10 avec réinitialisation
+            $stage = ($index % 10) + 1;
+
             $theme = new Theme();
             $theme->setName($themeName);
             $theme->setLanguage($language);
             $theme->setLevel($this->convertLevel($level));
-            $theme->setStage($index + 1);
+            $theme->setStage($stage);
             $theme->setIsValidated(false);
 
             try {
@@ -96,7 +99,7 @@ class GameService
     {
         $levelText = $this->convertLevel($level);
         $prompt = sprintf(
-            "Génère %d noms de thèmes uniques et variés adaptés au niveau '%s' pour un jeu éducatif destiné aux enfants de 4 à 12 ans. Les thèmes doivent être simples, engageants et liés à des sujets quotidiens, scolaires ou aux centres d'intérêt des enfants (par exemple, la nature, les animaux, les sciences, les fêtes, les sports, etc.). Assure-toi qu'il n'y a aucune répétition dans les noms des thèmes. Même pour le niveau 'Difficile', les thèmes doivent rester compréhensibles et accessibles pour cet âge. Retourne une liste au format JSON.",
+            "Génère %d noms de thèmes uniques et variés adaptés au niveau '%s' pour un jeu éducatif destiné aux enfants de 4 à 12 ans. Pour le niveau 'Difficile', les thèmes doivent être intellectuellement stimulants, liés à des sujets culturels, scientifiques, historiques ou créatifs (par exemple, 'Cultures du monde', 'Explorateurs célèbres'). Évite les thèmes trop simples comme 'Animaux', 'Voyage' ou 'Supermarché'. Les thèmes doivent rester engageants et accessibles pour cet âge, sans répétition. Retourne une liste au format JSON.",
             $count,
             $levelText
         );
@@ -139,12 +142,15 @@ class GameService
                     'Trains', 'Films', 'Théâtre', 'Danse', 'Cuisine', 'Marché', 'Parc', 'Zoo', 'Cirque', 'Foire'
                 ],
                 'Difficile' => [
-                    'Cultures du monde', 'Livres célèbres', 'Artistes connus', 'Musique classique', 'Sciences amusantes', 'Histoire des jouets',
-                    'Contes traditionnels', 'Peinture', 'Théâtre pour enfants', 'Danses du monde', 'Instruments de musique', 'Écrivains célèbres',
-                    'Fêtes culturelles', 'Histoire des costumes', 'Animaux légendaires', 'Découverte des planètes', 'Inventions simples',
-                    'Explorateurs célèbres', 'Monuments célèbres', 'Jeux anciens', 'Nature et environnement', 'Étoiles et constellations',
-                    'Histoire des sports', 'Cuisine du monde', 'Chansons traditionnelles', 'Artisanat', 'Jardins célèbres', 'Récits d’aventure',
-                    'Symboles culturels', 'Mythes et légendes'
+                     'Livres célèbres', 'Artistes connus', 'Musique classique', 
+                     'Histoire des jouets', 'Peinture', 'Animaux',
+                    'Théâtre pour enfants', 'Danses du monde', 'Instruments de musique', 
+                    'Écrivains célèbres', 'Fêtes culturelles', 'Histoire des costumes', 
+                    'Animaux légendaires',
+                    'Explorateurs célèbres', 'Monuments célèbres', 'Jeux anciens', 
+                    'Nature et environnement', 'Histoire des sports', 
+                    'Cuisine du monde', 'Chansons traditionnelles', 'Jardins célèbres', 
+                    'Découvertes scientifiques', 'Histoire des transports', 
                 ],
             ];
             $availableThemes = $themesByLevel[$levelText] ?? ['Divers'];
