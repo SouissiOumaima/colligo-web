@@ -69,13 +69,6 @@
                             {% endif %}
                         {% endif %}
                     </p>
-                    {% if maxTriesReached is defined and maxTriesReached %}
-                        <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}" id="auto-proceed-form" style="display: none;">
-                            <input type="hidden" name="is_correct" value="0">
-                            <input type="hidden" name="max_tries_reached" value="1">
-                            <input type="hidden" name="game_id" value="{{ gameId }}">
-                        </form>
-                    {% endif %}
                 {% endif %}
             </div>
         </main>
@@ -112,7 +105,7 @@
                             {% endif %}
                         </p>
                         <div class="result-buttons">
-                            <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}">
+                            <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}" id="proceed-form">
                                 <input type="hidden" name="is_correct" value="{{ isCorrect ? '1' : '0' }}">
                                 <input type="hidden" name="max_tries_reached" value="{{ maxTriesReached ? '1' : '0' }}">
                                 <input type="hidden" name="game_id" value="{{ gameId }}">
@@ -283,6 +276,10 @@
         .primary-btn:hover {
             background-color: #9b83c1;
         }
+        .primary-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
         .secondary-btn {
             background-color: #66d9d1;
             color: white;
@@ -314,15 +311,17 @@
     <script src="{{ asset('js/animations.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const feedbackContainer = document.getElementById('feedback-container');
-            if (feedbackContainer) {
-                const maxTriesReached = {{ maxTriesReached|default(false) | json_encode }};
-                if (maxTriesReached) {
-                    const autoProceedForm = document.getElementById('auto-proceed-form');
-                    if (autoProceedForm) {
-                        setTimeout(() => autoProceedForm.submit(), 2000); // Auto-submit after 2 seconds
-                    }
-                }
+            const continueBtn = document.getElementById('continue-btn');
+            const proceedForm = document.getElementById('proceed-form');
+
+            if (continueBtn && proceedForm) {
+                continueBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Disable the button to prevent multiple submissions
+                    continueBtn.disabled = true;
+                    continueBtn.textContent = 'جاري التحميل...';
+                    proceedForm.submit();
+                });
             }
         });
     </script>

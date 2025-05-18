@@ -112,6 +112,15 @@ class GameController extends AbstractController
         }
 
         $result = $gameService->checkAnswer($selectedImageUrl);
+        $state = $gameService->getGameState();
+
+        // Save level completion if stage 10 is completed with a correct answer or max tries reached
+        if ($state['currentStage'] === 10 && ($result['isCorrect'] || $result['maxTriesReached'])) {
+            $endTime = new \DateTime();
+            $timeTaken = $state['levelStartTime'] ? $endTime->getTimestamp() - $state['levelStartTime']->getTimestamp() : 0;
+            $gameService->saveLevelCompletion($timeTaken);
+            error_log("Level completed: saveLevelCompletion called for level {$state['currentLevel']} after stage 10");
+        }
 
         return $this->render('game/game_screen.html.twig', array_merge($result, [
             'currentImages' => $gameService->getCurrentImages(),
@@ -149,9 +158,11 @@ class GameController extends AbstractController
         $progressService->ensureGamesExist($gameId);
         $gameService->setChildId($childId);
         $gameService->setGameId($gameId);
-        $completed = $gameService->proceedOrRetry($isCorrect, $maxTriesReached);
 
-        if ($completed) {
+        $state = $gameService->getGameState();
+        $isLevelComplete = $gameService->proceedOrRetry($isCorrect, $maxTriesReached);
+
+        if ($isLevelComplete) {
             return $this->redirectToRoute('main_menu', [
                 'childId' => $childId,
                 'parentId' => $parentId,
@@ -163,6 +174,7 @@ class GameController extends AbstractController
 
     private function renderGameScreen(GameService $gameService, int $childId, int $parentId, int $gameId): Response
     {
+        $state = $gameService->getGameState();
         return $this->render('game/game_screen.html.twig', [
             'currentImages' => $gameService->getCurrentImages(),
             'correctWord' => $gameService->getCorrectWord(),
