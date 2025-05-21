@@ -33,10 +33,10 @@ class ChildType extends AbstractType
             ->add('language', ChoiceType::class, [
                 'label' => 'Langue',
                 'choices' => [
-                    'Français' => 'fr',
-                    'Anglais' => 'en',
-                    'Espagnol' => 'es',
-                    'Allemand' => 'de',
+                    'Français' => 'Français',
+                    'Anglais' => 'Anglais',
+                    'Espagnol' => 'Espagnol',
+                    'Allemand' => 'Allemand',
                 ],
                 'constraints' => [
                     new NotBlank(['message' => 'La langue est requise.']),

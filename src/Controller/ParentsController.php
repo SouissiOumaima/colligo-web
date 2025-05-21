@@ -17,6 +17,24 @@ class ParentsController extends AbstractController
         $this->repository = $repository;
     }
 
+
+
+    #[Route('/dashboard', name: 'app_dashboard')]
+    public function index(): Response
+    {
+        $parent = $this->getUser();
+        if (!$parent instanceof Parents) {
+            // Mock the user directly for testing
+            $parent = new Parents();
+            $parent->setEmail('parent@example.com');
+        }
+
+        return $this->render('parents/dashboard.html.twig', [
+            'parent' => $parent,
+        ]);
+    }
+
+
     #[Route('/Parents/{id}', name: 'Parents_show', methods: ['GET'])]
     public function show(int $id): Response
     {
@@ -30,4 +48,5 @@ class ParentsController extends AbstractController
             'Parents' => $Parents,
         ]);
     }
+
 }

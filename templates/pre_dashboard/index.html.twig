@@ -1394,14 +1394,13 @@
                             {% for child in children %}
                                 {% set bgClass = loop.index0 % 6 == 0 ? 'bg-vivid-red' : (loop.index0 % 6 == 1 ? 'bg-vivid-blue' : (loop.index0 % 6 == 2 ? 'bg-vivid-green' : (loop.index0 % 6 == 3 ? 'bg-vivid-orange' : (loop.index0 % 6 == 4 ? 'bg-vivid-purple' : 'bg-vivid-pink')))) %}
                                 <div class="child-box {{ bgClass }}" tabindex="0">
-                                    <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}">
-                                        {% if child.avatar %}
+                                    <a href="{{ path('child_dashboard', {'parentId': parent.parentId, 'childId': child.childId}) }}">                                           {% if child.avatar %}
                                             <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') }}" alt="{{ child.name }} avatar" class="child-avatar" loading="lazy">
                                         {% else %}
                                             <img src="{{ asset('images/default-avatar.png') }}" alt="{{ child.name }} avatar" class="child-avatar" loading="lazy">
                                         {% endif %}
                                         <div class="child-name">{{ child.name }}</div>
-                                        <div class="child-language">{{ get_language_name(child.language) }}</div>
+                                        <div class="child-language">{{ (child.language) }}</div>
                                     </a>
                                 </div>
                             {% endfor %}
