@@ -32,52 +32,86 @@ class GameService
     {
         $this->em = $em;
         $this->session = $session;
-        $this->initializeSession();
     }
 
     private function initializeSession(): void
     {
-        if (!$this->session->has('game_state')) {
+        if ($this->childId === null) {
+            throw new \Exception('Child ID must be set before initializing session.');
+        }
+
+        $sessionKey = "game_state_child_{$this->childId}";
+        if (!$this->session->has($sessionKey)) {
             $this->levelStartTime = new \DateTime();
-            $this->session->set('game_state', [
+            $this->session->set($sessionKey, [
                 'currentLevel' => 1,
                 'currentStage' => 1,
                 'currentLevelPoints' => 0,
-                'totalTriesInLevel' => 1,
+                'totalTriesInLevel' => 0,
                 'currentStageTries' => 0,
                 'currentImages' => [],
                 'correctWord' => null,
                 'correctImageUrl' => null,
                 'highestLevelReached' => $this->getHighestLevelReached() ?? 1,
-                'levelStartTime' => $this->levelStartTime,
+                'levelStartTime' => $this->levelStartTime->getTimestamp(),
+                'stagePoints' => [],
+                'stageTries' => [],
             ]);
         }
     }
 
     public function getGameState(): array
-    {
-        return $this->session->get('game_state', [
-            'currentLevel' => 1,
-            'currentStage' => 1,
-            'currentLevelPoints' => 0,
-            'totalTriesInLevel' => 1,
-            'currentStageTries' => 0,
-            'currentImages' => [],
-            'correctWord' => null,
-            'correctImageUrl' => null,
-            'highestLevelReached' => $this->getHighestLevelReached() ?? 1,
-            'levelStartTime' => new \DateTime(),
-        ]);
+{
+    if ($this->childId === null) {
+        throw new \Exception('Child ID must be set before retrieving game state.');
     }
 
-    public function startGame(int $level): void
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before starting the game.');
-        }
+    $sessionKey = "game_state_child_{$this->childId}";
+    $state = $this->session->get($sessionKey, [
+        'currentLevel' => 1,
+        'currentStage' => 1,
+        'currentLevelPoints' => 0,
+        'totalTriesInLevel' => 1,
+        'currentStageTries' => 0,
+        'currentImages' => [],
+        'correctWord' => null,
+        'correctImageUrl' => null,
+        'highestLevelReached' => $this->getHighestLevelReached() ?? 1,
+        'levelStartTime' => (new \DateTime())->getTimestamp(),
+        'stagePoints' => [],
+        'stageTries' => [],
+    ]);
 
-        $this->selectedLanguage = $this->fetchChildLanguage();
-        $this->levelStartTime = new \DateTime();
+    if (!isset($state['stagePoints']) || !is_array($state['stagePoints'])) {
+        $state['stagePoints'] = [];
+    }
+    if (!isset($state['stageTries']) || !is_array($state['stageTries'])) {
+        $state['stageTries'] = [];
+    }
+
+    error_log("getGameState: childId={$this->childId}, level={$state['currentLevel']}, stage={$state['currentStage']}, totalTriesInLevel={$state['totalTriesInLevel']}, fullState=" . json_encode($state));
+
+    return $state;
+}
+
+    public function startGame(int $level): void
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before starting the game.');
+    }
+
+    $this->selectedLanguage = $this->fetchChildLanguage();
+    $this->levelStartTime = new \DateTime();
+    $this->initializeSession();
+    $state = $this->getGameState();
+    $stagesPerLevel = $this->getStagesPerLevel();
+    $highestLevelReached = $this->getHighestLevelReached();
+
+    error_log("startGame: childId={$this->childId}, requestedLevel=$level, currentLevel={$state['currentLevel']}, currentStage={$state['currentStage']}, highestLevelReached=$highestLevelReached, stagesPerLevel=$stagesPerLevel");
+
+    // Only reset state for new levels or completed levels
+    if ($level > $highestLevelReached || ($state['currentLevel'] === $level && $state['currentStage'] > $stagesPerLevel)) {
+        error_log("Resetting state: childId={$this->childId}, newLevel=$level, newStage=1");
         $state = [
             'currentLevel' => min(max(1, $level), 3),
             'currentStage' => 1,
@@ -87,12 +121,21 @@ class GameService
             'currentImages' => [],
             'correctWord' => null,
             'correctImageUrl' => null,
-            'highestLevelReached' => $this->getHighestLevelReached() ?? 1,
-            'levelStartTime' => $this->levelStartTime,
+            'highestLevelReached' => $highestLevelReached,
+            'levelStartTime' => $this->levelStartTime->getTimestamp(),
+            'stagePoints' => [],
+            'stageTries' => [],
         ];
-        $this->session->set('game_state', $state);
-        $this->loadNextRound();
+    } else {
+        $state['currentStageTries'] = 0;
+        $state['levelStartTime'] = $this->levelStartTime->getTimestamp();
+        error_log("Resuming game: childId={$this->childId}, level={$state['currentLevel']}, stage={$state['currentStage']}, totalTriesInLevel={$state['totalTriesInLevel']}");
     }
+
+    $this->session->set("game_state_child_{$this->childId}", $state);
+    $this->session->save(); // Force session save
+    $this->loadNextRound();
+}
 
     public function loadNextRound(): void
     {
@@ -130,9 +173,9 @@ class GameService
         $state['correctWord'] = $this->getTranslationFromRow($correctImage, $this->selectedLanguage);
         $state['correctImageUrl'] = $correctImage['url'];
         $state['currentImages'] = $images;
-        $this->session->set('game_state', $state);
+        $this->session->set("game_state_child_{$this->childId}", $state);
 
-        error_log("Loaded next round: level={$state['currentLevel']}, stage={$state['currentStage']}");
+        error_log("Loaded next round: childId={$this->childId}, level={$state['currentLevel']}, stage={$state['currentStage']}");
     }
 
     private function getTranslationFromRow(array $imageRow, string $language): string
@@ -146,91 +189,118 @@ class GameService
     }
 
     public function checkAnswer(?string $selectedImageUrl): array
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before checking answers.');
-        }
-
-        $state = $this->getGameState();
-        $previousTries = $state['currentStageTries'];
-        $state['currentStageTries']++;
-
-        $isCorrect = $selectedImageUrl === $state['correctImageUrl'];
-
-        if (!$isCorrect && $selectedImageUrl !== null) {
-            $state['totalTriesInLevel']++;
-        }
-
-        error_log("checkAnswer: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, stage={$state['currentStage']}, isCorrect=$isCorrect, currentStageTries={$state['currentStageTries']}, previousTries=$previousTries, totalTriesInLevel={$state['totalTriesInLevel']}");
-
-        $points = 0;
-        $maxTriesReached = $state['currentStageTries'] >= self::MAX_TRIES_PER_STAGE;
-
-        if ($isCorrect) {
-            $attemptNumber = $previousTries + 1;
-            $points = $this->calculatePoints($attemptNumber);
-            $state['currentLevelPoints'] += $points;
-        } else if ($maxTriesReached) {
-            $points = 0; // 0 points when max tries reached
-        }
-
-        $state['currentStageTries'] = min($state['currentStageTries'], self::MAX_TRIES_PER_STAGE);
-        $this->session->set('game_state', $state);
-
-        return [
-            'isCorrect' => $isCorrect,
-            'currentStage' => $state['currentStage'],
-            'currentLevel' => $state['currentLevel'],
-            'points' => $points,
-            'currentStageTries' => $state['currentStageTries'],
-            'maxTriesReached' => $maxTriesReached,
-            'totalTriesInLevel' => $state['totalTriesInLevel'],
-        ];
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before checking answers.');
     }
 
-    public function proceedOrRetry(bool $isCorrect, bool $maxTriesReached): bool
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before proceeding or retrying.');
-        }
+    $state = $this->getGameState();
+    $attemptStartTime = new \DateTime();
+    // Only increment currentStageTries if it's not the first attempt
+    if ($state['currentStageTries'] === 0) {
+        $state['currentStageTries'] = 1; // Start at 1 for display
+    } else {
+        $state['currentStageTries']++;
+    }
+    $isCorrect = $selectedImageUrl === $state['correctImageUrl'];
 
-        if ($this->selectedLanguage === null) {
-            $this->selectedLanguage = $this->fetchChildLanguage();
-        }
+    // Increment totalTriesInLevel for every attempt
+    $state['totalTriesInLevel']++;
+    // Update stage-specific tries
+    $stageTries = $state['stageTries'];
+    $stageTries[$state['currentStage']] = ($stageTries[$state['currentStage']] ?? 0) + 1;
+    $state['stageTries'] = $stageTries;
 
-        $state = $this->getGameState();
-        $stagesPerLevel = $this->getStagesPerLevel();
-        error_log("proceedOrRetry: isCorrect=$isCorrect, maxTriesReached=$maxTriesReached, currentStage={$state['currentStage']}, stagesPerLevel=$stagesPerLevel, currentLevel={$state['currentLevel']}, currentStageTries={$state['currentStageTries']}, totalTriesInLevel={$state['totalTriesInLevel']}");
+    error_log("checkAnswer: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, stage={$state['currentStage']}, isCorrect=$isCorrect, currentStageTries={$state['currentStageTries']}, totalTriesInLevel={$state['totalTriesInLevel']}");
 
-        // Treat max tries reached the same as a correct answer for progression
-        if ($isCorrect || $maxTriesReached) {
-            error_log("Proceeding: currentStage={$state['currentStage']} vs stagesPerLevel=$stagesPerLevel");
-            if ($state['currentStage'] < $stagesPerLevel) {
-                $state['currentStage']++;
+    $points = 0;
+    $maxTriesReached = $state['currentStageTries'] >= self::MAX_TRIES_PER_STAGE;
+
+    if ($isCorrect) {
+        $attemptNumber = $state['currentStageTries'];
+        $points = $this->calculatePoints($attemptNumber);
+        $state['currentLevelPoints'] += $points;
+        $state['stagePoints'][$state['currentStage']] = $points;
+    } elseif ($maxTriesReached) {
+        $points = 0;
+        $state['stagePoints'][$state['currentStage']] = 0;
+    }
+
+    $attemptEndTime = new \DateTime();
+    $attemptDuration = $attemptEndTime->getTimestamp() - $attemptStartTime->getTimestamp();
+    $totalTime = ($state['levelStartTime'] ? (new \DateTime())->getTimestamp() - $state['levelStartTime'] : 0) + $attemptDuration;
+
+    $state['currentStageTries'] = min($state['currentStageTries'], self::MAX_TRIES_PER_STAGE);
+    $this->session->set("game_state_child_{$this->childId}", $state);
+
+    $this->saveLevelProgress($totalTime);
+
+    return [
+        'isCorrect' => $isCorrect,
+        'currentStage' => $state['currentStage'],
+        'currentLevel' => $state['currentLevel'],
+        'points' => $points,
+        'currentStageTries' => $state['currentStageTries'],
+        'maxTriesReached' => $maxTriesReached,
+        'totalTriesInLevel' => $state['totalTriesInLevel'],
+    ];
+}
+
+        public function proceedOrRetry(bool $isCorrect, bool $maxTriesReached): bool
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before proceeding or retrying.');
+    }
+
+    if ($this->selectedLanguage === null) {
+        $this->selectedLanguage = $this->fetchChildLanguage();
+    }
+
+    $state = $this->getGameState();
+    $stagesPerLevel = $this->getStagesPerLevel();
+    error_log("proceedOrRetry: childId={$this->childId}, isCorrect=$isCorrect, maxTriesReached=$maxTriesReached, currentStage={$state['currentStage']}, stagesPerLevel=$stagesPerLevel, currentLevel={$state['currentLevel']}, currentStageTries={$state['currentStageTries']}, totalTriesInLevel={$state['totalTriesInLevel']}");
+
+    if ($isCorrect || $maxTriesReached) {
+        error_log("Proceeding: childId={$this->childId}, currentStage={$state['currentStage']} vs stagesPerLevel=$stagesPerLevel");
+        if ($state['currentStage'] < $stagesPerLevel) {
+            $state['currentStage']++;
+            $state['currentStageTries'] = 0;
+            $state['stageTries'][$state['currentStage']] = 0;
+            $this->session->set("game_state_child_{$this->childId}", $state);
+            $this->session->save(); // Force session save
+            error_log("Advanced to stage: childId={$this->childId}, newStage={$state['currentStage']}, totalTriesInLevel={$state['totalTriesInLevel']}");
+            $this->loadNextRound();
+        } else {
+            $this->saveLevelCompletion($state['levelStartTime'] ? (new \DateTime())->getTimestamp() - $state['levelStartTime'] : 0);
+            if ($state['currentLevel'] < 3) {
+                $state['currentLevel']++;
+                $state['currentStage'] = 1;
+                $state['currentLevelPoints'] = 0;
+                $state['totalTriesInLevel'] = 1;
                 $state['currentStageTries'] = 0;
-                $this->session->set('game_state', $state);
+                $state['levelStartTime'] = (new \DateTime())->getTimestamp();
+                $state['stagePoints'] = [];
+                $state['stageTries'] = [];
+                $this->session->set("game_state_child_{$this->childId}", $state);
+                $this->session->save(); // Force session save
+                error_log("Advanced to level: childId={$this->childId}, newLevel={$state['currentLevel']}, stage=1");
                 $this->loadNextRound();
             } else {
-                if ($state['currentLevel'] < 3) {
-                    $state['currentLevel']++;
-                    $state['currentStage'] = 1;
-                    $state['currentLevelPoints'] = 0;
-                    $state['totalTriesInLevel'] = 1;
-                    $state['currentStageTries'] = 0;
-                    $state['levelStartTime'] = new \DateTime();
-                    $this->session->set('game_state', $state);
-                    $this->loadNextRound();
-                } else {
-                    return true; // Signal game completion
-                }
+                $this->session->remove("game_state_child_{$this->childId}");
+                error_log("Game completed: childId={$this->childId}");
+                return true;
             }
-        } else {
-            // Retry the current stage
-            $this->loadNextRound();
         }
-
-        return false;
+    } else {
+        $state['currentStageTries'] = min($state['currentStageTries'], self::MAX_TRIES_PER_STAGE);
+        $this->session->set("game_state_child_{$this->childId}", $state);
+        $this->session->save(); // Force session save
+        error_log("Retrying stage: childId={$this->childId}, stage={$state['currentStage']}");
+        $this->loadNextRound();
     }
+
+    return false;
+}
 
     private function fetchChildLanguage(): string
     {
@@ -261,75 +331,145 @@ class GameService
         };
     }
 
-    public function saveLevelCompletion(int $timeTaken): void
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            throw new \Exception('Child ID and Game ID must be set before saving level completion.');
-        }
-
-        $state = $this->getGameState();
-        error_log("saveLevelCompletion: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, score={$state['currentLevelPoints']}, tries={$state['totalTriesInLevel']}, time={$timeTaken}");
-
-        $child = $this->em->getRepository(Child::class)->find($this->childId);
-        $game = $this->em->getRepository(Game::class)->find($this->gameId);
-
-        if (!$child || !$game) {
-            $error = "Child ID {$this->childId} or Game ID {$this->gameId} not found";
-            error_log($error);
-            throw new \Exception($error);
-        }
-
-        $level = $this->em->getRepository(Level::class)->findOneBy([
-            'id' => $state['currentLevel'],
-            'childId' => $child,
-            'gameId' => $game,
-        ]);
-
-        if (!$level) {
-            $level = new Level();
-            $level->setId($state['currentLevel']);
-            $level->setChildId($child);
-            $level->setGameId($game);
-            $level->setScore($state['currentLevelPoints']);
-            $level->setNbtries($state['totalTriesInLevel']);
-            $level->setTime($timeTaken);
-        } else {
-            $level->setScore(max($level->getScore(), $state['currentLevelPoints']));
-            $level->setNbtries($state['totalTriesInLevel']);
-            $level->setTime($level->getTime() + $timeTaken);
-        }
-
-        try {
-            $this->em->persist($level);
-            $this->em->flush();
-            error_log("Level saved successfully: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, score={$level->getScore()}, tries={$level->getNbtries()}, time={$level->getTime()}");
-        } catch (\Exception $e) {
-            error_log("Failed to save level: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, error=" . $e->getMessage());
-            throw new \Exception("Failed to save level: " . $e->getMessage());
-        }
-
-        $newHighest = max($state['highestLevelReached'], $state['currentLevel'] + 1);
-        $state['highestLevelReached'] = min($newHighest, 3);
-        $this->session->set('game_state', $state);
+    private function saveLevelProgress(int $timeTaken): void
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before saving level progress.');
     }
+
+    $state = $this->getGameState();
+    error_log("saveLevelProgress: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, score={$state['currentLevelPoints']}, tries={$state['totalTriesInLevel']}, time={$timeTaken}");
+
+    $child = $this->em->getRepository(Child::class)->find($this->childId);
+    $game = $this->em->getRepository(Game::class)->find($this->gameId);
+
+    if (!$child || !$game) {
+        $error = "Child ID {$this->childId} or Game ID {$this->gameId} not found";
+        error_log($error);
+        throw new \Exception($error);
+    }
+
+    $level = $this->em->getRepository(Level::class)->findOneBy([
+        'id' => $state['currentLevel'],
+        'childId' => $child,
+        'gameId' => $game,
+    ]);
+
+    $isNewLevel = !$level;
+    if ($isNewLevel) {
+        $level = new Level();
+        $level->setId($state['currentLevel']);
+        $level->setChildId($child);
+        $level->setGameId($game);
+        $level->setScore(0); // Initialize score for new level
+        $level->setNbtries(0);
+        $level->setTime(0);
+    }
+
+    // Accumulate existing time instead of overwriting
+    $existingTime = $level->getTime() ?? 0;
+    $level->setTime($existingTime + $timeTaken);
+
+    // Update score and tries
+    $currentScore = $isNewLevel ? 0 : $level->getScore();
+    $level->setScore(max($currentScore, $state['currentLevelPoints']));
+    $level->setNbtries($state['totalTriesInLevel']);
+
+    try {
+        $this->em->persist($level);
+        $this->em->flush();
+        error_log("Level progress saved: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, score={$level->getScore()}, tries={$level->getNbtries()}, time={$level->getTime()}");
+
+        // Reset levelStartTime in session after saving
+        $state['levelStartTime'] = (new \DateTime())->getTimestamp();
+        $this->session->set("game_state_child_{$this->childId}", $state);
+    } catch (\Exception $e) {
+        error_log("Failed to save level progress: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, error=" . $e->getMessage());
+        throw new \Exception("Failed to save level progress: " . $e->getMessage());
+    }
+}
+
+    public function saveLevelCompletion(int $timeTaken): void
+{
+    if ($this->childId === null || $this->gameId === null) {
+        throw new \Exception('Child ID and Game ID must be set before saving level completion.');
+    }
+
+    $state = $this->getGameState();
+    error_log("saveLevelCompletion: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, score={$state['currentLevelPoints']}, tries={$state['totalTriesInLevel']}, time={$timeTaken}");
+
+    $child = $this->em->getRepository(Child::class)->find($this->childId);
+    $game = $this->em->getRepository(Game::class)->find($this->gameId);
+
+    if (!$child || !$game) {
+        $error = "Child ID {$this->childId} or Game ID {$this->gameId} not found";
+        error_log($error);
+        throw new \Exception($error);
+    }
+
+    $level = $this->em->getRepository(Level::class)->findOneBy([
+        'id' => $state['currentLevel'],
+        'childId' => $child,
+        'gameId' => $game,
+    ]);
+
+    $isNewLevel = !$level;
+    if ($isNewLevel) {
+        $level = new Level();
+        $level->setId($state['currentLevel']);
+        $level->setChildId($child);
+        $level->setGameId($game);
+        $level->setScore(0); // Initialize score for new level
+        $level->setNbtries(0);
+        $level->setTime(0);
+    }
+
+    // Accumulate existing time instead of overwriting
+    $existingTime = $level->getTime() ?? 0;
+    $level->setTime($existingTime + $timeTaken);
+
+    // Update score and tries
+    $currentScore = $isNewLevel ? 0 : $level->getScore();
+    $level->setScore(max($currentScore, $state['currentLevelPoints']));
+    $level->setNbtries($state['totalTriesInLevel']);
+
+    try {
+        $this->em->persist($level);
+        $this->em->flush();
+        error_log("Level saved successfully: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, score={$level->getScore()}, tries={$level->getNbtries()}, time={$level->getTime()}");
+
+        // Reset levelStartTime in session after saving
+        $state['levelStartTime'] = (new \DateTime())->getTimestamp();
+        $this->session->set("game_state_child_{$this->childId}", $state);
+    } catch (\Exception $e) {
+        error_log("Failed to save level: childId={$this->childId}, gameId={$this->gameId}, level={$state['currentLevel']}, error=" . $e->getMessage());
+        throw new \Exception("Failed to save level: " . $e->getMessage());
+    }
+
+    $newHighest = max($state['highestLevelReached'], $state['currentLevel'] + 1);
+    $state['highestLevelReached'] = min($newHighest, 3);
+    $this->session->set("game_state_child_{$this->childId}", $state);
+}
 
     public function getHighestLevelReached(): int
-    {
-        if ($this->childId === null || $this->gameId === null) {
-            return 1;
-        }
-
-        $conn = $this->em->getConnection();
-        $sql = 'SELECT MAX(id) FROM level WHERE childId = ? AND gameId = ? AND score > 0';
-        $stmt = $conn->prepare($sql);
-        $stmt->bindValue(1, $this->childId);
-        $stmt->bindValue(2, $this->gameId);
-        $result = $stmt->executeQuery();
-
-        $highestLevel = (int)$result->fetchOne();
-        return max(1, min($highestLevel + 1, 3));
+{
+    if ($this->childId === null || $this->gameId === null) {
+        return 1;
     }
 
+    $conn = $this->em->getConnection();
+    $sql = 'SELECT MAX(id) FROM level WHERE childId = ? AND gameId = ? AND score >= ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bindValue(1, $this->childId);
+    $stmt->bindValue(2, $this->gameId);
+    $stmt->bindValue(3, 10); // Minimum score for completing 10 stages (e.g., 1 point per stage)
+    $result = $stmt->executeQuery();
+
+    $highestLevel = (int)$result->fetchOne();
+    $highestLevelReached = max(1, min($highestLevel + 1, 3));
+    error_log("getHighestLevelReached: childId={$this->childId}, gameId={$this->gameId}, highestLevelReached=$highestLevelReached");
+    return $highestLevelReached;
+}
     public function getStagesPerLevel(): int
     {
         if ($this->gameId === null) {
@@ -382,6 +522,7 @@ class GameService
     {
         error_log("Setting childId to $childId");
         $this->childId = $childId;
+        $this->initializeSession(); // Initialize session for the new child
     }
 
     public function setGameId(int $gameId): void
@@ -395,7 +536,7 @@ class GameService
         if ($this->childId === null || $this->gameId === null) {
             return [];
         }
-        
+
         $conn = $this->em->getConnection();
         $sql = 'SELECT id AS level, score, nbtries AS tries, time 
                 FROM level 
@@ -405,7 +546,28 @@ class GameService
         $stmt->bindValue(1, $this->childId);
         $stmt->bindValue(2, $this->gameId);
         $result = $stmt->executeQuery();
-        
+
         return $result->fetchAllAssociative();
     }
+    public function isGameComplete(): bool
+{
+    if ($this->childId === null || $this->gameId === null) {
+        return false;
+    }
+
+    // Check the database for the highest level completed with sufficient score
+    $conn = $this->em->getConnection();
+    $sql = 'SELECT MAX(id) FROM level WHERE childId = ? AND gameId = ? AND score >= ?';
+    $stmt = $conn->prepare($sql);
+    $stmt->bindValue(1, $this->childId);
+    $stmt->bindValue(2, $this->gameId);
+    $stmt->bindValue(3, 10); // Minimum score for completing 10 stages
+    $result = $stmt->executeQuery();
+
+    $highestLevel = (int)$result->fetchOne();
+    $isComplete = $highestLevel >= 3; // Game is complete if level 3 has been completed
+    error_log("isGameComplete: childId={$this->childId}, gameId={$this->gameId}, highestLevel=$highestLevel, isComplete=$isComplete");
+    return $isComplete;
+}
+    
 }
