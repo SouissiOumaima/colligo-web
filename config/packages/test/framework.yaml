@@ -1,0 +1,6 @@
+# config/packages/test/framework.yaml
+framework:
+    test: true
+    session:
+        enabled: true
+        storage_factory_id: session.storage.factory.mock_file

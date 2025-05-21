@@ -1,0 +1,15 @@
+# config/packages/test/doctrine.yaml
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        # Override the database name to prevent _test suffix
+        dbname_suffix: '' # This disables the automatic _test suffix
+        # Optionally, you can hardcode the dbname to ensure clarity
+        # dbname: colligo_test
+    orm:
+        auto_generate_proxy_classes: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: true
+        enable_lazy_ghost_objects: true # Address the earlier deprecation notice
+        # config/packages/test/framework.yaml
+# config/packages/test/framework.yaml

@@ -1,0 +1,6 @@
+# config/packages/test/services.yaml
+services:
+    App\Service\GameService:
+        public: true
+    App\Service\ProgressService:
+        public: true

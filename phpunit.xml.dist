@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
@@ -18,8 +17,14 @@
     </php>
 
     <testsuites>
-        <testsuite name="Project Test Suite">
-            <directory>tests</directory>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Service">
+            <directory>tests/Service</directory>
+        </testsuite>
+        <testsuite name="Controller">
+            <directory>tests/Controller</directory>
         </testsuite>
     </testsuites>
 
@@ -27,12 +32,21 @@
         <include>
             <directory suffix=".php">src</directory>
         </include>
+        <exclude>
+            <directory>src/DataFixtures</directory>
+            <directory>src/Entity</directory>
+            <directory>src/Migrations</directory>
+        </exclude>
     </coverage>
 
     <listeners>
         <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
     </listeners>
 
+    <!-- Run `composer require symfony/panther` before enabling this extension -->
+    <!--
     <extensions>
+        <extension class="Symfony\Component\Panther\ServerExtension" />
     </extensions>
+    -->
 </phpunit>

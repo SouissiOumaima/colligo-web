@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 
 #[ORM\Entity]
-class Dragdrop
+class Fill_in_the_blank
 {
 
     #[ORM\Id]
@@ -14,13 +14,22 @@ class Dragdrop
     private int $id;
 
     #[ORM\Column(type: "text")]
-    private string $phrase;
+    private string $questionText;
+
+    #[ORM\Column(type: "string", length: 255)]
+    private string $correctAnswer;
 
     #[ORM\Column(type: "integer")]
-    private int $niveau;
+    private int $level;
 
     #[ORM\Column(type: "string", length: 50)]
-    private string $langue;
+    private string $language;
+
+    #[ORM\Column(type: "string", length: 50)]
+    private string $theme;
+
+    #[ORM\Column(type: "string")]
+    private string $allAnswers;
 
     public function getId()
     {
@@ -32,33 +41,63 @@ class Dragdrop
         $this->id = $value;
     }
 
-    public function getPhrase()
+    public function getQuestionText()
     {
-        return $this->phrase;
+        return $this->questionText;
     }
 
-    public function setPhrase($value)
+    public function setQuestionText($value)
     {
-        $this->phrase = $value;
+        $this->questionText = $value;
     }
 
-    public function getNiveau()
+    public function getCorrectAnswer()
     {
-        return $this->niveau;
+        return $this->correctAnswer;
     }
 
-    public function setNiveau($value)
+    public function setCorrectAnswer($value)
     {
-        $this->niveau = $value;
+        $this->correctAnswer = $value;
     }
 
-    public function getLangue()
+    public function getLevel()
     {
-        return $this->langue;
+        return $this->level;
     }
 
-    public function setLangue($value)
+    public function setLevel($value)
     {
-        $this->langue = $value;
+        $this->level = $value;
+    }
+
+    public function getLanguage()
+    {
+        return $this->language;
+    }
+
+    public function setLanguage($value)
+    {
+        $this->language = $value;
+    }
+
+    public function getTheme()
+    {
+        return $this->theme;
+    }
+
+    public function setTheme($value)
+    {
+        $this->theme = $value;
+    }
+
+    public function getAllAnswers()
+    {
+        return $this->allAnswers;
+    }
+
+    public function setAllAnswers($value)
+    {
+        $this->allAnswers = $value;
     }
 }

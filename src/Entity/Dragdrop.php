@@ -4,121 +4,61 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
-use App\Entity\Parents;
-use Doctrine\Common\Collections\Collection;
-use App\Entity\Level;
 
 #[ORM\Entity]
-class Child
+class Dragdrop
 {
 
     #[ORM\Id]
     #[ORM\Column(type: "integer")]
-    private int $childId;
+    private int $id;
 
-    #[ORM\ManyToOne(targetEntity: Parents::class, inversedBy: "childs")]
-    #[ORM\JoinColumn(name: 'parentId', referencedColumnName: 'parentId', onDelete: 'CASCADE')]
-    private Parents $parentId;
+    #[ORM\Column(type: "text")]
+    private string $phrase;
 
     #[ORM\Column(type: "integer")]
-    private int $age;
+    private int $niveau;
 
     #[ORM\Column(type: "string", length: 50)]
-    private string $language;
+    private string $langue;
 
-    #[ORM\Column(type: "string", length: 255)]
-    private string $avatar;
-
-    #[ORM\Column(type: "string", length: 100)]
-    private string $name;
-
-    public function getChildId()
+    public function getId()
     {
-        return $this->childId;
+        return $this->id;
     }
 
-    public function setChildId($value)
+    public function setId($value)
     {
-        $this->childId = $value;
+        $this->id = $value;
     }
 
-    public function getParentId()
+    public function getPhrase()
     {
-        return $this->parentId;
+        return $this->phrase;
     }
 
-    public function setParentId($value)
+    public function setPhrase($value)
     {
-        $this->parentId = $value;
+        $this->phrase = $value;
     }
 
-    public function getAge()
+    public function getNiveau()
     {
-        return $this->age;
+        return $this->niveau;
     }
 
-    public function setAge($value)
+    public function setNiveau($value)
     {
-        $this->age = $value;
+        $this->niveau = $value;
     }
 
-    public function getLanguage()
+    public function getLangue()
     {
-        return $this->language;
+        return $this->langue;
     }
 
-    public function setLanguage($value)
+    public function setLangue($value)
     {
-        $this->language = $value;
-    }
-
-    public function getAvatar()
-    {
-        return $this->avatar;
-    }
-
-    public function setAvatar($value)
-    {
-        $this->avatar = $value;
-    }
-
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    public function setName($value)
-    {
-        $this->name = $value;
-    }
-
-    #[ORM\OneToMany(mappedBy: "childId", targetEntity: Level::class)]
-    private Collection $levels;
-
-    public function getLevels(): Collection
-    {
-        return $this->levels;
-    }
-
-    public function addLevel(Level $level): self
-    {
-        if (!$this->levels->contains($level)) {
-            $this->levels[] = $level;
-            $level->setChildId($this);
-        }
-
-        return $this;
-    }
-
-    public function removeLevel(Level $level): self
-    {
-        if ($this->levels->removeElement($level)) {
-            // set the owning side to null (unless already changed)
-            if ($level->getChildId() === $this) {
-                $level->setChildId(null);
-            }
-        }
-
-        return $this;
+        $this->langue = $value;
     }
 }

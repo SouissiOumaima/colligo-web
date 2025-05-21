@@ -32,3 +32,6 @@ services:
         arguments:
             $em: '@doctrine.orm.entity_manager'
             $uploadDir: '%app.upload_dir%'
+            # config/services.yaml
+imports:
+    - { resource: 'services_test.yaml', env: test }
