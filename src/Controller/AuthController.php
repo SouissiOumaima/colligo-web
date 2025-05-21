@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Parents;
+use App\Entity\Admin;
 use App\Form\VerifyFormType;
 use App\Service\AuthService;
 use Psr\Log\LoggerInterface;
@@ -55,8 +56,17 @@ class AuthController extends AbstractController
             $this->logger->debug('Login form data', ['email' => $email]);
 
             try {
+                // Vérifier si l'email existe dans la table Admin et si le mot de passe correspond
+                $admin = $this->authService->verifyAdminCredentials($email, $password);
+                if ($admin) {
+                    $this->logger->info('Admin credentials verified, redirecting to admin dashboard', ['email' => $email]);
+                    $this->addFlash('success', 'Connexion admin réussie !');
+                    return $this->redirectToRoute('admin_dashboard', ['adminId' => $admin->getAdminId()]);
+                }
+
+                // Si pas admin, tenter la connexion parent
                 $user = $this->authService->login($email, $password);
-                $this->logger->info('Login successful, redirecting to +parent dashboard', ['email' => $email]);
+                $this->logger->info('Login successful, redirecting to parent dashboard', ['email' => $email]);
                 $this->addFlash('success', 'Connexion réussie !');
                 return $this->redirectToRoute('pre_dashboard', ['parentId' => $user->getParentId()]);
             } catch (AuthenticationException $e) {
@@ -101,6 +111,15 @@ class AuthController extends AbstractController
                 $this->addFlash('error', $passwordError);
             } else {
                 try {
+                    // Vérifier si l'email existe dans la table Admin et si le mot de passe correspond
+                    $admin = $this->authService->verifyAdminCredentials($email, $password);
+                    if ($admin) {
+                        $this->logger->info('Admin credentials verified, redirecting to admin dashboard', ['email' => $email]);
+                        $this->addFlash('success', 'Connexion admin réussie !');
+                        return $this->redirectToRoute('admin_dashboard', ['adminId' => $admin->getAdminId()]);
+                    }
+
+                    // Si pas admin, continuer avec la logique de signup des parents
                     $result = $this->authService->signup($email, $password);
                     $signupToken = $result['signup_token'];
                     $request->getSession()->set('pending_verification_email', $email);
@@ -130,8 +149,6 @@ class AuthController extends AbstractController
             'verify_password' => null,
         ]);
     }
-
-
 
     #[Route('/verify-account', name: 'verify_account', methods: ['GET', 'POST'])]
     public function verify(Request $request): Response
@@ -220,7 +237,6 @@ class AuthController extends AbstractController
         return $this->render('auth/forgot_password_request.html.twig');
     }
 
-
     #[Route('/forgot-password', name: 'forgot_password', methods: ['GET', 'POST'])]
     public function forgotPassword(Request $request): Response
     {
@@ -267,8 +283,6 @@ class AuthController extends AbstractController
                     $this->authService->resetPassword($token, $formData['new_password']);
                     $this->logger->info('Password reset successful');
                     $this->addFlash('success_forgot_password', 'Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.');
-                    // Removed redirect: return $this->redirectToRoute('app_login');
-                    // Instead, render the same page to display the success message
                     return $this->render('auth/forgot_password.html.twig', [
                         'token' => $token,
                         'password_error' => $passwordError,
@@ -292,7 +306,6 @@ class AuthController extends AbstractController
         ]);
     }
 
-
     private function getPasswordRequirementsError(string $password): string
     {
         $error = 'Le mot de passe doit contenir :<ul>';
@@ -308,9 +321,4 @@ class AuthController extends AbstractController
         $flashBag = $this->container->get('request_stack')->getSession()->getFlashBag();
         return $flashBag->has($type) ? $flashBag->get($type)[0] : null;
     }
-
-
-
-
-
 }

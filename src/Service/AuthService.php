@@ -9,7 +9,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-
+use App\Entity\Admin;
 class AuthService
 {
     private $entityManager;
@@ -29,7 +29,17 @@ class AuthService
         $this->mailer = $mailer;
         $this->logger = $logger;
     }
-
+    public function verifyAdminCredentials(string $email, string $password): ?Admin
+    {
+        $this->logger->debug('Checking admin credentials', ['email' => $email]);
+        $admin = $this->entityManager->getRepository(Admin::class)->findOneBy(['email' => $email]);
+        if ($admin && $password === $admin->getPassword()) {
+            $this->logger->debug('Admin password verified', ['email' => $email]);
+            return $admin;
+        }
+        $this->logger->debug('Admin credentials invalid', ['email' => $email, 'admin_found' => $admin !== null]);
+        return null;
+    }
     /**
      * Handles user signup: creates a new user, hashes the password, generates a verification code and signup token, and sends email.
      */
