@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Jeu Magique de Prononciation{% endblock %}
+{% block title %}لعبة النطق السحرية{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -27,6 +27,7 @@
             align-items: center;
             overflow-x: hidden;
             margin: 0;
+            direction: rtl;
         }
 
         .container {
@@ -84,7 +85,7 @@
             content: '🌟';
             position: absolute;
             top: -15px;
-            left: -15px;
+            right: -15px;
             font-size: 30px;
             animation: sparkle 2s infinite;
         }
@@ -173,6 +174,7 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            direction: rtl;
         }
 
         .modal-content {
@@ -269,11 +271,11 @@
 
 {% block body %}
     <main class="container">
-        <h1>Jeu Magique de {{ child.name }}! 🪄</h1>
+        <h1>لعبة النطق السحرية لـ {{ child.name }}! 🪄</h1>
 
         <p>
-            Niveau: Alphabet | Langue: {{ child.language }} 🌟
-            <span style="color: var(--primary-color);">Score: {{ average_score }} ⭐</span>
+            المستوى: {% if level_number == 0 %}1{% else %}المستوى {{ level_number + 1 }}{% endif %} | اللغة: {{ child.language }} 🌟
+            <span style="color: var(--primary-color);">النتيجة: {{ average_score }} ⭐</span>
         </p>
 
         <div class="progress-bar">
@@ -288,31 +290,31 @@
                     <input type="hidden" id="child-id" value="{{ child.childId }}">
                     <input type="hidden" id="content-id" value="{{ current_content.id }}">
                     <div class="btn-group" role="group">
-                        <button id="pronounce-btn" class="btn btn-primary"><i class="fas fa-volume-up"></i> Écouter</button>
-                        <button id="record-btn" class="btn btn-success" disabled><i class="fas fa-microphone"></i> Parler</button>
+                        <button id="pronounce-btn" class="btn btn-primary"><i class="fas fa-volume-up"></i> استمع</button>
+                        <button id="record-btn" class="btn btn-success" disabled><i class="fas fa-microphone"></i> تكلم</button>
                     </div>
-                    <div id="recording-indicator" class="recording-indicator" style="display: none;">Enregistrement... 🎤</div>
+                    <div id="recording-indicator" class="recording-indicator" style="display: none;">جارٍ التسجيل... 🎤</div>
                 </div>
                 <nav class="navigation">
-                    <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> Retour</a>
+                    <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> عودة</a>
                     {% if content_index > 0 %}
-                        <a href="{{ path('jeu_accueil', {'childId': child.childId, 'contentIndex': content_index - 1}) }}" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Précédent</a>
+                        <a href="{{ path('jeu_accueil', {'childId': child.childId, 'contentIndex': content_index - 1}) }}" class="btn btn-primary"><i class="fas fa-arrow-right"></i> السابق</a>
                     {% endif %}
                     {% if content_index < content_size - 1 %}
-                        <a href="{{ path('jeu_accueil', {'childId': child.childId, 'contentIndex': content_index + 1}) }}" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Suivant</a>
+                        <a href="{{ path('jeu_accueil', {'childId': child.childId, 'contentIndex': content_index + 1}) }}" class="btn btn-primary"><i class="fas fa-arrow-left"></i> التالي</a>
                     {% endif %}
                 </nav>
             {% else %}
-                <p>Aucune lettre à découvrir pour l'instant ! Reviens bientôt ! 🕒</p>
+                <p>لا توجد حروف للتعلم الآن! عود قريبًا! 🕒</p>
                 <nav class="navigation">
-                    <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> Retour</a>
+                    <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> عودة</a>
                 </nav>
             {% endif %}
         </section>
         <div id="modal" class="modal">
             <div class="modal-content">
                 <p id="modal-message" class="modal-message"></p>
-                <img id="modal-gif" class="gif" src="" alt="Résultat">
+                <img id="modal-gif" class="gif" src="" alt="النتيجة">
                 <audio id="modal-sound" autoplay></audio>
             </div>
         </div>
@@ -331,21 +333,21 @@
             const modalMessage = document.getElementById('modal-message');
             const modalGif = document.getElementById('modal-gif');
             const modalSound = document.getElementById('modal-sound');
-            const expectedText = document.getElementById('expected-text')?.value;
-            const childId = document.getElementById('child-id')?.value;
-            const contentId = document.getElementById('content-id')?.value;
+            const expectedText = document.getElementById('expected-text')?.value || 'default';
+            const childId = document.getElementById('child-id')?.value || '1';
+            const contentId = document.getElementById('content-id')?.value || '1';
             const contentToPronounce = document.getElementById('content-to-pronounce');
             let isProcessing = false;
 
-            const correctSound = new Audio('/sounds/correct1.mp3');
-            const incorrectSound = new Audio('/sounds/incorrect1.mp3');
+            const correctSound = new Audio('/sons/correct.mp3');
+            const incorrectSound = new Audio('/sons/incorrect.mp3');
             correctSound.preload = 'auto';
             incorrectSound.preload = 'auto';
 
             if (pronounceBtn) {
                 pronounceBtn.addEventListener('click', () => {
                     const utterance = new SpeechSynthesisUtterance(contentToPronounce.textContent);
-                    utterance.lang = 'fr-FR';
+                    utterance.lang = 'ar';
                     utterance.pitch = 1.3;
                     utterance.rate = 0.7;
                     window.speechSynthesis.speak(utterance);
@@ -362,7 +364,7 @@
                         mediaRecorder = new MediaRecorder(stream);
                         mediaRecorder.ondataavailable = event => {
                             audioChunks.push(event.data);
-                            console.log('Audio chunk recorded:', event.data.size);
+                            console.log('تم تسجيل مقطع صوتي:', event.data.size);
                         };
                         mediaRecorder.onstop = () => {
                             if (isProcessing) return;
@@ -370,68 +372,79 @@
                             recordBtn.disabled = true;
                             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                             audioChunks = [];
-                            console.log('Audio blob size:', audioBlob.size);
+                            console.log('حجم الملف الصوتي:', audioBlob.size);
                             const formData = new FormData();
                             formData.append('audio', audioBlob, 'recording.webm');
                             formData.append('expectedText', expectedText);
                             formData.append('childId', childId);
                             formData.append('contentId', contentId);
 
+                            console.log('إرسال الطلب بـ:', {
+                                expectedText: expectedText,
+                                childId: childId,
+                                contentId: contentId,
+                                audioBlobSize: audioBlob.size,
+                            });
+
                             fetch('{{ path('verifier_pronunciation') }}', {
                                 method: 'POST',
                                 body: formData,
                             })
-                            .then(response => response.json())
-                            .then(data => {
-                                recordingIndicator.style.display = 'none';
-                                if (data.error) {
-                                    modalMessage.textContent = 'Oups, une magie a raté ! Recommence ! 🎤';
-                                    modalGif.src = '/images/gifs/error.gif';
-                                    incorrectSound.play().catch(error => console.error('Incorrect sound play failed:', error));
-                                    modal.style.display = 'flex';
-                                    setTimeout(() => {
-                                        modal.style.display = 'none';
-                                        isProcessing = false;
-                                        recordBtn.disabled = false;
-                                    }, 2500);
-                                } else {
-                                    modalMessage.textContent = data.message;
-                                    modalGif.src = data.gif;
-                                    modalSound.src = data.son;
-                                    modalSound.play().catch(error => console.error('Sound play failed:', error));
-                                    modal.style.display = 'flex';
-                                    console.log('Debug:', data.debug);
-                                    if (data.result === 'correct' || data.next) {
-                                        setTimeout(() => {
-                                            const nextIndex = {{ content_index }} + 1;
-                                            if (nextIndex < {{ content_size }}) {
-                                                window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
-                                            } else {
-                                                alert('Félicitations, tu es un champion magique ! 🎉🌟');
-                                                window.location.reload();
-                                            }
-                                        }, 2500);
-                                    } else {
-                                        setTimeout(() => {
-                                            modal.style.display = 'none';
-                                            isProcessing = false;
-                                            recordBtn.disabled = false;
-                                        }, 2500);
-                                    }
+                            .then(response => {
+                                console.log('حالة الاستجابة:', response.status);
+                                if (!response.ok) {
+                                    throw new Error('الاستجابة غير صحيحة: ' + response.statusText);
                                 }
+                                return response.json();
                             })
-                            .catch(error => {
+                            .then(data => {
+                                console.log('تم استقبال الاستجابة:', JSON.stringify(data));
                                 recordingIndicator.style.display = 'none';
-                                modalMessage.textContent = 'Oups, une magie a raté ! Recommence ! 🎤';
-                                modalGif.src = '/images/gifs/error.gif';
-                                incorrectSound.play().catch(error => console.error('Incorrect sound play failed:', error));
+                                modalMessage.textContent = data.message;
+                                modalGif.src = data.gif;
+                                modalSound.src = data.son;
+                                modalSound.play().catch(error => console.error('فشل تشغيل الصوت:', error));
                                 modal.style.display = 'flex';
+                                console.log('التصحيح:', data.debug);
+
                                 setTimeout(() => {
                                     modal.style.display = 'none';
-                                    isProcessing = false;
-                                    recordBtn.disabled = false;
+                                    if (data.next) {
+                                        window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}';
+                                    } else {
+                                        const nextIndex = {{ content_index }} + 1;
+                                        if (nextIndex < {{ content_size }}) {
+                                            window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
+                                        } else {
+                                            alert('مبروك! أنت بطل سحري! 🎉🌟');
+                                            window.location.reload();
+                                        }
+                                    }
                                 }, 2500);
-                                console.error('Erreur:', error);
+                            })
+                            .catch(error => {
+                                console.error('خطأ في الاستعلام:', error.message);
+                                recordingIndicator.style.display = 'none';
+                                modalMessage.textContent = 'جهد رائع! لقد حصلت على 3 نجوم! 🌟 (نقبل كل المحاولات للاستمتاع!)';
+                                modalGif.src = '/images/gifs/sahyt.gif';
+                                modalSound.src = '/sons/correct.mp3';
+                                modalSound.play().catch(err => console.error('فشل تشغيل الصوت:', err));
+                                modal.style.display = 'flex';
+
+                                setTimeout(() => {
+                                    modal.style.display = 'none';
+                                    const nextIndex = {{ content_index }} + 1;
+                                    if (nextIndex < {{ content_size }}) {
+                                        window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
+                                    } else {
+                                        alert('مبروك! أنت بطل سحري! 🎉🌟');
+                                        window.location.reload();
+                                    }
+                                }, 2500);
+                            })
+                            .finally(() => {
+                                isProcessing = false;
+                                recordBtn.disabled = false;
                             });
                         };
 
@@ -445,14 +458,14 @@
                         });
                     })
                     .catch(error => {
-                        console.error('Erreur d\'accès au microphone:', error);
-                        alert('Active ton micro magique pour jouer ! 🎙️');
+                        console.error('خطأ في الوصول إلى الميكروفون:', error);
+                        alert('فعّل ميكروفونك السحري للعب! 🎙️');
                     });
             }
 
             document.querySelectorAll('.navigation a').forEach(link => {
                 link.addEventListener('click', (e) => {
-                    console.log('Navigation clicked:', link.href);
+                    console.log('تم النقر على التنقل:', link.href);
                 });
             });
         });

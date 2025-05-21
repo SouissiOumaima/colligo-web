@@ -11,10 +11,14 @@
 
     <div class="container">
         <header class="game-header">
-            <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="back-button">
-                <span class="back-icon"></span>
-                <span>الرئيسية</span>
-            </a>
+            <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" class="back-button-form">
+    <input type="hidden" name="game_id" value="{{ gameId }}">
+    <input type="hidden" name="exit" value="true">
+    <button type="submit" class="back-button">
+        <span class="back-icon"></span>
+        <span>الرئيسية</span>
+    </button>
+</form>
             <div class="level-info">
                 <span class="level-label">المستوى <span id="current-level">{{ currentLevel }}</span></span>
                 <span class="stage-label">المرحلة <span id="current-stage">{{ currentStage }}</span> من <span id="total-stages">10</span></span>
@@ -104,17 +108,19 @@
                                 {% endif %}
                             {% endif %}
                         </p>
-                        <div class="result-buttons">
-                            <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}" id="proceed-form">
-                                <input type="hidden" name="is_correct" value="{{ isCorrect ? '1' : '0' }}">
-                                <input type="hidden" name="max_tries_reached" value="{{ maxTriesReached ? '1' : '0' }}">
-                                <input type="hidden" name="game_id" value="{{ gameId }}">
-                                <button type="submit" class="btn primary-btn" id="continue-btn">
-                                    {% if isCorrect or (maxTriesReached is defined and maxTriesReached) %}المتابعة{% else %}إعادة المحاولة{% endif %}
-                                </button>
-                            </form>
-                            <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="btn secondary-btn" id="home-btn">العودة للرئيسية</a>
-                        </div>
+                       <div class="result-buttons">
+    <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}" id="proceed-form">
+        <input type="hidden" name="game_id" value="{{ gameId }}">
+        <button type="submit" class="btn primary-btn" id="continue-btn">
+            {% if isCorrect or (maxTriesReached is defined and maxTriesReached) %}المتابعة{% else %}إعادة المحاولة{% endif %}
+        </button>
+    </form>
+    <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" id="main-menu-form">
+    <input type="hidden" name="game_id" value="{{ gameId }}">
+    <input type="hidden" name="exit" value="true">
+    <button type="submit" class="btn secondary-btn" id="home-btn">العودة للرئيسية</button>
+</form>
+</div>
                     </div>
                 </div>
             </div>

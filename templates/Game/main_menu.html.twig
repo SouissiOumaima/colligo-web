@@ -26,14 +26,22 @@
                         <div class="alert alert-danger">{{ message }}</div>
                     {% endfor %}
 
+                    {% if isGameComplete %}
+                        <p class="alert alert-info">لقد أكملت اللعبة! يرجى التواصل مع ولي الأمر لإعادة تعيين اللعبة.</p>
+                    {% endif %}
+
                     <div class="action-buttons">
-                        <a href="{{ path('start_game', {'childId': childId, 'parentId': parentId, 'level': selectedLevel}) }}" class="btn primary-btn">بدء اللعب</a>
+                        {% if isGameComplete %}
+                            <button class="btn primary-btn" disabled>بدء اللعب</button>
+                        {% else %}
+                            <a href="{{ path('start_game', {'childId': childId, 'parentId': parentId, 'level': selectedLevel}) }}" class="btn primary-btn">بدء اللعب</a>
+                        {% endif %}
                         <a href="{{ path('home', {'childId': childId}) }}" class="btn secondary-btn">رجوع</a>
                     </div>
                 </div>
 
                 <div class="mascot-container">
-                    <img src="{{ asset('Gifs/hello.gif') }}" alt="صورة متحركة" class="mascot">
+                    <img src="{{ asset('images/hello.gif') }}" alt="صورة متحركة" class="mascot">
                 </div>
             </div>
         </main>
@@ -41,7 +49,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Debug: Check if the GIF is loading and its natural dimensions
             const mascot = document.querySelector('.mascot');
             mascot.addEventListener('load', () => {
                 console.log('GIF loaded. Natural dimensions:', mascot.naturalWidth, 'x', mascot.naturalHeight);
@@ -110,6 +117,10 @@
             transition: transform 0.2s;
             text-decoration: none;
         }
+        .primary-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
         .primary-btn {
             background-color: #7b61ff;
             color: #fff;
@@ -118,7 +129,7 @@
             background-color: #68d391;
             color: #fff;
         }
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: scale(1.05);
         }
         .mascot-container {
@@ -142,6 +153,14 @@
             border: 1px solid red;
             padding: 10px;
             margin-bottom: 10px;
+        }
+        .alert-info {
+            color: #31708f;
+            background-color: #d9edf7;
+            border: 1px solid #bce8f1;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
         }
     </style>
 {% endblock %}
