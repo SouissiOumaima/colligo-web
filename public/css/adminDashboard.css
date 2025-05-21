@@ -512,3 +512,24 @@ html, body {
         font-size: 12px !important;
     }
 }
+.btn-primary {
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    border-radius: 25px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+    text-decoration: none !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; 
+
+.btn-primary:active {
+    transform: scale(0.95) !important;
+}
