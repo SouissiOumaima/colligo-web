@@ -182,16 +182,16 @@
             font-size: 36px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Ombre réduite pour un effet circulaire */
-            border: 3px solid #FFF; /* Bordure blanche pour renforcer le cercle */
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            border: 3px solid #FFF;
             position: relative;
         }
         .mood-option.selected {
             transform: scale(1.3);
             font-size: 42px;
             z-index: 2;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7); /* Ombre lumineuse circulaire */
-            border-color: #FFD700; /* Bordure dorée pour la sélection */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+            border-color: #FFD700;
         }
         .mood-option:hover:not(.selected) {
             transform: scale(1.15);
@@ -490,7 +490,7 @@
                 width: 50px;
                 height: 50px;
                 font-size: 30px;
-                border: 2px solid #FFF; /* Bordure ajustée pour petits écrans */
+                border: 2px solid #FFF;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             }
             .mood-option.selected {
@@ -587,13 +587,13 @@
                 {% set gameData = [
                     {'name': 'لعبة الكلمة الدخيلة', 'image': 'medecin.jpg', 'index': 1},
                     {'name': 'لعبة الكلمات', 'image': 'pilote.jpg', 'index': 2},
-                    {'name': 'لعبة الجمل', 'image': 'dentist.png', 'index': 3},
-                    {'name': 'لعبة الصور', 'image': 'enseignant.jpg', 'index': 4},
+                    {'name': 'لعبة الصور', 'image': 'dentist.png', 'index': 3},
+                    {'name': 'لعبة الجمل', 'image': 'enseignant.jpg', 'index': 4},
                     {'name': 'لعبة المطابقة', 'image': 'chauffeur.png', 'index': 5},
                     {'name': 'لعبة الصوت', 'image': 'musicien.jpg', 'index': 6}
                 ] %}
                 {% for game in gameData %}
-                    <a href="{% if game.index == 2 %}{{ path('fill_in_the_blank_cover', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% elseif game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
+                    <a href="{% if game.index == 2 %}{{ path('fill_in_the_blank_cover', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% elseif game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% elseif game.index == 3 %}{{ path('main_menu', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
                         <img src="{{ asset('images/proffessions/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
                         <div class="game-name">{{ game.name }}</div>
                     </a>
@@ -606,10 +606,10 @@
             <div class="modal-content">
                 <div class="modal-title">تقدّمي في الألعاب</div>
                 <img src="{{ asset('gifs/progress.gif') | default('https://via.placeholder.com/400x100') }}" class="progress-gif" alt="Progress GIF">
-                {% for i in 1..5 %}
+                {% for game in gameData %}
                     <div class="game-progress">
-                        <span class="name">{{ gameData[i-1].name }}:</span>
-                        <span class="details">المستوى {{ gameProgress[i] ? gameProgress[i].level : 0 }} - النقاط: {{ gameProgress[i] ? gameProgress[i].score : 0 }}</span>
+                        <span class="name">{{ game.name }}:</span>
+                        <span class="details">المستوى {{ gameProgress[game.index] is defined ? gameProgress[game.index].level : 0 }} - النقاط: {{ gameProgress[game.index] is defined ? gameProgress[game.index].score : 0 }}</span>
                     </div>
                 {% endfor %}
                 <button class="close-button" id="closeButton">إغلاق</button>

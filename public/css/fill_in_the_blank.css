@@ -1,5 +1,11 @@
 /* Game Container */
 .game-container {
+    display: flex;
+    justify-content: center; /* Centrage horizontal */
+    align-items: center;     /* Centrage vertical */
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
     font-family: 'Chewy', cursive;
     background: linear-gradient(135deg, #ffebcd, #ff69b4);
     background-size: cover;
@@ -18,11 +24,15 @@
 
 /* Header Container */
 .header-container {
-    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px; /* Optionnel : un peu de marge à gauche/droite */
     top: 20px;
     left: 0;
     right: 0;
     z-index: 10;
+    position: absolute; /* ou relative, selon ton HTML */
 }
 
 /* Child Info (Avatar and Name) */
