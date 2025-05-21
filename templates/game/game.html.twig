@@ -208,18 +208,58 @@
         let firstSelected = null;
         let firstWord = null;
         let attemptsLeft = {{ attemptsLeft }};
-        let attemptsUsedInStage = 3 - attemptsLeft;
+        let attemptsUsedInStage = 0;
+        let score = {{ score }};
+
+        console.log('Initial state - attemptsLeft:', attemptsLeft, 'score:', score);
+        console.log('Initial words:', {{ words|json_encode|raw }});
+        console.log('Initial synonyms:', {{ synonyms|json_encode|raw }});
 
         document.querySelectorAll('.word-button, .synonym-button').forEach(button => {
             button.addEventListener('click', () => {
-                if (button.classList.contains('matched') || button.disabled) return; // Prevent clicking matched buttons
+                console.log('Button clicked:', {
+                    text: button.textContent,
+                    class: button.className,
+                    dataset: button.dataset,
+                    isWordButton: button.classList.contains('word-button'),
+                    isSynonymButton: button.classList.contains('synonym-button')
+                });
+
+                if (button.classList.contains('matched') || button.disabled) {
+                    console.log('Button already matched or disabled:', button.textContent);
+                    return;
+                }
+
                 if (firstSelected === null) {
                     firstSelected = button;
-                    firstWord = button.dataset.word || button.dataset.synonym;
+                    firstWord = normalizeText(button.dataset.word || button.dataset.synonym);
                     button.classList.add('selected');
-                } else if (firstSelected !== button) { // Prevent selecting the same button
-                    const secondWord = button.dataset.word || button.dataset.synonym;
-                    const isWord = button.classList.contains('word-button');
+                    console.log('First selected:', {
+                        word: firstWord,
+                        type: button.classList.contains('word-button') ? 'word' : 'synonym',
+                        class: button.className
+                    });
+                } else if (firstSelected !== button) {
+                    const secondWord = normalizeText(button.dataset.word || button.dataset.synonym);
+                    const isWord = firstSelected.classList.contains('word-button');
+                    console.log('Second selected:', {
+                        word: secondWord,
+                        type: button.classList.contains('word-button') ? 'word' : 'synonym',
+                        class: button.className
+                    });
+                    console.log('isWord determined:', isWord, 'First Selected Class:', firstSelected.className);
+
+                    const firstIsWord = firstSelected.classList.contains('word-button');
+                    const secondIsWord = button.classList.contains('word-button');
+                    if (firstIsWord === secondIsWord) {
+                        console.log('Error: Both selections are of the same type (both words or both synonyms)');
+                        showModal('يرجى اختيار كلمة ومرادف!', '/images/no.gif', '/audio/incorrect.mp3');
+                        firstSelected.classList.remove('selected');
+                        firstSelected = null;
+                        firstWord = null;
+                        return;
+                    }
+
                     firstSelected.classList.remove('selected');
                     submitMatch(firstWord, secondWord, isWord, button);
                 }
@@ -227,38 +267,100 @@
         });
 
         document.getElementById('next-button').addEventListener('click', () => {
+            console.log('Next button clicked, attemptsLeft:', attemptsLeft, 'attemptsUsedInStage:', attemptsUsedInStage);
             fetch('{{ path('game_action') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `action=next&attemptsLeft=${attemptsLeft}&attemptsUsedInStage=${attemptsUsedInStage}`
             })
-            .then(response => response.json())
-            .then(data => handleResponse(data))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Next response:', data);
+                handleResponse(data);
+            })
             .catch(error => {
                 console.error('Fetch error:', error);
-                showModal('حدث خطأ في الشبكة.', '/images/no.gif', '/audio/incorrect.mp3');
+                showModal('حدث خطأ في الشبكة أو الخادم.', '/images/no.gif', '/audio/incorrect.mp3');
             });
         });
-
         function submitMatch(firstWord, secondWord, isWord, secondButton) {
+            if (!firstWord || !secondWord) {
+                console.log('Error: Missing firstWord or secondWord', { firstWord, secondWord });
+                showModal('يرجى اختيار كلمة ومرادف!', '/images/no.gif', '/audio/incorrect.mp3');
+                firstSelected = null;
+                firstWord = null;
+                return;
+            }
+        
+            const currentWords = Array.from(document.querySelectorAll('.word-button')).map(btn => btn.dataset.word);
+            const currentSynonyms = Array.from(document.querySelectorAll('.synonym-button')).map(btn => btn.dataset.synonym);
+            console.log('Validating against:', { currentWords, currentSynonyms });
+        
+            if (isWord) {
+                if (!currentSynonyms.includes(firstWord) || !currentWords.includes(secondWord)) {
+                    console.log('Validation failed: Words not in current lists', { firstWord, secondWord });
+                    showModal('كلمة أو مرادف غير صالح!', '/images/no.gif', '/audio/incorrect.mp3');
+                    firstSelected = null;
+                    firstWord = null;
+                    return;
+                }
+            } else {
+                if (!currentWords.includes(firstWord) || !currentSynonyms.includes(secondWord)) {
+                    console.log('Validation failed: Words not in current lists', { firstWord, secondWord });
+                    showModal('كلمة أو مرادف غير صالح!', '/images/no.gif', '/audio/incorrect.mp3');
+                    firstSelected = null;
+                    firstWord = null;
+                    return;
+                }
+            }
+        
+            const payload = new URLSearchParams({
+                action: 'match',
+                firstWord: firstWord,
+                secondWord: secondWord,
+                isWord: isWord,
+                attemptsLeft: attemptsLeft,
+                attemptsUsedInStage: attemptsUsedInStage
+            }).toString();
+            console.log('Submitting payload:', payload);
+        
             fetch('{{ path('game_action') }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `action=match&firstWord=${encodeURIComponent(firstWord || '')}&secondWord=${encodeURIComponent(secondWord || '')}&isWord=${isWord}&attemptsLeft=${attemptsLeft}&attemptsUsedInStage=${attemptsUsedInStage}`
+                body: payload
             })
-            .then(response => response.json())
-            .then(data => handleResponse(data))
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Match response:', data);
+                handleResponse(data, secondButton);
+            })
             .catch(error => {
                 console.error('Fetch error:', error);
-                showModal('حدث خطأ في الشبكة.', '/images/no.gif', '/audio/incorrect.mp3');
+                showModal('حدث خطأ في الشبكة أو الخادم.', '/images/no.gif', '/audio/incorrect.mp3');
+                firstSelected = null;
+                firstWord = null;
             });
         }
 
-        function handleResponse(data) {
-            console.log('Response from server:', data);
+        function handleResponse(data, secondButton) {
+            console.log('Handling response:', data);
             if (firstSelected) {
                 firstSelected.classList.remove('selected');
             }
+            attemptsLeft = data.attemptsLeft;
+            attemptsUsedInStage = data.attemptsUsedInStage || (3 - attemptsLeft);
+            score = data.score;
             document.getElementById('attempts').textContent = `المحاولات: ${data.attemptsLeft}`;
             document.getElementById('score').textContent = `النقاط: ${data.score}`;
 
@@ -268,11 +370,14 @@
                 document.getElementById('next-button').style.display = 'none';
             }
 
-            // Handle flash messages
-            if (data.flashMessages && data.flashMessages.success) {
-                showModal(data.flashMessages.success, '/images/correct.gif', '/audio/correct.mp3');
-            } else if (data.flashMessages && data.flashMessages.error) {
-                showModal(data.flashMessages.error, '/images/no.gif', '/audio/incorrect.mp3');
+            if (data.flashMessages) {
+                if (data.flashMessages.success) {
+                    showModal(data.flashMessages.success, '/images/correct.gif', '/audio/correct.mp3');
+                } else if (data.flashMessages.error) {
+                    showModal(data.flashMessages.error, '/images/no.gif', '/audio/incorrect.mp3');
+                }
+            } else if (data.message) {
+                showModal(data.message, data.correctMatch ? '/images/correct.gif' : '/images/no.gif', data.correctMatch ? '/audio/correct.mp3' : '/audio/incorrect.mp3');
             }
 
             if (data.status === 'continue') {
@@ -282,16 +387,10 @@
                     firstSelected.disabled = true;
                     secondButton.disabled = true;
                 }
-                if (data.message) {
-                    showModal(data.message, data.correctMatch ? '/images/correct.gif' : '/images/no.gif', data.correctMatch ? '/audio/correct.mp3' : '/audio/incorrect.mp3');
-                }
                 updateButtons(data.words, data.synonyms);
             } else if (data.status === 'next_theme') {
                 document.getElementById('theme').textContent = `الموضوع: ${data.theme}`;
                 updateButtons(data.words, data.synonyms);
-                if (data.message) {
-                    showModal(data.message, data.gif || '/images/correct.gif', data.audio || '/audio/correct.mp3');
-                }
                 attemptsLeft = data.attemptsLeft;
                 attemptsUsedInStage = 0;
             } else if (data.status === 'next_level') {
@@ -328,6 +427,7 @@
                     btn.disabled = false;
                 }
             });
+            console.log('Updated buttons:', { words, synonyms });
         }
 
         function showModal(message, gif, audioSrc) {
@@ -360,6 +460,10 @@
             document.getElementById('level-modal-audio').currentTime = 0;
             window.location.href = '{{ path('language_selection') }}';
         });
+
+        function normalizeText(text) {
+            return text.normalize('NFC');
+        }
     </script>
 </body>
 </html>

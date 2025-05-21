@@ -4,21 +4,21 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Entity\Parents;
+use App\Entity\Level;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
-use App\Entity\Level;
 
 #[ORM\Entity]
+#[ORM\Table(name: "child")]
 class Child
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: "integer")]
-    private ?int $childId = null;
+    #[ORM\Column(type: "integer", name: "childId")]
+    private int $childId;
 
     #[ORM\ManyToOne(targetEntity: Parents::class, inversedBy: "childs")]
-    #[ORM\JoinColumn(name: 'parentId', referencedColumnName: 'parentId', onDelete: 'CASCADE')]
-    private ?Parents $parentId = null;
+    #[ORM\JoinColumn(name: "parentId", referencedColumnName: "parentId", onDelete: "CASCADE")]
+    private Parents $parentId;
 
     #[ORM\Column(type: "integer")]
     private int $age;
@@ -32,7 +32,7 @@ class Child
     #[ORM\Column(type: "string", length: 100)]
     private string $name;
 
-    #[ORM\OneToMany(mappedBy: "child", targetEntity: Level::class)]
+    #[ORM\OneToMany(mappedBy: "childId", targetEntity: Level::class)]
     private Collection $levels;
 
     public function __construct()
@@ -40,19 +40,25 @@ class Child
         $this->levels = new ArrayCollection();
     }
 
-    public function getChildId(): ?int
+    public function getChildId(): int
     {
         return $this->childId;
     }
 
-    public function getParentId(): ?Parents
+    public function setChildId(int $value): self
+    {
+        $this->childId = $value;
+        return $this;
+    }
+
+    public function getParentId(): Parents
     {
         return $this->parentId;
     }
 
-    public function setParentId(?Parents $parentId): self
+    public function setParentId(Parents $value): self
     {
-        $this->parentId = $parentId;
+        $this->parentId = $value;
         return $this;
     }
 
@@ -61,9 +67,9 @@ class Child
         return $this->age;
     }
 
-    public function setAge(int $age): self
+    public function setAge(int $value): self
     {
-        $this->age = $age;
+        $this->age = $value;
         return $this;
     }
 
@@ -72,9 +78,9 @@ class Child
         return $this->language;
     }
 
-    public function setLanguage(string $language): self
+    public function setLanguage(string $value): self
     {
-        $this->language = $language;
+        $this->language = $value;
         return $this;
     }
 
@@ -83,9 +89,9 @@ class Child
         return $this->avatar;
     }
 
-    public function setAvatar(string $avatar): self
+    public function setAvatar(string $value): self
     {
-        $this->avatar = $avatar;
+        $this->avatar = $value;
         return $this;
     }
 
@@ -94,9 +100,9 @@ class Child
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $value): self
     {
-        $this->name = $name;
+        $this->name = $value;
         return $this;
     }
 

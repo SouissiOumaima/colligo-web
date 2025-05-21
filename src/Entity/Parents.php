@@ -13,9 +13,8 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(name: 'parentId', type: 'integer')]
     private ?int $parentId = null;
-
     #[ORM\Column(type: 'string', length: 100, unique: true)]
     private ?string $email = null;
 
@@ -37,7 +36,7 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $reset_password_token = null;
 
-    #[ORM\OneToMany(mappedBy: 'parents', targetEntity: Child::class)]
+    #[ORM\OneToMany(mappedBy: 'parentId', targetEntity: Child::class)]
     private Collection $childs;
 
     public function __construct()
@@ -77,7 +76,7 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->verification_code;
     }
 
-    public function n(?string $verification_code): self
+    public function setVerificationCode(?string $verification_code): self
     {
         $this->verification_code = $verification_code;
         return $this;
@@ -127,7 +126,7 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getChildren(): Collection
+    public function getChilds(): Collection
     {
         return $this->childs;
     }
@@ -146,7 +145,7 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->childs->removeElement($child)) {
             if ($child->getParentId() === $this) {
-                $child->setParentId(null);
+             ;
             }
         }
 
@@ -158,8 +157,6 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
         return ['ROLE_USER'];
     }
 
-  
-
     public function eraseCredentials(): void
     {
     }
@@ -169,5 +166,8 @@ class Parents implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-   
+    public function getUsername(): string
+    {
+        return $this->email;
+    }
 }
