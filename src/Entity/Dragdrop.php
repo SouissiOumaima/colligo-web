@@ -16,7 +16,7 @@ class Dragdrop
     #[ORM\Column(type: "text")]
     private string $phrase;
 
-    #[ORM\Column(name: "arabicTranslation", type: "text", nullable: true)]
+    #[ORM\Column(name: "arabicTranslation", type: "text", nullable: true)] // Explicitly set name to match database
     private ?string $arabicTranslation = null;
 
     #[ORM\Column(type: "integer")]

@@ -176,7 +176,7 @@ class AdminController extends AbstractController
             }
         }
 
-        return $this->render('Admin/dashboard.html.twig', [
+        return $this->render('admin/dashboard.html.twig', [
             'totalAdmins' => $totalAdmins,
             'totalParents' => $totalParents,
             'totalChildren' => $totalChildren,
@@ -744,7 +744,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/add-admin', name: 'admin_add_admin', methods: ['GET', 'POST'])]
-    public function addAdmin(Request $request, UserPasswordHasherInterface $passwordHasher): Response
+    public function addAdmin(Request $request, UserPasswordHasherInterface $passwordHasher, AdminRepository $adminRepository, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(AddAdminType::class);
         $form->handleRequest($request);
@@ -754,7 +754,7 @@ class AdminController extends AbstractController
             $email = $data['email'];
             $plainPassword = $data['password'];
 
-            $existingAdmin = $this->adminRepository->findOneBy(['email' => $email]);
+            $existingAdmin = $adminRepository->findOneBy(['email' => $email]);
             if ($existingAdmin) {
                 $this->addFlash('error', 'Un administrateur avec cet email existe déjà.');
                 return $this->render('admin/add_admin.html.twig', [
@@ -768,12 +768,15 @@ class AdminController extends AbstractController
             $admin->setPassword($hashedPassword);
 
             try {
-                $this->entityManager->persist($admin);
-                $this->entityManager->flush();
+                $entityManager->persist($admin);
+                $entityManager->flush();
                 $this->addFlash('success', 'Administrateur ajouté avec succès.');
                 return $this->redirectToRoute('admin_user_management');
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Erreur lors de l\'ajout de l\'administrateur : ' . $e->getMessage());
+                return $this->render('admin/add_admin.html.twig', [
+                    'form' => $form->createView(),
+                ]);
             }
         }
 

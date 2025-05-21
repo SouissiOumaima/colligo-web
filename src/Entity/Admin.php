@@ -3,46 +3,50 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'admin')]
+#[ORM\Table(name: 'Admin')]
 class Admin implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'integer', name: 'adminId')]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(name: "adminId", type: "integer")]
     private int $adminId;
 
-    #[ORM\Column(type: 'string', length: 100, unique: true)]
+    #[ORM\Column(type: "string", length: 100, unique: true)]
+    #[Assert\Email(message: "L'email '{{ value }}' n'est pas valide.")]
+    #[Assert\NotBlank(message: "L'email ne peut pas être vide.")]
     private string $email;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: "string", length: 255)]
+    #[Assert\NotBlank(message: "Le mot de passe ne peut pas être vide.")]
+    #[Assert\Length(min: 8, minMessage: "Le mot de passe doit contenir au moins {{ limit }} caractères.")]
     private string $password;
 
-    public function getAdminId(): int
+    public function getAdminId()
     {
         return $this->adminId;
     }
 
-    public function setAdminId(int $adminId): self
+    public function setAdminId($value)
     {
-        $this->adminId = $adminId;
-        return $this;
+        $this->adminId = $value;
     }
 
-    public function getEmail(): string
+    public function getEmail()
     {
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail($value)
     {
-        $this->email = $email;
-        return $this;
+        $this->email = $value;
     }
 
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }
@@ -53,28 +57,27 @@ class Admin implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->email;
+    }
+
     public function getRoles(): array
     {
-        return ['ROLE_ADMIN']; // Default role for admin
+        return ['ROLE_ADMIN']; // Default role without a database column
     }
 
     public function eraseCredentials(): void
     {
-        // If you store sensitive data (e.g., plain-text password), clear it here
     }
 
     public function getUserIdentifier(): string
     {
         return $this->email;
-    }
-
-    public function getSalt(): ?string
-    {
-        return null; // Not needed if using bcrypt or similar
-    }
-
-    public function getUsername(): string
-    {
-        return $this->getUserIdentifier(); // Alias for compatibility with older Symfony versions
     }
 }

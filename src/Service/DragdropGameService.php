@@ -1,5 +1,5 @@
 <?php
-
+// Correction du service DragdropGameService.php
 namespace App\Service;
 
 use App\Entity\Dragdrop;
@@ -52,6 +52,16 @@ class DragdropGameService
             'usedSentences' => $usedSentences,
         ]);
 
+        // Vérifier que language et level sont définis
+        if (empty($this->language) || empty($this->level)) {
+            $this->logger->error('Language or level not set', [
+                'language' => $this->language ?? 'null',
+                'level' => $this->level ?? 'null'
+            ]);
+            throw new \Exception('Language or level not set');
+        }
+
+        // Vérifier combien de phrases sont disponibles
         $availableCount = $this->dragdropRepository->countByLanguageAndLevel($this->language, $this->level);
         $this->logger->debug('Available sentences count', ['count' => $availableCount]);
 
@@ -63,12 +73,23 @@ class DragdropGameService
             throw new \Exception(sprintf('No sentences found for language "%s" and level %d.', $this->language, $this->level));
         }
 
+        // Vérifier si toutes les phrases sont déjà utilisées
+        if (count($this->usedSentences) >= $availableCount) {
+            $this->logger->warning('All sentences have been used', [
+                'usedCount' => count($this->usedSentences),
+                'availableCount' => $availableCount
+            ]);
+            // Réinitialiser les phrases utilisées pour permettre de les réutiliser
+            $this->usedSentences = [];
+        }
+
         $dragdrop = $this->dragdropRepository->findRandomByLanguageAndLevel($this->language, $this->level, $this->usedSentences);
         if (!$dragdrop) {
             $this->logger->error('Failed to load a sentence despite available count', [
                 'language' => $this->language,
                 'level' => $this->level,
                 'availableCount' => $availableCount,
+                'usedSentences' => $usedSentences,
             ]);
             throw new \Exception(sprintf('Failed to load a sentence despite %d available sentences.', $availableCount));
         }
@@ -76,8 +97,8 @@ class DragdropGameService
         $this->currentDragdrop = $dragdrop;
         $this->usedSentences[] = $dragdrop->getId();
         $this->logger->debug('Successfully loaded sentence', [
-            'phrase' => $dragdrop->getPhrase(),
             'id' => $dragdrop->getId(),
+            'phrase' => $dragdrop->getPhrase(),
             'arabicTranslation' => $dragdrop->getArabicTranslation(),
         ]);
     }
@@ -85,10 +106,9 @@ class DragdropGameService
     public function getOriginalPhrase(): ?string
     {
         if (!$this->currentDragdrop) {
-            $this->logger->error('No current dragdrop sentence to get original phrase');
+            $this->logger->warning('No current dragdrop sentence to get original phrase');
             return null;
         }
-
         $phrase = $this->currentDragdrop->getPhrase();
         $this->logger->debug('Retrieved original phrase', ['phrase' => $phrase]);
         return $phrase;
@@ -97,12 +117,12 @@ class DragdropGameService
     public function getShuffledWords(): ?array
     {
         if (!$this->currentDragdrop) {
-            $this->logger->error('No current dragdrop sentence to get shuffled words');
+            $this->logger->warning('No current dragdrop sentence to get shuffled words');
             return null;
         }
 
-        $phrase = $this->currentDragdrop->getPhrase();
-        $words = array_filter(explode(' ', trim($phrase)));
+        $phrase = trim($this->currentDragdrop->getPhrase());
+        $words = array_filter(explode(' ', $phrase), 'strlen');
         shuffle($words);
         $this->logger->debug('Retrieved shuffled words', ['words' => $words]);
         return $words;
@@ -111,18 +131,16 @@ class DragdropGameService
     public function isCorrect(string $userSentence): bool
     {
         if (!$this->currentDragdrop) {
+            $this->logger->warning('No current dragdrop sentence to check');
             return false;
         }
+        $correct = strtolower(trim($userSentence)) === strtolower(trim($this->currentDragdrop->getPhrase()));
         $this->logger->debug('Checking user sentence', [
             'userSentence' => $userSentence,
             'correctPhrase' => $this->currentDragdrop->getPhrase(),
+            'isCorrect' => $correct,
         ]);
-        return strtolower(trim($userSentence)) === strtolower(trim($this->currentDragdrop->getPhrase()));
-    }
-
-    public function saveSentenceToDatabase(string $sentence): void
-    {
-        // Not needed for this use case
+        return $correct;
     }
 
     public function getLevel(): int
