@@ -1,0 +1,271 @@
+<div class="sidebar" id="sidebar">
+	<div class="sidebar-header">
+		<h3 class="sidebar-title">
+			<i class="fas fa-tachometer-alt me-2"></i>
+			Admin Dashboard
+		</h3>
+		<button class="sidebar-toggle" id="sidebarToggle">
+			<i class="fas fa-bars"></i>
+		</button>
+	</div>
+	<ul class="sidebar-menu">
+		<li class="menu-item">
+			<a href="{{ path('admin_dashboard') }}" class="menu-link">
+				<i class="fas fa-home menu-icon"></i>
+				<span class="menu-text">Accueil</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_user_management') }}" class="menu-link">
+				<i class="fas fa-users menu-icon"></i>
+				<span class="menu-text">Gestion des Utilisateurs</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_user_statistics') }}" class="menu-link">
+				<i class="fas fa-chart-bar menu-icon"></i>
+				<span class="menu-text">Statistiques Utilisateurs</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_fill_in_the_blank_database') }}" class="menu-link">
+				<i class="fas fa-pen menu-icon"></i>
+				<span class="menu-text">Remplir les Blancs</span>
+			</a>
+			<ul class="submenu" style="display: block;">
+				<li class="submenu-item">
+					<a href="{{ path('admin_generate_questions') }}" class="submenu-link">
+						<i class="fas fa-plus-circle menu-icon"></i>
+						<span class="menu-text">Générer Question</span>
+					</a>
+				</li>
+				<li class="submenu-item">
+					<a href="{{ path('admin_fill_in_the_blank_database') }}" class="submenu-link">
+						<i class="fas fa-database menu-icon"></i>
+						<span class="menu-text">Questions dans la Base de Données</span>
+					</a>
+				</li>
+			</ul>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_load_words') }}" class="menu-link" class="submenu-link">
+				<i class="fas fa-puzzle-piece menu-icon"></i>
+				<span class="menu-text">Jeu de Devinette</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_dragdrop_content') }}" class="menu-link">
+				<i class="fas fa-hand-pointer menu-icon"></i>
+				<span class="menu-text">Glisser-Déposer</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_generate_themes') }}" class="menu-link">
+				<i class="fas fa-link menu-icon"></i>
+				<span class="menu-text">Associer les Mots</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_pronunciation_content') }}" class="menu-link">
+				<i class="fas fa-microphone menu-icon"></i>
+				<span class="menu-text">jeu de Prononciation</span>
+			</a>
+		</li>
+		<li class="menu-item">
+			<a href="{{ path('admin_manage_images') }}" class="menu-link">
+				<i class="fas fa-image menu-icon"></i>
+				<span class="menu-text">Image/Mot</span>
+			</a>
+		</li>
+	</ul>
+</div>
+
+<style>
+	/* Sidebar Styling */
+	.sidebar {
+		width: 250px !important;
+		background: linear-gradient(135deg, #f2f0f5, #e6e3eb) !important; /* Gradient from #f2f0f5 to a slightly darker shade */
+		color: #2d3748 !important;
+		position: fixed !important;
+		height: 100% !important;
+		transition: width 0.3s ease, box-shadow 0.3s ease !important;
+		box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1) !important; /* Softer shadow for a clean look */
+		z-index: 1000 !important;
+		border-right: 1px solid rgba(0, 0, 0, 0.05) !important; /* Light border to match the palette */
+	}
+
+	.sidebar.collapsed {
+		width: 60px !important;
+		box-shadow: 1px 0 10px rgba(0, 0, 0, 0.05) !important;
+	}
+
+	.sidebar.collapsed .sidebar-header h3,
+	.sidebar.collapsed .menu-text,
+	.sidebar.collapsed .badge,
+	.sidebar.collapsed .toggle-submenu-btn {
+		display: none !important;
+	}
+
+	.sidebar.collapsed .submenu {
+		display: none !important;
+	}
+
+	.sidebar-header {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		padding: 20px !important;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+		background: rgba(255, 255, 255, 0.2) !important; /* Light white overlay for subtle contrast */
+	}
+
+	.sidebar-title {
+		margin: 0 !important;
+		font-size: 20px !important;
+		font-weight: 700 !important;
+		color: #2d3748 !important;
+		text-transform: uppercase !important;
+		letter-spacing: 1px !important;
+	}
+
+	.sidebar-toggle {
+		background: none !important;
+		border: none !important;
+		color: #2d3748 !important;
+		font-size: 20px !important;
+		cursor: pointer !important;
+		transition: transform 0.3s ease, color 0.3s ease !important;
+	}
+
+	.sidebar-toggle:hover {
+		color: #5c6bc0 !important; /* Soft indigo for hover to complement #f2f0f5 */
+		transform: rotate(90deg) !important;
+	}
+
+	.sidebar-menu {
+		list-style: none !important;
+		padding: 0 !important;
+		margin: 0 !important;
+	}
+
+	.menu-item {
+		border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important; /* Very light divider for a minimal look */
+	}
+
+	.menu-link {
+		display: flex !important;
+		align-items: center !important;
+		padding: 15px 20px !important;
+		color: #4a5568 !important;
+		text-decoration: none !important;
+		transition: all 0.3s ease !important;
+		position: relative !important;
+		border-left: 4px solid transparent !important;
+	}
+
+	.menu-link:hover {
+		color: #ffffff !important;
+		background: rgba(92, 107, 192, 0.2) !important; /* Soft indigo (#5c6bc0) with opacity for hover */
+		padding-left: 25px !important;
+		box-shadow: 0 0 10px rgba(92, 107, 192, 0.3) !important;
+		border-left-color: #5c6bc0 !important; /* Matching hover color */
+	}
+
+	.menu-link.active {
+		background: linear-gradient(135deg, #5c6bc0, #4a589b) !important; /* Indigo gradient for active state */
+		color: #ffffff !important;
+		font-weight: 600 !important;
+		border-left-color: #ffffff !important;
+	}
+
+	.menu-icon {
+		margin-right: 10px !important;
+		font-size: 18px !important;
+		transition: transform 0.3s ease !important;
+	}
+
+	.sidebar.collapsed .menu-icon {
+		margin-right: 0 !important;
+	}
+
+	.menu-text {
+		font-size: 16px !important;
+		transition: opacity 0.3s ease !important;
+	}
+
+	/* Submenu Styling */
+	.toggle-submenu-btn {
+		background: none !important;
+		border: none !important;
+		color: #4a5568 !important;
+		font-size: 14px !important;
+		cursor: pointer !important;
+		padding: 0 10px !important;
+		position: absolute !important;
+		right: 10px !important;
+		top: 50% !important;
+		transform: translateY(-50%) !important;
+		transition: color 0.3s ease !important;
+	}
+
+	.toggle-submenu-btn:hover {
+		color: #5c6bc0 !important; /* Matching hover color */
+	}
+
+	.toggle-submenu-btn i {
+		transition: transform 0.3s ease !important;
+	}
+
+	.toggle-submenu-btn i.fa-chevron-up {
+		transform: rotate(180deg) !important;
+	}
+
+	.submenu {
+		list-style: none !important;
+		padding: 0 !important;
+		background: rgba(0, 0, 0, 0.02) !important; /* Very subtle overlay to blend with the light background */
+		overflow: hidden !important;
+		transition: max-height 0.3s ease !important;
+		max-height: 0 !important;
+	}
+
+	.submenu.active {
+		max-height: 200px !important; /* Adjust based on content */
+	}
+
+	.submenu-item {
+		padding: 0 !important;
+	}
+
+	.submenu-link {
+		display: flex !important;
+		align-items: center !important;
+		padding: 10px 20px 10px 40px !important;
+		color: #4a5568 !important;
+		text-decoration: none !important;
+		transition: all 0.3s ease !important;
+		position: relative !important;
+	}
+
+	.submenu-link:hover {
+		color: #ffffff !important;
+		background: rgba(92, 107, 192, 0.15) !important; /* Matching submenu hover effect */
+		padding-left: 45px !important;
+		box-shadow: 0 0 8px rgba(92, 107, 192, 0.2) !important;
+	}
+</style>
+ <script>
+    function toggleSubmenu(button) {
+        const submenu = button.nextElementSibling;
+        const icon = button.querySelector('i');
+        if (submenu.style.display === 'block') {
+            submenu.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        } else {
+            submenu.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        }
+    }
+</script>

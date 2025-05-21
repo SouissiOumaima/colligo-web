@@ -1,0 +1,1047 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques des Utilisateurs{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Reset and Global Styles */
+        html, body {
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: linear-gradient(to bottom, #f7f5fa, #ffffff) !important;
+            font-family: "Segoe UI", Helvetica, Arial, sans-serif !important;
+            overflow-x: hidden !important;
+            color: #2c3e50 !important;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 250px !important;
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
+            color: #ffffff !important;
+            height: 100vh !important;
+            position: fixed !important;
+            transition: width 0.3s ease !important;
+            overflow-y: auto !important;
+            z-index: 1000 !important;
+        }
+
+        .sidebar.collapsed {
+            width: 80px !important;
+        }
+
+        .sidebar-header {
+            padding: 20px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+
+        .sidebar-title {
+            margin: 0 !important;
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important; /* Updated to white for better contrast */
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+
+        .sidebar-toggle {
+            background: none !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 20px !important;
+            cursor: pointer !important;
+            transition: color 0.3s ease !important;
+        }
+
+        .sidebar-toggle:hover {
+            color: #d1e8f5 !important; /* Lighter blue shade for hover */
+        }
+
+        .sidebar-menu {
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .menu-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* Slightly increased opacity */
+        }
+
+        .menu-link {
+            display: flex !important;
+            align-items: center !important;
+            padding: 15px 20px !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transition: background 0.3s ease !important;
+            position: relative !important;
+        }
+
+        .menu-link:hover {
+            background: rgba(255, 255, 255, 0.2) !important; /* Slightly increased opacity */
+        }
+
+        .menu-link.active {
+            background: rgba(41, 128, 185, 0.9) !important; /* Darker blue for active state */
+        }
+
+        .menu-icon {
+            margin-right: 10px !important;
+            font-size: 18px !important;
+        }
+
+        .menu-text {
+            flex-grow: 1 !important;
+        }
+
+        .toggle-submenu-btn {
+            background: none !important;
+            border: none !important;
+            color: #ffffff !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            padding: 0 10px !important;
+        }
+
+        .toggle-submenu-btn i {
+            transition: transform 0.3s ease !important;
+        }
+
+        .toggle-submenu-btn i.fa-chevron-up {
+            transform: rotate(180deg) !important;
+        }
+
+        .submenu {
+            list-style: none !important;
+            padding: 0 !important;
+            background: rgba(0, 0, 0, 0.3) !important; /* Slightly darker for contrast */
+        }
+
+        .submenu-item {
+            padding: 0 !important;
+        }
+
+        .submenu-link {
+            display: flex !important;
+            align-items: center !important;
+            padding: 10px 20px 10px 40px !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+            transition: background 0.3s ease !important;
+        }
+
+        .submenu-link:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .sidebar.collapsed .menu-text,
+        .sidebar.collapsed .toggle-submenu-btn {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .submenu {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .menu-link {
+            justify-content: center !important;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px !important;
+            transition: margin-left 0.3s ease !important;
+            background: transparent !important;
+            width: calc(100% - 250px) !important;
+            padding: 30px 0 !important;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 80px !important;
+            width: calc(100% - 80px) !important;
+        }
+
+        /* Dashboard Title */
+        .dashboard-title {
+            font-size: 36px !important;
+            font-weight: 700 !important;
+            color: #2c3e50 !important;
+            margin-bottom: 30px !important;
+            text-align: center !important;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 24px !important;
+            font-weight: 600 !important;
+            color: #2c3e50 !important;
+            margin-bottom: 20px !important;
+            text-align: center !important;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 15px !important;
+            padding: 20px !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(5px) !important;
+            -webkit-backdrop-filter: blur(5px) !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            height: 400px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            color: #2c3e50 !important;
+            border-radius: 15px !important;
+            padding: 20px !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+            backdrop-filter: blur(5px) !important;
+            -webkit-backdrop-filter: blur(5px) !important;
+        }
+
+        .chart-card h4 {
+            font-size: 20px !important;
+            font-weight: 600 !important;
+            margin-bottom: 15px !important;
+            color: #2c3e50 !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+
+        .chart-card canvas {
+            max-width: 100% !important;
+            height: 300px !important;
+        }
+
+        /* Creative Button */
+        .creative-button {
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 5px !important;
+            padding: 12px 40px !important;
+            font-size: 16px !important;
+            font-weight: 500 !important;
+            text-transform: uppercase !important;
+            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
+            display: inline-block !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .creative-button:hover {
+            background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Darker blue gradient on hover */
+            transform: translateY(-3px) !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px !important;
+            }
+
+            .main-content {
+                margin-left: 80px !important;
+                width: calc(100% - 80px) !important;
+            }
+
+            .sidebar .menu-text,
+            .sidebar .toggle-submenu-btn {
+                display: none !important;
+            }
+
+            .sidebar .submenu {
+                display: none !important;
+            }
+
+            .sidebar .menu-link {
+                justify-content: center !important;
+            }
+
+            .dashboard-title {
+                font-size: 32px !important;
+            }
+
+            .section-title {
+                font-size: 22px !important;
+            }
+
+            .chart-card {
+                height: 350px !important;
+            }
+
+            .chart-card canvas {
+                height: 250px !important;
+            }
+
+            .chart-card h4 {
+                font-size: 18px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 15px !important;
+            }
+
+            .sidebar {
+                width: 80px !important;
+                transform: translateX(-80px) !important;
+                transition: transform 0.3s ease !important;
+            }
+
+            .sidebar.active {
+                transform: translateX(0) !important;
+            }
+
+            .dashboard-title {
+                font-size: 28px !important;
+            }
+
+            .section-title {
+                font-size: 20px !important;
+            }
+
+            .chart-card {
+                height: 300px !important;
+            }
+
+            .chart-card canvas {
+                height: 200px !important;
+            }
+
+            .chart-card h4 {
+                font-size: 16px !important;
+            }
+
+            .row {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-title {
+                font-size: 24px !important;
+            }
+
+            .section-title {
+                font-size: 18px !important;
+            }
+
+            .chart-card {
+                height: 250px !important;
+                padding: 15px !important;
+            }
+
+            .chart-card canvas {
+                height: 180px !important;
+            }
+
+            .chart-card h4 {
+                font-size: 14px !important;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1 p-5">
+            <h1 class="dashboard-title">Statistiques des Utilisateurs</h1>
+
+            <!-- General Information Section -->
+            <h2 class="section-title">Informations Générales</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+                <!-- Total Users Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Nombre Total d'Utilisateurs</h4>
+                        <canvas id="totalUsersChart"></canvas>
+                    </div>
+                </div>
+                <!-- Score Distribution per Game Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Distribution des Scores</h4>
+                        <canvas id="scoreDistributionChart"></canvas>
+                    </div>
+                </div>
+                <!-- Children's Age Distribution Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Distribution des Âges</h4>
+                        <canvas id="ageDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Children Section -->
+            <h2 class="section-title">Enfants</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+                <!-- Children by Level Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Enfants par Niveau</h4>
+                        <canvas id="childrenByLevelChart"></canvas>
+                    </div>
+                </div>
+                <!-- Children by Language Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Enfants par Langue</h4>
+                        <canvas id="childrenByLanguageChart"></canvas>
+                    </div>
+                </div>
+                <!-- Children per Parent Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Enfants par Parent</h4>
+                        <canvas id="childrenPerParentChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Levels Section -->
+            <h2 class="section-title">Niveaux</h2>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <!-- Levels by Game Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Niveaux par Jeu</h4>
+                        <canvas id="levelsByGameChart"></canvas>
+                    </div>
+                </div>
+                <!-- Average Attempts per Level Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Tentatives par Niveau</h4>
+                        <canvas id="attemptsPerLevelChart"></canvas>
+                    </div>
+                </div>
+                <!-- Average Time Spent per Level Chart -->
+                <div class="col">
+                    <div class="chart-card glass-card">
+                        <h4 class="chart-title">Temps par Niveau</h4>
+                        <canvas id="timePerLevelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Sidebar Toggle Functionality
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                });
+            } else {
+                console.error('Sidebar or Sidebar Toggle element not found');
+            }
+
+            // Total Users Chart (Pie Chart)
+            const totalUsersCtx = document.getElementById('totalUsersChart').getContext('2d');
+            new Chart(totalUsersCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Admins', 'Parents', 'Enfants'],
+                    datasets: [{
+                        data: [{{ totalAdmins }}, {{ totalParents }}, {{ totalChildren }}],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)', // Blue for Admins
+                            'rgba(46, 204, 113, 0.8)', // Green for Parents
+                            'rgba(241, 196, 15, 0.8)'  // Yellow for Children
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(241, 196, 15, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Score Distribution per Game Chart (Grouped Histogram)
+            const scoreDistributionCtx = document.getElementById('scoreDistributionChart').getContext('2d');
+            new Chart(scoreDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        '0-20',
+                        '20-40',
+                        '40-60',
+                        '60-80',
+                        '80-100'
+                    ],
+                    datasets: [
+                        {% for game in games %}
+                        {
+                            label: '{{ game }}',
+                            data: [
+                                {% for bin in scoreHistogram[game] %}
+                                {{ bin }}{{ loop.last ? '' : ',' }}
+                                {% endfor %}
+                            ],
+                            backgroundColor: 'rgba({{ loop.index * 50 % 255 }}, {{ loop.index * 100 % 255 }}, {{ loop.index * 150 % 255 }}, 0.8)',
+                            borderColor: 'rgba({{ loop.index * 50 % 255 }}, {{ loop.index * 100 % 255 }}, {{ loop.index * 150 % 255 }}, 1)',
+                            borderWidth: 1
+                        }{{ loop.last ? '' : ',' }}
+                        {% endfor %}
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nombre d\'Entrées',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Score',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Children's Age Distribution Chart (Histogram)
+            const ageDistributionCtx = document.getElementById('ageDistributionChart').getContext('2d');
+            new Chart(ageDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['4-5', '6-7', '8-9', '10+'],
+                    datasets: [{
+                        label: 'Nombre d\'Enfants',
+                        data: [{{ ageHistogram|join(',') }}],
+                        backgroundColor: 'rgba(255, 159, 64, 0.8)', // Orange for this chart
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nombre d\'Enfants',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Âge (années)',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Children by Level Chart (Bar Chart)
+            const childrenByLevelCtx = document.getElementById('childrenByLevelChart').getContext('2d');
+            new Chart(childrenByLevelCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Niveau 1', 'Niveau 2', 'Niveau 3'],
+                    datasets: [{
+                        label: 'Nombre d\'Enfants',
+                        data: [{{ childrenLevel1 }}, {{ childrenLevel2 }}, {{ childrenLevel3 }}],
+                        backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nombre d\'Enfants',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Niveau',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Children by Language Chart (Doughnut Chart)
+            const childrenByLanguageCtx = document.getElementById('childrenByLanguageChart').getContext('2d');
+            new Chart(childrenByLanguageCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Français', 'Anglais', 'Espagnol', 'German'],
+                    datasets: [{
+                        data: [{{ childrenFrench }}, {{ childrenEnglish }}, {{ childrenSpanish }}, {{ childrenGerman }}],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',  // Blue for Français
+                            'rgba(46, 204, 113, 0.8)',  // Green for Anglais
+                            'rgba(241, 196, 15, 0.8)',  // Yellow for Espagnol
+                            'rgba(231, 76, 60, 0.8)'    // Red for German
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(241, 196, 15, 1)',
+                            'rgba(231, 76, 60, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Children per Parent Chart (Histogram)
+            const childrenPerParentCtx = document.getElementById('childrenPerParentChart').getContext('2d');
+            new Chart(childrenPerParentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0', '1', '2', '3', '4', '5+'],
+                    datasets: [{
+                        label: 'Nombre de Parents',
+                        data: [{{ childrenPerParentHistogram|join(',') }}],
+                        backgroundColor: 'rgba(155, 89, 182, 0.8)', // Purple for this chart
+                        borderColor: 'rgba(155, 89, 182, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nombre de Parents',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Nombre d\'Enfants',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Levels by Game Chart (Grouped Bar Chart)
+            const levelsByGameCtx = document.getElementById('levelsByGameChart').getContext('2d');
+            new Chart(levelsByGameCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Level 1', 'Level 2', 'Level 3'],
+                    datasets: [
+                        {% for game in games %}
+                        {
+                            label: '{{ game }}',
+                            data: [
+                                {{ levelsByGame[game]['Level 1'] }},
+                                {{ levelsByGame[game]['Level 2'] }},
+                                {{ levelsByGame[game]['Level 3'] }}
+                            ],
+                            backgroundColor: 'rgba({{ loop.index * 50 % 255 }}, {{ loop.index * 100 % 255 }}, {{ loop.index * 150 % 255 }}, 0.8)',
+                            borderColor: 'rgba({{ loop.index * 50 % 255 }}, {{ loop.index * 100 % 255 }}, {{ loop.index * 150 % 255 }}, 1)',
+                            borderWidth: 1
+                        }{{ loop.last ? '' : ',' }}
+                        {% endfor %}
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nombre d\'Enfants',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Niveau',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Average Attempts per Level Chart (Bar Chart)
+            const attemptsPerLevelCtx = document.getElementById('attemptsPerLevelChart').getContext('2d');
+            new Chart(attemptsPerLevelCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Niveau 1', 'Niveau 2', 'Niveau 3'],
+                    datasets: [{
+                        label: 'Tentatives Moyennes',
+                        data: [
+                            {{ avgAttemptsPerLevel[1] ?? 0 }},
+                            {{ avgAttemptsPerLevel[2] ?? 0 }},
+                            {{ avgAttemptsPerLevel[3] ?? 0 }}
+                        ],
+                        backgroundColor: 'rgba(75, 192, 192, 0.8)', // Teal for this chart
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tentatives Moyennes',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Niveau',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Average Time Spent per Level Chart (Bar Chart)
+            const timePerLevelCtx = document.getElementById('timePerLevelChart').getContext('2d');
+            new Chart(timePerLevelCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Niveau 1', 'Niveau 2', 'Niveau 3'],
+                    datasets: [{
+                        label: 'Temps Moyen (secondes)',
+                        data: [
+                            {{ avgTimePerLevel[1] ?? 0 }},
+                            {{ avgTimePerLevel[2] ?? 0 }},
+                            {{ avgTimePerLevel[3] ?? 0 }}
+                        ],
+                        backgroundColor: 'rgba(153, 102, 255, 0.8)', // Purple for this chart
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Temps Moyen (secondes)',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Niveau',
+                                font: {
+                                    size: 14,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12,
+                                    family: '"Segoe UI", Helvetica, Arial, sans-serif'
+                                },
+                                color: '#2c3e50'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

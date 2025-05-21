@@ -1,0 +1,271 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord Administrateur
+{% endblock %}
+
+{% block stylesheets %}
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+	<link rel="stylesheet" href="{{ asset('css/adminDashboard.css') }}">
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+	<div
+		class="dashboard-wrapper">
+		<!-- Sidebar -->
+		{% include 'admin/sidebar.html.twig' %}
+
+		<!-- Main Content -->
+		<div class="main-content" id="mainContent">
+			<div class="container">
+				<h1 class="dashboard-title animate__animated animate__fadeInDown">Bienvenue, Administrateur !</h1>
+
+				<!-- Overview Cards -->
+				<div class="row mb-4">
+					<div class="col-md-4 mb-3">
+						<div class="card-overview1">
+							<h4>Total Admins</h4>
+							<h2>{{ totalAdmins }}</h2>
+						</div>
+					</div>
+					<div class="col-md-4 mb-3">
+						<div class="card-overview2">
+							<h4>Total Parents</h4>
+							<h2>{{ totalParents }}</h2>
+						</div>
+					</div>
+					<div class="col-md-4 mb-3">
+						<div class="card-overview3">
+							<h4>Total Enfants</h4>
+							<h2>{{ totalChildren }}</h2>
+						</div>
+					</div>
+				</div>
+
+				<!-- Charts -->
+				<div class="row mb-4">
+					<div class="col-md-6 mb-3">
+						<div class="chart-card glass-card animate__animated animate__fadeInLeft">
+							<h4>Enfants par Langue</h4>
+							<canvas id="languageChart"></canvas>
+						</div>
+					</div>
+					<div class="col-md-6 mb-3">
+						<div class="chart-card glass-card animate__animated animate__fadeInRight">
+							<h4>Distribution des Âges</h4>
+							<canvas id="ageChart"></canvas>
+						</div>
+					</div>
+				</div>
+
+				<!-- User Management Table -->
+				<div class="table-card glass-card animate__animated animate__fadeInUp">
+					<h4>Gestion des Utilisateurs</h4>
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>ID</th>
+								<th>Email</th>
+								<th>Type</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% set users = [] %}
+							{% for admin in admins %}
+								{% set users = users|merge([{'id': admin.adminId, 'email': admin.email, 'type': 'Admin', 'children': []}]) %}
+							{% endfor %}
+							{% for parent in parents %}
+								{% set users = users|merge([{'id': parent.parentId, 'email': parent.email, 'type': 'Parent', 'children': parentChildren[parent.parentId] ?? []}]) %}
+							{% endfor %}
+							{% set users = users|sort((a, b) => a.id <=> b.id) %}
+							{% for user in users|slice(0, 5) %}
+								<tr>
+									<td>{{ user.id }}</td>
+									<td>
+										{{ user.email }}
+										{% if user.type == 'Parent' and user.children|length > 0 %}
+											<button class="toggle-children-btn" data-target="children-{{ user.id }}">
+												<i class="fas fa-chevron-down"></i>
+											</button>
+										{% endif %}
+									</td>
+									<td>{{ user.type }}</td>
+								</tr>
+								{% if user.type == 'Parent' and user.children|length > 0 %}
+									<tr class="children-row" id="children-{{ user.id }}" style="display: none;">
+										<td colspan="3">
+											<div class="children-sublist">
+												<strong>Enfants :</strong>
+												<ul>
+													{% for child in user.children %}
+														<li>{{ child.name }}
+															(Âge:
+															{{ child.age }}, Langue:
+															{{ child.language }})</li>
+													{% endfor %}
+												</ul>
+											</div>
+										</td>
+									</tr>
+								{% endif %}
+							{% endfor %}
+						</tbody>
+					</table>
+					<div class="text-center mt-3">
+						<a href="{{ path('admin_user_management') }}" class="btn btn-primary">Voir Plus</a>
+					</div>
+				</div>
+				
+				<!-- Game Cards -->
+				<div class="game-cards-container">
+					<a href="{{ path('admin_fill_in_the_blank_database') }}" class="game-card glass-card animate__animated animate__zoomIn text-decoration-none">
+						<i class="fas fa-pen fa-2x"></i>
+						<p>Remplir les Blancs</p>
+					</a>
+					<a href="{{ path('admin_load_words') }}" class="game-card glass-card animate__animated animate__zoomIn text-decoration-none">
+						<i class="fas fa-puzzle-piece fa-2x"></i>
+						<p>Jeu de Devinette</p>
+					</a>
+					<a href="{{ path('admin_dragdrop_content') }}" class="game-card glass-card animate__animated animate__zoomIn text-decoration-none">
+						<i class="fas fa-hand-pointer fa-2x"></i>
+						<p>Glisser-Déposer</p>
+					</a>
+					<a href="{{ path('admin_generate_themes') }}" class="game-card glass-card animate__animated animate__zoomIn text-decoration-none">
+						<i class="fas fa-link fa-2x"></i>
+						<p>Associer les Mots</p>
+					</a>
+					<a href="{{ path('admin_pronunciation_content') }}" class="game-card glass-card animate__animated animate__zoomIn text-decoration-none" >
+						<i class="fas fa-microphone fa-2x"></i>
+						<p>Pronunciation</p>
+					</a>
+					<a href="{{ path('admin_manage_images') }}" class="game-card glass-card animate__animated animate__zoomIn text-decoration-none" >
+						<i class="fas fa-image fa-2x"></i>
+						<p>Image/Mot</p>
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	 <script>
+				// Sidebar toggle
+				document.getElementById('sidebarToggle').addEventListener('click', function() {
+					document.getElementById('sidebar').classList.toggle('collapsed');
+					document.getElementById('mainContent').classList.toggle('expanded');
+				});
+		
+				// Toggle children sublist
+				document.querySelectorAll('.toggle-children-btn').forEach(button => {
+					button.addEventListener('click', function() {
+						const targetId = this.getAttribute('data-target');
+						const targetRow = document.getElementById(targetId);
+						const icon = this.querySelector('i');
+						if (targetRow.style.display === 'none') {
+							targetRow.style.display = 'table-row';
+							icon.classList.remove('fa-chevron-down');
+							icon.classList.add('fa-chevron-up');
+						} else {
+							targetRow.style.display = 'none';
+							icon.classList.remove('fa-chevron-up');
+							icon.classList.add('fa-chevron-down');
+						}
+					});
+				});
+		
+				// Language Chart
+		const languageCtx = document.getElementById('languageChart').getContext('2d');
+		new Chart(languageCtx, {
+		    type: 'pie',
+		    data: {
+		        labels: ['Français', 'Anglais', 'Espagnol', 'German'],
+		        datasets: [{
+		            data: [{{ childrenFrench }}, {{ childrenEnglish }}, {{ childrenSpanish }}, {{ childrenGerman }}],
+		            backgroundColor: ['#00c4b4', '#ff6f61', '#ffd700', '#ff8c00'],
+		            borderWidth: 1,
+		            borderColor: '#fff'
+		        }]
+		    },
+		    options: {
+		        responsive: true,
+		        maintainAspectRatio: false,
+		        plugins: {
+		            legend: {
+		                position: 'bottom',
+		                labels: {
+		                    font: {
+		                        size: 14,
+		                        family: "'Poppins', sans-serif"
+		                    },
+		                    color: '#333' 
+		                }
+		            }
+		        }
+		    }
+		});
+		
+		// Age Distribution Chart
+		const ageCtx = document.getElementById('ageChart').getContext('2d');
+		new Chart(ageCtx, {
+		    type: 'bar',
+		    data: {
+		        labels: ['4-5', '6-7', '8-9', '10+'],
+		        datasets: [{
+		            label: 'Nombre d\'Enfants',
+		            data: [{{ ageHistogram[0] }}, {{ ageHistogram[1] }}, {{ ageHistogram[2] }}, {{ ageHistogram[3] }}],
+		            backgroundColor: '#00c4b4',
+		            borderColor: '#fff',
+		            borderWidth: 1
+		        }]
+		    },
+		    options: {
+		        responsive: true,
+		        maintainAspectRatio: false,
+		        scales: {
+		            y: {
+		                beginAtZero: true,
+		                ticks: {
+		                    font: {
+		                        size: 12,
+		                        family: "'Poppins', sans-serif"
+		                    },
+		                    color: '#333'
+		                },
+		                grid: {
+		                    color: 'rgba(0, 0, 0, 0.1)' 
+		                }
+		            },
+		            x: {
+		                ticks: {
+		                    font: {
+		                        size: 12,
+		                        family: "'Poppins', sans-serif"
+		                    },
+		                    color: '#333'
+		                },
+		                grid: {
+		                    display: false
+		                }
+		            }
+		        },
+		        plugins: {
+		            legend: {
+		                labels: {
+		                    font: {
+		                        size: 14,
+		                        family: "'Poppins', sans-serif"
+		                    },
+		                    color: '#333' 
+		                }
+		            }
+		        }
+		    }
+		});
+		
+				function showComingSoonAlert(gameName) {
+					alert(gameName + ' is under development.');
+				}
+			</script>
+{% endblock %}

@@ -4,6 +4,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+  gemini_api_key: "%env(GEMINI_API_KEY)%"
+  upload_dir: "%kernel.project_dir%/public/uploads/images"
+  ai_api_key: "%env(AI_API_KEY)%"
 
 services:
   # default configuration for services in *this* file
@@ -48,3 +51,19 @@ services:
   App\Service\ProgressService:
     arguments:
       $em: "@doctrine.orm.entity_manager"
+  App\Service\AIService:
+
+  App\Controller\AdminController:
+    arguments:
+      $aiApiKey: "%ai_api_key%"
+      $logger: "@monolog.logger"
+
+  App\Service\AdminService:
+    arguments:
+      $uploadDir: "%upload_dir%"
+
+  App\Service\DragdropGameService:
+    arguments:
+      $params: "@parameter_bag"
+      $entityManager: "@doctrine.orm.entity_manager"
+      $dragdropRepository: '@App\Repository\DragdropRepository'

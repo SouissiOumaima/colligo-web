@@ -1,0 +1,72 @@
+ {% extends 'base.html.twig' %}
+
+{% block title %}Modifier une Question{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('css/addQuestionsFillInTheBlank.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <h1 class="dashboard-title">Modifier une Question</h1>
+
+        <div class="dashboard-container">
+            {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
+                <div class="col-md-12">
+                    <div class="list-group-item">
+                        {{ form_label(form.questionText) }}
+                        {{ form_widget(form.questionText, {'attr': {'class': 'form-control form-text-area'}}) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="list-group-item">
+                        {{ form_label(form.correctAnswer) }}
+                        {{ form_widget(form.correctAnswer, {'attr': {'class': 'form-control form-text-field'}}) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="list-group-item">
+                        {{ form_label(form.incorrectAnswer1) }}
+                        {{ form_widget(form.incorrectAnswer1, {'attr': {'class': 'form-control form-text-field'}}) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="list-group-item">
+                        {{ form_label(form.incorrectAnswer2) }}
+                        {{ form_widget(form.incorrectAnswer2, {'attr': {'class': 'form-control form-text-field'}}) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="list-group-item">
+                        {{ form_label(form.theme) }}
+                        {{ form_widget(form.theme, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="list-group-item">
+                        {{ form_label(form.level) }}
+                        {{ form_widget(form.level, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="list-group-item">
+                        {{ form_label(form.language) }}
+                        {{ form_widget(form.language, {'attr': {'class': 'form-control'}}) }}
+                    </div>
+                </div>
+            {{ form_end(form) }}
+        </div>
+
+        <!-- Display flash messages -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success mt-3" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
