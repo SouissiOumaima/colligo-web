@@ -191,12 +191,6 @@ class AdminController extends AbstractController
         ]);
     }
 
-    #[Route('/fill-in-the-blank-dashboard', name: 'admin_fill_in_the_blank_dashboard')]
-    public function fillInTheBlankDashboard(): Response
-    {
-        return $this->render('admin/fill_in_the_blank_dashboard.html.twig');
-    }
-
     #[Route('/generate-questions', name: 'admin_generate_questions')]
     public function generateQuestions(Request $request, SessionInterface $session): Response
     {
@@ -417,125 +411,92 @@ class AdminController extends AbstractController
     #[Route('/add-question', name: 'admin_add_question')]
     public function addQuestion(Request $request): Response
     {
-        $theme = $request->query->get('theme', 'Animaux');
-        $level = $request->query->getInt('level', 1);
-        $language = $request->query->get('language', 'Français');
+        $themes = [
+            'Animaux',
+            'Couleurs',
+            'Nourriture',
+            'Sports',
+            'Vêtements',
+            'Moyens de transport',
+            'Parties du corps',
+            'Famille',
+            'Saison',
+            'Jours de la semaine',
+            'Formes géométriques',
+            'Métiers'
+        ];
+        $levels = [1, 2, 3];
+        $languages = ['Français', 'Anglais', 'Espagnol', 'German'];
 
-        $form = $this->createFormBuilder()
+        $fillInTheBlank = new Fill_in_the_blank();
+        $form = $this->createFormBuilder($fillInTheBlank)
+            ->add('theme', ChoiceType::class, [
+                'choices' => array_combine($themes, $themes),
+                'placeholder' => 'Choisir un thème',
+                'required' => true,
+                'attr' => ['class' => 'glass-input'],
+            ])
+            ->add('level', ChoiceType::class, [
+                'choices' => array_combine($levels, $levels),
+                'placeholder' => 'Choisir un niveau',
+                'required' => true,
+                'attr' => ['class' => 'glass-input'],
+            ])
+            ->add('language', ChoiceType::class, [
+                'choices' => array_combine($languages, $languages),
+                'placeholder' => 'Choisir une langue',
+                'required' => true,
+                'attr' => ['class' => 'glass-input'],
+            ])
             ->add('questionText', TextType::class, [
                 'label' => 'Question',
-                'attr' => ['placeholder' => 'Entrez la question (ex: Le chat est un ____.)'],
+                'attr' => ['placeholder' => 'Entrez la question (ex: Le chat est un ____.)', 'class' => 'glass-input'],
                 'required' => true,
             ])
             ->add('correctAnswer', TextType::class, [
                 'label' => 'Réponse Correcte',
-                'attr' => ['placeholder' => 'Réponse correcte'],
+                'attr' => ['placeholder' => 'Réponse correcte', 'class' => 'glass-input'],
                 'required' => true,
             ])
             ->add('incorrectAnswer1', TextType::class, [
                 'label' => 'Mauvaise Réponse 1',
-                'attr' => ['placeholder' => 'Mauvaise réponse 1'],
+                'attr' => ['placeholder' => 'Mauvaise réponse 1', 'class' => 'glass-input'],
                 'required' => true,
+                'mapped' => false, // Do not map to entity property
             ])
             ->add('incorrectAnswer2', TextType::class, [
                 'label' => 'Mauvaise Réponse 2',
-                'attr' => ['placeholder' => 'Mauvaise réponse 2'],
+                'attr' => ['placeholder' => 'Mauvaise réponse 2', 'class' => 'glass-input'],
                 'required' => true,
+                'mapped' => false, // Do not map to entity property
             ])
             ->add('save', SubmitType::class, ['label' => 'Enregistrer'])
             ->getForm();
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $formData = $form->getData();
-            $questionText = $formData['questionText'];
-            $correctAnswer = $formData['correctAnswer'];
-            $incorrectAnswer1 = $formData['incorrectAnswer1'];
-            $incorrectAnswer2 = $formData['incorrectAnswer2'];
+            $fillInTheBlank = $form->getData();
+            $incorrectAnswer1 = $form->get('incorrectAnswer1')->getData();
+            $incorrectAnswer2 = $form->get('incorrectAnswer2')->getData();
 
-            if (!is_string($questionText) || empty($questionText)) {
-                $this->addFlash('error', 'La question est requise.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
-            if (!is_string($correctAnswer) || empty($correctAnswer)) {
-                $this->addFlash('error', 'La réponse correcte est requise.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
-            if (!is_string($incorrectAnswer1) || empty($incorrectAnswer1)) {
-                $this->addFlash('error', 'La mauvaise réponse 1 est requise.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
-            if (!is_string($incorrectAnswer2) || empty($incorrectAnswer2)) {
-                $this->addFlash('error', 'La mauvaise réponse 2 est requise.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
+            $allAnswers = [
+                $fillInTheBlank->getCorrectAnswer(),
+                $incorrectAnswer1,
+                $incorrectAnswer2
+            ];
 
-            if (!is_string($theme) || empty($theme)) {
-                $this->addFlash('error', 'Le thème est requis.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
-            if (!is_int($level)) {
-                $this->addFlash('error', 'Le niveau doit être un nombre.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
-            if (!is_string($language) || empty($language)) {
-                $this->addFlash('error', 'La langue est requise.');
-                return $this->render('admin/add_question.html.twig', [
-                    'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
-                ]);
-            }
-
-            if (strpos($questionText, '____') === false) {
+            // Validation checks
+            if (strpos($fillInTheBlank->getQuestionText(), '____') === false) {
                 $this->addFlash('error', 'La question doit contenir un espace vide marqué par "____".');
                 return $this->render('admin/add_question.html.twig', [
                     'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
                 ]);
             }
 
-            $allAnswers = [$correctAnswer, $incorrectAnswer1, $incorrectAnswer2];
             if (count(array_unique($allAnswers)) !== count($allAnswers)) {
                 $this->addFlash('error', 'Les réponses ne doivent pas contenir de doublons.');
                 return $this->render('admin/add_question.html.twig', [
                     'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
                 ]);
             }
 
@@ -543,36 +504,21 @@ class AdminController extends AbstractController
                 $this->addFlash('error', 'Il doit y avoir exactement trois réponses (une correcte et deux incorrectes).');
                 return $this->render('admin/add_question.html.twig', [
                     'form' => $form->createView(),
-                    'theme' => $theme,
-                    'level' => $level,
-                    'language' => $language,
                 ]);
             }
 
-            $newQuestion = new Fill_in_the_blank();
-            $newQuestion->setQuestionText($questionText)
-                ->setCorrectAnswer($correctAnswer)
-                ->setAllAnswers($allAnswers)
-                ->setTheme($theme)
-                ->setLevel($level)
-                ->setLanguage($language);
-
-            $this->entityManager->persist($newQuestion);
+            $fillInTheBlank->setAllAnswers($allAnswers);
+            $this->entityManager->persist($fillInTheBlank);
             $this->entityManager->flush();
 
             $this->addFlash('success', 'Question ajoutée à la base de données avec succès.');
-
             return $this->redirectToRoute('admin_fill_in_the_blank_database');
         }
 
         return $this->render('admin/add_question.html.twig', [
             'form' => $form->createView(),
-            'theme' => $theme,
-            'level' => $level,
-            'language' => $language,
         ]);
     }
-
     #[Route('/fill-in-the-blank-database', name: 'admin_fill_in_the_blank_database')]
     public function fillInTheBlankDatabase(Request $request): Response
     {
@@ -1561,7 +1507,7 @@ class AdminController extends AbstractController
     }
 
 
-   #[Route('/pronunciation-content', name: 'admin_pronunciation_content', methods: ['GET', 'POST'])]
+    #[Route('/pronunciation-content', name: 'admin_pronunciation_content', methods: ['GET', 'POST'])]
     public function managePronunciationContent(Request $request, PronunciationContentRepository $repository, EntityManagerInterface $entityManager): Response
     {
         $content = new PronunciationContent();

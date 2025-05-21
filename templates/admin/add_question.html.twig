@@ -175,44 +175,50 @@
                 <h1 class="dashboard-title">Ajouter une Nouvelle Question</h1>
 
                 <div class="dashboard-container glass-card">
-                    <!-- Display pre-selected values -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <div class="list-group-item glass-card">
-                                <label class="form-label"><strong>Thème :</strong> {{ theme }}</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="list-group-item glass-card">
-                                <label class="form-label"><strong>Niveau :</strong> {{ level }}</label>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="list-group-item glass-card">
-                                <label class="form-label"><strong>Langue :</strong> {{ language }}</label>
-                            </div>
-                        </div>
-                    </div>
-
                     {{ form_start(form, {'attr': {'class': 'row g-3'}}) }}
+                        <!-- Theme Selection -->
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.theme) }}
+                                {{ form_widget(form.theme, {'attr': {'class': 'form-select glass-input'}}) }}
+                            </div>
+                        </div>
+                        <!-- Level Selection -->
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.level) }}
+                                {{ form_widget(form.level, {'attr': {'class': 'form-select glass-input'}}) }}
+                            </div>
+                        </div>
+                        <!-- Language Selection -->
+                        <div class="col-md-4">
+                            <div class="list-group-item glass-card">
+                                {{ form_label(form.language) }}
+                                {{ form_widget(form.language, {'attr': {'class': 'form-select glass-input'}}) }}
+                            </div>
+                        </div>
+                        <!-- Question Text -->
                         <div class="col-md-12">
                             <div class="list-group-item glass-card">
                                 {{ form_label(form.questionText) }}
                                 {{ form_widget(form.questionText, {'attr': {'class': 'form-control form-text-area glass-input'}}) }}
                             </div>
                         </div>
+                        <!-- Correct Answer -->
                         <div class="col-md-4">
                             <div class="list-group-item glass-card">
                                 {{ form_label(form.correctAnswer) }}
                                 {{ form_widget(form.correctAnswer, {'attr': {'class': 'form-control form-text-field glass-input'}}) }}
                             </div>
                         </div>
+                        <!-- Incorrect Answer 1 -->
                         <div class="col-md-4">
                             <div class="list-group-item glass-card">
                                 {{ form_label(form.incorrectAnswer1) }}
                                 {{ form_widget(form.incorrectAnswer1, {'attr': {'class': 'form-control form-text-field glass-input'}}) }}
                             </div>
                         </div>
+                        <!-- Incorrect Answer 2 -->
                         <div class="col-md-4">
                             <div class="list-group-item glass-card">
                                 {{ form_label(form.incorrectAnswer2) }}
