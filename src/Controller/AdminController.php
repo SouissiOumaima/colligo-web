@@ -11,7 +11,7 @@ use App\Entity\Jeudedevinette;
 use App\Entity\Parents;
 use App\Entity\Theme;
 use App\Entity\Word;
-use App\Form\AddAdminType;
+use App\Form\AdminFormType;
 use App\Form\DragdropType;
 use App\Repository\AdminRepository;
 use App\Repository\ChildRepository;
@@ -746,7 +746,7 @@ class AdminController extends AbstractController
     #[Route('/add-admin', name: 'admin_add_admin', methods: ['GET', 'POST'])]
     public function addAdmin(Request $request, UserPasswordHasherInterface $passwordHasher, AdminRepository $adminRepository, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(AddAdminType::class);
+        $form = $this->createForm(AdminFormType::class);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -1207,7 +1207,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/validate-theme/{id}', name: 'admin_validate_theme', methods: ['POST'])]
-    #[ParamConverter('theme', class: 'App\Entity\Theme')]
+    // #[ParamConverter('theme', class: 'App\Entity\Theme')]
     public function validateTheme(Theme $theme, EntityManagerInterface $entityManager, Request $request): Response
     {
         $token = new CsrfToken('validate_theme', $request->request->get('_csrf_token'));
@@ -1227,7 +1227,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/delete-theme/{id}', name: 'admin_delete_theme', methods: ['POST'])]
-    #[ParamConverter('theme', class: 'App\Entity\Theme')]
+    // #[ParamConverter('theme', class: 'App\Entity\Theme')]
     public function deleteTheme(Theme $theme, EntityManagerInterface $entityManager, Request $request): Response
     {
         $token = new CsrfToken('delete_theme', $request->request->get('_csrf_token'));
