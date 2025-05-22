@@ -31,7 +31,7 @@ class ProgressService
     {
         $conn = $this->em->getConnection();
         try {
-            $parentExists = $conn->executeQuery('SELECT 1 FROM parent WHERE parentId = ?', [$parentId])->fetchOne();
+            $parentExists = $conn->executeQuery('SELECT 1 FROM parents WHERE parentId = ?', [$parentId])->fetchOne();
 
             if (!$parentExists) {
                 $conn->executeStatement(

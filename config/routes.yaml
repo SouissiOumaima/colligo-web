@@ -28,3 +28,6 @@ child_dashboard:
   path: /child/{parentId}/{childId}
   controller: App\Controller\ChildController::dashboard
   methods: GET
+index:
+  path: /
+  controller: App\Controller\SecurityController::login

@@ -80,6 +80,7 @@
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
+            direction: ltr; /* Forcer LTR pour les langues comme l'anglais */
         }
 
         #check-button, #next-button {
@@ -107,7 +108,7 @@
         <div class="status-bar">
             <div class="status-box level">🌟 المستوى : <span id="level">{{ level }}</span></div>
             <div class="status-box score">⭐ النتيجة : <span id="score">{{ score }}</span></div>
-            <div class="status-box hint">💡 التلميح : 
+            <div class="status-box hint" id="arabic-hint">💡 التلميح : 
                 {{ arabicTranslation is defined and arabicTranslation ? arabicTranslation : 'لا توجد جمل متاحة لهذه اللغة والمستوى.' }}
             </div>
         </div>
@@ -128,7 +129,6 @@
         <button id="next-button" onclick="nextSentence()" style="display: none;">التالي</button>
         <button onclick="resetSentence()" style="background-color:#e53935; color:white; padding:10px 20px; border:none; border-radius:10px; margin-top:10px;">🔁 إعادة الترتيب</button>
 
-
         <!-- Feedback Modal -->
         <div id="feedback-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #2196f3; border-radius: 10px; padding: 20px; z-index: 1000; text-align: center;">
             <img id="feedback-gif" src="" alt="Feedback" style="width: 150px;"><br>
@@ -137,34 +137,7 @@
         </div>
     </div>
 
-    <!-- Scripts JS (identiques à ton code précédent) -->
     <script>
-
-
-
-    function showFeedback(isCorrect) {
-    const modal = document.getElementById('feedback-modal');
-    const gif = document.getElementById('feedback-gif');
-    const audio = document.getElementById('feedback-audio');
-    const message = document.getElementById('feedback-message');
-
-    if (isCorrect) {
-        gif.src = "/images/gifs/bravo.gif";  // ajoute ce fichier
-        audio.src = "/sounds/correct1.mp3";   // ajoute ce fichier
-        message.textContent = "إجابة صحيحة! ممتاز!";
-        message.style.color = "green";
-    } else {
-        gif.src = "/images/gifs/error.gif";  // ajoute ce fichier
-        audio.src = "/sounds/incorrect1.mp3"; // ajoute ce fichier
-        message.textContent = "خطأ! حاول مرة أخرى.";
-        message.style.color = "red";
-    }
-
-    modal.style.display = 'block';
-    audio.play();
-}
-
-        // JS identique à ce que tu as déjà
         let draggedWord = null;
 
         function allowDrop(ev) {
@@ -176,32 +149,29 @@
             ev.dataTransfer.setData("text", draggedWord);
         }
 
-    function drop(ev) {
-    ev.preventDefault();
-    const draggedText = ev.dataTransfer.getData("text");
+        function drop(ev) {
+            ev.preventDefault();
+            const draggedText = ev.dataTransfer.getData("text");
 
-    if (draggedText) {
-        // Retirer le mot de la zone de départ
-        const sourceWords = document.querySelectorAll("#words .word");
-        for (let word of sourceWords) {
-            if (word.textContent.trim() === draggedText.trim()) {
-                word.remove();
-                break;
+            if (draggedText) {
+                // Retirer le mot de la zone de départ
+                const sourceWords = document.querySelectorAll("#words .word");
+                for (let word of sourceWords) {
+                    if (word.textContent.trim() === draggedText.trim()) {
+                        word.remove();
+                        break;
+                    }
+                }
+
+                // Créer un nouvel élément dans la phrase
+                const word = document.createElement("span");
+                word.textContent = draggedText + " ";
+                word.className = "word";
+                word.setAttribute("draggable", "false");
+                document.getElementById("sentence-area").appendChild(word); // Utiliser appendChild pour ajouter à la fin
+                draggedWord = null;
             }
         }
-
-        // Créer un nouvel élément dans la phrase
-        const word = document.createElement("span");
-        word.textContent = draggedText + " ";
-        word.className = "word";
-        word.setAttribute("draggable", "false");
-document.getElementById("sentence-area").insertAdjacentElement("beforeend", word);
-
- 
-        draggedWord = null;
-    }
-}
-
 
         function showFeedback(isCorrect) {
             const modal = document.getElementById('feedback-modal');
@@ -254,23 +224,23 @@ document.getElementById("sentence-area").insertAdjacentElement("beforeend", word
                 alert('حدث خطأ، حاول مرة أخرى.');
             });
         }
+
         function resetSentence() {
-    const sentenceArea = document.getElementById("sentence-area");
-    const wordsDiv = document.getElementById("words");
-    const sentenceWords = sentenceArea.querySelectorAll(".word");
+            const sentenceArea = document.getElementById("sentence-area");
+            const wordsDiv = document.getElementById("words");
+            const sentenceWords = sentenceArea.querySelectorAll(".word");
 
-    sentenceWords.forEach(word => {
-        const newWord = document.createElement("span");
-        newWord.textContent = word.textContent.trim();
-        newWord.className = "word";
-        newWord.setAttribute("draggable", "true");
-        newWord.setAttribute("ondragstart", "drag(event)");
-        wordsDiv.appendChild(newWord);
-    });
+            sentenceWords.forEach(word => {
+                const newWord = document.createElement("span");
+                newWord.textContent = word.textContent.trim();
+                newWord.className = "word";
+                newWord.setAttribute("draggable", "true");
+                newWord.setAttribute("ondragstart", "drag(event)");
+                wordsDiv.appendChild(newWord);
+            });
 
-    sentenceArea.innerHTML = "";
-}
-
+            sentenceArea.innerHTML = "";
+        }
 
         function nextSentence() {
             fetch(`/dragdrop/next-sentence/{{ child.childId }}`, { method: 'POST' })
@@ -278,7 +248,7 @@ document.getElementById("sentence-area").insertAdjacentElement("beforeend", word
             .then(data => {
                 document.getElementById('words').innerHTML = data.shuffledWords.map(w => `<span class="word" draggable="true" ondragstart="drag(event)">${w}</span>`).join('');
                 document.getElementById('sentence-area').innerHTML = '';
-                document.getElementById('arabic-hint').textContent = data.arabicTranslation || 'لا توجد جمل متاحة.';
+                document.getElementById('arabic-hint').textContent = `💡 التلميح : ${data.arabicTranslation || 'لا توجد جمل متاحة.'}`;
                 document.getElementById('next-button').style.display = 'none';
             })
             .catch(error => console.error('Error:', error));

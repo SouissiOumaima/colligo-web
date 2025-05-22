@@ -1372,15 +1372,22 @@
     </div>
 
     <!-- Contenu principal -->
-    <div class="main-content">
-        <!-- Section supérieure -->
-        <div class="top-section">
-            <button id="sound-toggle-btn" class="sound-toggle-btn" title="Contrôler le son">
-                <i class="fas fa-volume-up"></i>
-            </button>
-            <div class="title-label">علموا الاطفال وهم يلعبون</div>
-        </div>
+    
+<div class="main-content">
+    <!-- Section supérieure -->
+    <div class="top-section position-relative d-flex align-items-center justify-content-center py-2 px-3">
 
+        <!-- Bouton Son à gauche -->
+        <button id="sound-toggle-btn" class="sound-toggle-btn position-absolute start-0 ms-3" title="Contrôler le son">
+            <i class="fas fa-volume-up"></i>
+        </button>
+
+        <!-- Texte centré -->
+        <div class="title-label text-center">علموا الاطفال وهم يلعبون</div>
+
+        <!-- Logo à droite -->
+        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="position-absolute end-0 me-3" style="width: 75px;">
+    </div>
         <!-- Section centrale -->
         <div class="center-section">
             <div class="row">

@@ -43,6 +43,7 @@ class AuthController extends AbstractController
 
         return $isValid;
     }
+    #[Route('/', name: 'app_root', methods: ['GET', 'POST'])]
 
     #[Route('/login', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(Request $request): Response
