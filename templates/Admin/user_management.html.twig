@@ -1,0 +1,413 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block stylesheets %}
+    <link href="{{ asset('css/user_management.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1 p-5">
+            <h1 class="dashboard-title mb-4">Gestion des Utilisateurs</h1>
+
+            <!-- Flash Messages -->
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            <!-- Add Admin Button -->
+            <div class="mb-4 text-end">
+                <a href="{{ path('admin_add_admin') }}" class="creative-button">
+                    <i class="fas fa-plus me-2"></i>Ajouter un Administrateur
+                </a>
+            </div>
+            <!-- Filter Section -->
+            <div class="filter-section mb-4">
+                <div class="row">
+                    <!-- Role Filter -->
+                    <div class="col-md-3">
+                        <label for="role-filter" class="form-label">Rôle</label>
+                        <select id="role-filter" class="form-select glass-input">
+                            <option value="">Tous les rôles</option>
+                            <option value="Administrateur">Administrateur</option>
+                            <option value="Parent">Parent</option>
+                        </select>
+                    </div>
+                    <!-- Search Bar -->
+                    <div class="col-md-6">
+                        <label for="email-search" class="form-label">Rechercher par Email</label>
+                        <input type="text" id="email-search" class="form-control glass-input" placeholder="Entrez l'email">
+                    </div>
+                    <!-- Clear Filters Button -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button id="clear-filters" class="creative-button w-100">Effacer les filtres</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            {% if admins is not empty or parents is not empty %}
+                <div class="table-card glass-card animate__animated animate__fadeInUp">
+                    <table class="glass-table table table-striped table-hover" id="users-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Utilisateur</th>
+                                <th scope="col">Rôle</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Admins -->
+                            {% for admin in admins %}
+                                <tr class="admin-row" data-role="Administrateur" data-email="{{ admin.email|lower }}">
+                                    <td>{{ admin.adminId }}</td>
+                                    <td>{{ admin.email }}</td>
+                                    <td>Administrateur</td>
+                                    <td>
+                                        <a href="#" class="action-icon delete-user" title="Supprimer" data-id="{{ admin.adminId }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+
+                            <!-- Parents and their Children -->
+                            {% for parent in parents %}
+                                <tr class="parent-row" data-role="Parent" data-email="{{ parent.email|lower }}" data-bs-toggle="collapse" data-bs-target="#children-{{ parent.parentId }}" aria-expanded="false" aria-controls="children-{{ parent.parentId }}">
+                                    <td>{{ parent.parentId }}</td>
+                                    <td>
+                                        {% set children = parentChildren[parent.parentId] ?? [] %}
+                                        {% if children is not empty %}
+                                            <i class="fas fa-chevron-right me-2 toggle-icon"></i>
+                                        {% endif %}
+                                        {{ parent.email|default('Email non défini') }}
+                                    </td>
+                                    <td>Parent</td>
+                                    <td>
+                                        <a href="#" class="action-icon delete-user" title="Supprimer" data-id="{{ parent.parentId }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% if children is not empty %}
+                                    <tr class="collapse" id="children-{{ parent.parentId }}">
+                                        <td colspan="4">
+                                            <table class="table table-bordered mb-0">
+                                                <tbody>
+                                                    {% for child in children %}
+                                                        <tr>
+                                                            <td>{{ child.childId|default('ID non défini') }}</td>
+                                                            <td class="nested-child">{{ child.name|default('Nom non défini') }}</td>
+                                                            <td>Enfant</td>
+                                                            <td>
+                                                                <a href="#" class="action-icon delete-user" title="Supprimer" data-id="{{ child.childId|default('') }}">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-center text-muted">Aucun utilisateur dans la base de données.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% block javascripts %}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+            document.addEventListener('DOMContentLoaded', function () {
+                // Sidebar Toggle Functionality
+                const sidebar = document.getElementById('sidebar');
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                if (sidebarToggle && sidebar) {
+                    sidebarToggle.addEventListener('click', function () {
+                        sidebar.classList.toggle('collapsed');
+                    });
+                } else {
+                    console.error('Sidebar or Sidebar Toggle element not found');
+                }
+
+                // Submenu Toggle Functionality
+                const submenuButtons = document.querySelectorAll('.toggle-submenu-btn');
+                submenuButtons.forEach(function (button) {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('data-target');
+                        const submenu = document.getElementById(targetId);
+                        const icon = this.querySelector('i');
+                        if (submenu) {
+                            if (submenu.style.display === 'none' || submenu.style.display === '') {
+                                submenu.style.display = 'block';
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-up');
+                            } else {
+                                submenu.style.display = 'none';
+                                icon.classList.remove('fa-chevron-up');
+                                icon.classList.add('fa-chevron-down');
+                            }
+                        } else {
+                            console.error(`Submenu with ID ${targetId} not found`);
+                        }
+                    });
+                });
+
+                // Toggle Child List and Icon
+                const parentRows = document.querySelectorAll('.parent-row');
+                parentRows.forEach(row => {
+                    const targetId = row.getAttribute('data-bs-target');
+                    const collapseElement = document.querySelector(targetId);
+                    const icon = row.querySelector('.toggle-icon');
+
+                    // Ensure collapse toggle works by adding a manual click handler
+                    row.addEventListener('click', function(e) {
+                        // Prevent toggle if clicking the delete button
+                        if (e.target.closest('.delete-user')) {
+                            return;
+                        }
+
+                        // Manually toggle the collapse state
+                        const isExpanded = collapseElement?.classList.contains('show');
+                        if (isExpanded) {
+                            // Close the collapse
+                            collapseElement.classList.remove('show');
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-right');
+                            }
+                            row.setAttribute('aria-expanded', 'false');
+                        } else {
+                            // Open the collapse
+                            collapseElement?.classList.add('show');
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-right');
+                                icon.classList.add('fa-chevron-down');
+                            }
+                            row.setAttribute('aria-expanded', 'true');
+                        }
+                    });
+
+                    // Sync icon state on Bootstrap collapse events
+                    if (collapseElement) {
+                        collapseElement.addEventListener('shown.bs.collapse', function () {
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-right');
+                                icon.classList.add('fa-chevron-down');
+                            }
+                            row.setAttribute('aria-expanded', 'true');
+                        });
+
+                        collapseElement.addEventListener('hidden.bs.collapse', function () {
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-right');
+                            }
+                            row.setAttribute('aria-expanded', 'false');
+                        });
+                    }
+                });
+
+                // Filter Functionality
+                const roleFilter = document.getElementById('role-filter');
+                const emailSearch = document.getElementById('email-search');
+                const clearFiltersBtn = document.getElementById('clear-filters');
+                const table = document.getElementById('users-table');
+                const rows = table.querySelectorAll('tbody tr:not(.collapse)'); // Exclude collapse rows initially
+
+                function applyFilters() {
+                    const selectedRole = roleFilter.value;
+                    const searchEmail = emailSearch.value.toLowerCase().trim();
+
+                    rows.forEach(row => {
+                        const rowRole = row.getAttribute('data-role');
+                        const rowEmail = row.getAttribute('data-email') || '';
+                        const childRowId = `children-${row.cells[0].textContent.trim()}`;
+                        const childRow = document.getElementById(childRowId);
+
+                        const matchesRole = !selectedRole || rowRole === selectedRole;
+                        const matchesEmail = !searchEmail || rowEmail.includes(searchEmail);
+
+                        if (matchesRole && matchesEmail) {
+                            row.style.display = '';
+                            if (childRow && childRow.classList.contains('show')) {
+                                childRow.classList.add('show');
+                            }
+                        } else {
+                            row.style.display = 'none';
+                            if (childRow) {
+                                childRow.classList.remove('show');
+                            }
+                        }
+                    });
+                }
+
+                // Event listeners for filter changes
+                roleFilter.addEventListener('change', applyFilters);
+                emailSearch.addEventListener('input', applyFilters);
+
+                // Clear filters
+                clearFiltersBtn.addEventListener('click', () => {
+                    roleFilter.value = '';
+                    emailSearch.value = '';
+                    rows.forEach(row => {
+                        row.style.display = '';
+                        const childRowId = `children-${row.cells[0].textContent.trim()}`;
+                        const childRow = document.getElementById(childRowId);
+                        if (childRow) {
+                            childRow.classList.remove('show'); // Reset child row visibility
+                            const icon = row.querySelector('.toggle-icon');
+                            if (icon) {
+                                icon.classList.remove('fa-chevron-down');
+                                icon.classList.add('fa-chevron-right');
+                            }
+                            row.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                });
+
+                // Function to generate a random CAPTCHA code
+                function generateCaptchaCode() {
+                    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                    let code = '';
+                    for (let i = 0; i < 6; i++) {
+                        code += characters.charAt(Math.floor(Math.random() * characters.length));
+                    }
+                    return code;
+                }
+
+                // Delete Confirmation with CAPTCHA
+                const deleteButtons = document.querySelectorAll('.delete-user');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const userId = this.getAttribute('data-id');
+                        const deleteUrl = "{{ path('admin_user_management', {'delete': 'USER_ID'}) }}"
+                            .replace('USER_ID', userId);
+
+                        const userEmailOrName = button.closest('tr').querySelector('td:nth-child(2)').textContent.trim();
+                        const userRole = button.closest('tr').querySelector('td:nth-child(3)').textContent.trim();
+                        let confirmText = `Vous êtes sur le point de supprimer ${userRole} ${userEmailOrName}. Cette action est irréversible !`;
+                        if (userRole === 'Parent') {
+                            confirmText += ' Cela supprimera également tous les enfants associés !';
+                        }
+
+                        Swal.fire({
+                            title: 'Êtes-vous sûr ?',
+                            text: confirmText,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Oui, supprimer !',
+                            cancelButtonText: 'Annuler'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const captchaCode = generateCaptchaCode();
+                                Swal.fire({
+                                    title: 'Vérification CAPTCHA',
+                                    html: `
+                                        <p>Veuillez entrer le code suivant pour confirmer la suppression :</p>
+                                        <p><strong>${captchaCode}</strong></p>
+                                        <input type="text" id="captchaInput" class="swal2-input" placeholder="Entrez le code CAPTCHA">
+                                    `,
+                                    icon: 'question',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#d33',
+                                    cancelButtonColor: '#3085d6',
+                                    confirmButtonText: 'Confirmer',
+                                    cancelButtonText: 'Annuler',
+                                    preConfirm: () => {
+                                        const userInput = document.getElementById('captchaInput').value.trim();
+                                        if (!userInput) {
+                                            Swal.showValidationMessage('Veuillez entrer le code CAPTCHA.');
+                                            return false;
+                                        }
+                                        if (userInput !== captchaCode) {
+                                            Swal.showValidationMessage('Code CAPTCHA incorrect.');
+                                            return false;
+                                        }
+                                        return true;
+                                    }
+                                }).then((captchaResult) => {
+                                    if (captchaResult.isConfirmed) {
+                                        window.location.href = deleteUrl;
+                                    }
+                                });
+                            }
+                        });
+                    });
+                });
+
+                // Flash Messages with SweetAlert
+                const successMessages = {{ app.flashes('success')|json_encode|raw }};
+                const errorMessages = {{ app.flashes('error')|json_encode|raw }};
+
+                if (successMessages.length > 0) {
+                    successMessages.forEach(message => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès',
+                            text: message,
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    });
+                }
+
+                if (errorMessages.length > 0) {
+                    errorMessages.forEach(message => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: message,
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                    });
+                }
+            });
+
+            function showComingSoonAlert(feature) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Bientôt disponible',
+                    text: `La fonctionnalité "${feature}" sera bientôt disponible !`,
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        </script>
+    {% endblock %}
+{% endblock %}

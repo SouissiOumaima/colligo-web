@@ -1,0 +1,556 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}jeu des images{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Reset and Global Styles */
+        html, body {
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #f7f5fa !important;
+            font-family: 'Poppins', sans-serif !important;
+            overflow-x: hidden !important;
+            color: #2d3748 !important;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            margin-left: 250px !important;
+            width: calc(100% - 250px) !important;
+            padding: 30px !important;
+            min-height: 100vh !important;
+            transition: all 0.3s ease !important;
+            background: #f7f5fa !important;
+        }
+
+        .main-content.expanded {
+            margin-left: 60px !important;
+            width: calc(100% - 60px) !important;
+        }
+
+        /* Sidebar toggle adjustment */
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 60px !important;
+            width: calc(100% - 60px) !important;
+        }
+
+        /* Title Styling */
+        .dashboard-title {
+            font-size: 36px !important;
+            font-weight: 700 !important;
+            color: #2d3748 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+            text-align: center !important;
+            margin-bottom: 30px !important;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 12px !important;
+            padding: 25px !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(0, 0, 0, 0.03) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        /* Form Labels */
+        .form-label {
+            color: #2d3748 !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
+            margin-bottom: 5px !important;
+            display: block !important;
+        }
+
+        /* Form Inputs */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            color: #2d3748 !important;
+            border-radius: 8px !important;
+            padding: 8px !important;
+            font-size: 14px !important;
+            transition: all 0.3s ease !important;
+            width: 100% !important;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.2) !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+            outline: none !important;
+        }
+
+        /* File Input Customization */
+        .custom-file-input {
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        .custom-file-input input[type="file"] {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            opacity: 0 !important;
+            cursor: pointer !important;
+        }
+
+        .custom-file-input label {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+            color: #2d3748 !important;
+            border-radius: 8px !important;
+            padding: 8px 15px !important;
+            font-size: 14px !important;
+            display: inline-block !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+        }
+
+        .custom-file-input label:hover {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* Creative Button */
+        .creative-button {
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 20px !important;
+            padding: 12px 25px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            min-width: 140px !important;
+            text-align: center !important;
+            margin: 0 10px !important;
+        }
+
+        .creative-button:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
+            background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Darker blue to lighter sky blue */
+        }
+
+        .creative-button:active {
+            transform: scale(0.97) !important;
+        }
+
+        /* Action Icons */
+        .action-icon {
+            font-size: 16px !important;
+            padding: 8px !important;
+            border-radius: 50% !important;
+            transition: background 0.3s ease, transform 0.3s ease !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        .action-icon.edit {
+            color: #3498db !important; /* Matching the primary blue */
+        }
+
+        .action-icon.edit:hover {
+            background: rgba(52, 152, 219, 0.1) !important;
+            transform: scale(1.1) !important;
+        }
+
+        .action-icon.delete {
+            color: #e74c3c !important; /* Red for delete to contrast with blue theme */
+        }
+
+        .action-icon.delete:hover {
+            background: rgba(231, 76, 60, 0.1) !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* Table Styles */
+        .glass-table {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 10px !important;
+            overflow: hidden !important;
+            color: #2d3748 !important;
+        }
+
+        .glass-table thead {
+            background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* New gradient for table header */
+        }
+
+        .glass-table th {
+            background: transparent !important;
+            color: #ffffff !important;
+            text-transform: uppercase !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+            padding: 12px !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .glass-table tbody tr:nth-child(odd) {
+            background: rgba(52, 152, 219, 0.05) !important; /* Light blue tint for odd rows */
+        }
+
+        .glass-table tbody tr:nth-child(even) {
+            background: rgba(135, 206, 235, 0.05) !important; /* Light sky blue tint for even rows */
+        }
+
+        .glass-table tbody td {
+            padding: 12px !important;
+            vertical-align: middle !important;
+            text-align: left !important;
+        }
+
+        .glass-table img {
+            max-width: 100px !important;
+            border-radius: 5px !important;
+        }
+
+        /* Alert Styles */
+        .alert {
+            border-radius: 8px !important;
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+            text-align: left !important;
+        }
+
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1) !important;
+            color: #28a745 !important;
+            border: 1px solid rgba(40, 167, 69, 0.3) !important;
+        }
+
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1) !important;
+            color: #dc3545 !important;
+            border: 1px solid rgba(220, 53, 69, 0.3) !important;
+        }
+
+        /* Responsive Design */
+        @media(max-width: 1024px) {
+            .main-content {
+                margin-left: 60px !important;
+                width: calc(100% - 60px) !important;
+                padding: 20px !important;
+            }
+
+            .dashboard-title {
+                font-size: 28px !important;
+            }
+
+            .glass-card {
+                padding: 15px !important;
+            }
+
+            .creative-button {
+                padding: 10px 20px !important;
+                font-size: 14px !important;
+            }
+        }
+
+        @media(max-width: 768px) {
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 15px !important;
+            }
+
+            .dashboard-title {
+                font-size: 24px !important;
+            }
+
+            .glass-card {
+                padding: 10px !important;
+            }
+
+            .creative-button {
+                padding: 8px 15px !important;
+                font-size: 12px !important;
+                margin: 5px 0 !important;
+            }
+
+            .glass-table th,
+            .glass-table td {
+                font-size: 12px !important;
+                padding: 8px !important;
+            }
+
+            .glass-table img {
+                max-width: 80px !important;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="container py-5">
+                <h1 class="dashboard-title">Gestion de jeu d'images</h1>
+
+                <div class="dashboard-container glass-card">
+                    <!-- Display flash messages -->
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+                    {% for message in app.flashes('error') %}
+                        <div class="alert alert-danger">{{ message }}</div>
+                    {% endfor %}
+
+                    <!-- Add/Edit Image Form -->
+                    <form method="post" action="{{ path('admin_manage_images') }}" enctype="multipart/form-data" class="p-6" id="imageUploadForm">
+                        <input type="hidden" name="image_id" id="image_id" value="">
+                        <div class="mb-6">
+                            <label for="word" class="form-label">Mot en anglais</label>
+                            <input type="text" class="glass-input" id="word" name="word" required>
+                        </div>
+                        <div class="mb-6 custom-file-input">
+                            <label for="image_file" class="form-label">Télécharger l'image (JPEG, PNG, GIF, 1024x1024 pixels)</label>
+                            <input type="file" class="glass-input" id="image_file" name="image_file" accept="image/jpeg,image/png,image/gif">
+                        </div>
+                        <div class="mb-6">
+                            <label for="french_translation" class="form-label">Traduction française</label>
+                            <input type="text" class="glass-input" id="french_translation" name="french_translation">
+                        </div>
+                        <div class="mb-6">
+                            <label for="spanish_translation" class="form-label">Traduction espagnole</label>
+                            <input type="text" class="glass-input" id="spanish_translation" name="spanish_translation">
+                        </div>
+                        <div class="mb-6">
+                            <label for="german_translation" class="form-label">Traduction allemande</label>
+                            <input type="text" class="glass-input" id="german_translation" name="german_translation">
+                        </div>
+                        <div class="button-wrapper text-center">
+                            <button type="submit" class="creative-button">Enregistrer l'image</button>
+                        </div>
+                    </form>
+
+                    <!-- Image List -->
+                    <h2 class="dashboard-title text-2xl font-semibold mt-8 mb-4">Images existantes</h2>
+                    <div class="table-responsive">
+                        <table class="table glass-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Anglais</th>
+                                    <th>Image</th>
+                                    <th>Français</th>
+                                    <th>Espagnol</th>
+                                    <th>Allemand</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for image in images %}
+                                    <tr>
+                                        <td>{{ image.id }}</td>
+                                        <td>{{ image.word }}</td>
+                                        <td>
+                                            <img src="{{ image.image_url }}" alt="{{ image.word }}" style="max-width: 100px;">
+                                        </td>
+                                        <td>{{ image.french_translation }}</td>
+                                        <td>{{ image.spanish_translation }}</td>
+                                        <td>{{ image.german_translation }}</td>
+                                        <td>
+                                            <button class="action-icon edit edit-image me-2"
+                                                    data-id="{{ image.id }}"
+                                                    data-word="{{ image.word }}"
+                                                    data-french="{{ image.french_translation }}"
+                                                    data-spanish="{{ image.spanish_translation }}"
+                                                    data-german="{{ image.german_translation }}"
+                                                    title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <a href="{{ path('admin_manage_images', {delete: image.id}) }}"
+                                               class="action-icon delete delete-image me-2"
+                                               data-id="{{ image.id }}"
+                                               title="Supprimer">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">Aucune image trouvée.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Sidebar Toggle, Edit Functionality, Delete Confirmation, and Image Size Validation -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        try {
+            // Sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    document.getElementById('sidebar').classList.toggle('collapsed');
+                    document.getElementById('mainContent').classList.toggle('expanded');
+                });
+            }
+
+            // Handle edit button click
+            document.querySelectorAll('.edit-image').forEach(button => {
+                button.addEventListener('click', () => {
+                    console.log('Edit button clicked for image ID:', button.dataset.id);
+                    const imageId = button.dataset.id;
+                    document.querySelector('#image_id').value = imageId;
+                    document.querySelector('#word').value = button.dataset.word;
+                    document.querySelector('#french_translation').value = button.dataset.french;
+                    document.querySelector('#spanish_translation').value = button.dataset.spanish;
+                    document.querySelector('#german_translation').value = button.dataset.german;
+                    document.querySelector('h2').textContent = 'Modifier l\'image';
+                    document.querySelector('#image_file').removeAttribute('required');
+                    window.scrollTo(0, 0);
+                });
+            });
+
+            // Reset form to "Add New Image" state when page loads
+            const imageId = document.querySelector('#image_id').value;
+            if (!imageId) {
+                document.querySelector('#image_file').setAttribute('required', 'required');
+                document.querySelector('h2').textContent = 'Ajouter une nouvelle image';
+            }
+
+            // Image size validation on form submission
+            const form = document.getElementById('imageUploadForm');
+            const imageInput = document.getElementById('image_file');
+
+            form.addEventListener('submit', async (e) => {
+                // Only validate if a new image is being uploaded (not required for editing if no new image is selected)
+                if (imageInput.files.length > 0) {
+                    const file = imageInput.files[0];
+                    const img = new Image();
+                    const objectUrl = URL.createObjectURL(file);
+
+                    try {
+                        // Wait for the image to load to get its dimensions
+                        await new Promise((resolve, reject) => {
+                            img.onload = resolve;
+                            img.onerror = reject;
+                            img.src = objectUrl;
+                        });
+
+                        const width = img.naturalWidth;
+                        const height = img.naturalHeight;
+
+                        // Check if dimensions are exactly 1024x1024
+                        if (width !== 1024 || height !== 1024) {
+                            e.preventDefault();
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erreur',
+                                text: 'L\'image doit être exactement de 1024x1024 pixels. Les dimensions actuelles sont ' + width + 'x' + height + ' pixels.',
+                                confirmButtonColor: '#6c757d',
+                                confirmButtonText: 'OK'
+                            });
+                            // Reset the file input
+                            imageInput.value = '';
+                        }
+                    } catch (error) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erreur',
+                            text: 'Impossible de vérifier les dimensions de l\'image.',
+                            confirmButtonColor: '#6c757d',
+                            confirmButtonText: 'OK'
+                        });
+                        imageInput.value = '';
+                    } finally {
+                        // Clean up the object URL
+                        URL.revokeObjectURL(objectUrl);
+                    }
+                }
+            });
+
+            // Enhanced delete confirmation with SweetAlert
+            document.querySelectorAll('.delete-image').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const imageId = button.getAttribute('data-id');
+                    const deleteUrl = "{{ path('admin_manage_images') }}?delete=" + imageId;
+
+                    Swal.fire({
+                        title: 'Êtes-vous sûr ?',
+                        text: 'Vous êtes sur le point de supprimer cette image. Cette action est irréversible !',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e74c3c', /* Red for consistency with delete icon */
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Oui, supprimer !',
+                        cancelButtonText: 'Annuler'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = deleteUrl;
+                        }
+                    });
+                });
+            });
+
+            // Flash Messages with SweetAlert
+            const successMessages = {{ app.flashes('success')|json_encode|raw }};
+            const errorMessages = {{ app.flashes('error')|json_encode|raw }};
+
+            if (successMessages.length > 0) {
+                successMessages.forEach(message => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Succès',
+                        text: message,
+                        confirmButtonColor: '#6c757d',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            }
+
+            if (errorMessages.length > 0) {
+                errorMessages.forEach(message => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: message,
+                        confirmButtonColor: '#6c757d',
+                        confirmButtonText: 'OK'
+                    });
+                });
+            }
+
+        } catch (error) {
+            console.error('JavaScript error:', error);
+        }
+    </script>
+{% endblock %}

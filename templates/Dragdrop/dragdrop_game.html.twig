@@ -1,0 +1,287 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <style>
+        body {
+            background: linear-gradient(to bottom right, #ff9a9e, #fad0c4);
+            font-family: 'Cairo', sans-serif;
+            direction: rtl;
+            text-align: center;
+        }
+
+        #game-container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 30px;
+            background-color: #ffffffcc;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            color: #d81b60;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .status-box {
+            flex: 1;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .level { background-color: #dcedc8; color: #33691e; }
+        .score { background-color: #fff9c4; color: #f57f17; }
+        .hint { background-color: #e1bee7; color: #6a1b9a; }
+
+        .no-sentence {
+            background-color: #ffe0b2;
+            color: #d84315;
+            font-weight: bold;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .word {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            cursor: grab;
+            font-weight: bold;
+        }
+
+        #words {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        #sentence-area {
+            min-height: 60px;
+            padding: 15px;
+            border: 2px dashed #7e57c2;
+            border-radius: 15px;
+            background-color: #f3e5f5;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        #check-button, #next-button {
+            padding: 10px 20px;
+            margin-top: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+        }
+
+        #check-button {
+            background-color: #0288d1;
+        }
+
+        #next-button {
+            background-color: #7cb342;
+        }
+    </style>
+
+    <div id="game-container">
+        <h1>🎯 لعبة ترتيب الكلمات السحرية</h1>
+
+        <div class="status-bar">
+            <div class="status-box level">🌟 المستوى : <span id="level">{{ level }}</span></div>
+            <div class="status-box score">⭐ النتيجة : <span id="score">{{ score }}</span></div>
+            <div class="status-box hint">💡 التلميح : 
+                {{ arabicTranslation is defined and arabicTranslation ? arabicTranslation : 'لا توجد جمل متاحة لهذه اللغة والمستوى.' }}
+            </div>
+        </div>
+
+        {% if shuffledWords is empty %}
+            <div class="no-sentence">🚫 لا توجد عبارة لعرضها.</div>
+        {% endif %}
+
+        <div id="words">
+            {% for word in shuffledWords %}
+                <span class="word" draggable="true" ondragstart="drag(event)">{{ word }}</span>
+            {% endfor %}
+        </div>
+
+        <div id="sentence-area" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+        <button id="check-button" onclick="checkSentence()">تحقق</button>
+        <button id="next-button" onclick="nextSentence()" style="display: none;">التالي</button>
+        <button onclick="resetSentence()" style="background-color:#e53935; color:white; padding:10px 20px; border:none; border-radius:10px; margin-top:10px;">🔁 إعادة الترتيب</button>
+
+
+        <!-- Feedback Modal -->
+        <div id="feedback-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #2196f3; border-radius: 10px; padding: 20px; z-index: 1000; text-align: center;">
+            <img id="feedback-gif" src="" alt="Feedback" style="width: 150px;"><br>
+            <audio id="feedback-audio"></audio>
+            <p id="feedback-message" style="font-size: 20px; font-weight: bold;"></p>
+        </div>
+    </div>
+
+    <!-- Scripts JS (identiques à ton code précédent) -->
+    <script>
+
+
+
+    function showFeedback(isCorrect) {
+    const modal = document.getElementById('feedback-modal');
+    const gif = document.getElementById('feedback-gif');
+    const audio = document.getElementById('feedback-audio');
+    const message = document.getElementById('feedback-message');
+
+    if (isCorrect) {
+        gif.src = "/images/gifs/bravo.gif";  // ajoute ce fichier
+        audio.src = "/sounds/correct1.mp3";   // ajoute ce fichier
+        message.textContent = "إجابة صحيحة! ممتاز!";
+        message.style.color = "green";
+    } else {
+        gif.src = "/images/gifs/error.gif";  // ajoute ce fichier
+        audio.src = "/sounds/incorrect1.mp3"; // ajoute ce fichier
+        message.textContent = "خطأ! حاول مرة أخرى.";
+        message.style.color = "red";
+    }
+
+    modal.style.display = 'block';
+    audio.play();
+}
+
+        // JS identique à ce que tu as déjà
+        let draggedWord = null;
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            draggedWord = ev.target.textContent.trim();
+            ev.dataTransfer.setData("text", draggedWord);
+        }
+
+    function drop(ev) {
+    ev.preventDefault();
+    const draggedText = ev.dataTransfer.getData("text");
+
+    if (draggedText) {
+        // Retirer le mot de la zone de départ
+        const sourceWords = document.querySelectorAll("#words .word");
+        for (let word of sourceWords) {
+            if (word.textContent.trim() === draggedText.trim()) {
+                word.remove();
+                break;
+            }
+        }
+
+        // Créer un nouvel élément dans la phrase
+        const word = document.createElement("span");
+        word.textContent = draggedText + " ";
+        word.className = "word";
+        word.setAttribute("draggable", "false");
+document.getElementById("sentence-area").insertAdjacentElement("beforeend", word);
+
+ 
+        draggedWord = null;
+    }
+}
+
+
+        function showFeedback(isCorrect) {
+            const modal = document.getElementById('feedback-modal');
+            const gif = document.getElementById('feedback-gif');
+            const audio = document.getElementById('feedback-audio');
+            const message = document.getElementById('feedback-message');
+
+            if (isCorrect) {
+                gif.src = "/images/gifs/bravo.gif";
+                audio.src = "/sounds/correct1.mp3";
+                message.textContent = "إجابة صحيحة! ممتاز!";
+                message.style.color = "green";
+            } else {
+                gif.src = "/images/gifs/error.gif";
+                audio.src = "/sounds/incorrect1.mp3";
+                message.textContent = "خطأ! حاول مرة أخرى.";
+                message.style.color = "red";
+            }
+
+            modal.style.display = 'block';
+            audio.play();
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback-modal').style.display = 'none';
+        }
+
+        function checkSentence() {
+            const sentenceArea = document.getElementById("sentence-area");
+            const userSentence = Array.from(sentenceArea.children).map(span => span.textContent.trim()).join(" ");
+            fetch(`/dragdrop/check-sentence/{{ child.childId }}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'sentence=' + encodeURIComponent(userSentence)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('score').textContent = data.score;
+                document.getElementById('level').textContent = data.level;
+                showFeedback(data.isCorrect);
+                if (data.isCorrect) {
+                    setTimeout(() => {
+                        hideFeedback();
+                        nextSentence();
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ، حاول مرة أخرى.');
+            });
+        }
+        function resetSentence() {
+    const sentenceArea = document.getElementById("sentence-area");
+    const wordsDiv = document.getElementById("words");
+    const sentenceWords = sentenceArea.querySelectorAll(".word");
+
+    sentenceWords.forEach(word => {
+        const newWord = document.createElement("span");
+        newWord.textContent = word.textContent.trim();
+        newWord.className = "word";
+        newWord.setAttribute("draggable", "true");
+        newWord.setAttribute("ondragstart", "drag(event)");
+        wordsDiv.appendChild(newWord);
+    });
+
+    sentenceArea.innerHTML = "";
+}
+
+
+        function nextSentence() {
+            fetch(`/dragdrop/next-sentence/{{ child.childId }}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('words').innerHTML = data.shuffledWords.map(w => `<span class="word" draggable="true" ondragstart="drag(event)">${w}</span>`).join('');
+                document.getElementById('sentence-area').innerHTML = '';
+                document.getElementById('arabic-hint').textContent = data.arabicTranslation || 'لا توجد جمل متاحة.';
+                document.getElementById('next-button').style.display = 'none';
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+{% endblock %}

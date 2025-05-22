@@ -1,0 +1,338 @@
+/*
+ * Styles specific to the progress page
+ */
+
+/* Progress page container */
+.progress-page {
+    color: var(--gray-800);
+}
+
+.progress-content {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-md);
+}
+
+/* Child selection */
+.child-selection {
+    text-align: center;
+    margin-bottom: var(--space-5);
+}
+
+.select-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 400px;
+    margin: 0 auto var(--space-4);
+}
+
+.child-input {
+    flex: 1;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-lg);
+    text-align: center;
+    border: 2px solid var(--gray-300);
+    border-radius: var(--radius-md);
+}
+
+.child-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+}
+
+.child-profiles {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--white);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.profile-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.profile-card.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+}
+
+.profile-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: var(--primary-light);
+    border-radius: var(--radius-full);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--white);
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+
+.profile-info {
+    text-align: right;
+}
+
+.profile-name {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.profile-details {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+
+/* Game selection */
+.game-selection {
+    margin-bottom: var(--space-5);
+}
+
+.game-cards {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-3);
+}
+
+.game-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-3);
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--gray-200);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.game-card.active {
+    border-color: var(--primary);
+    background-color: rgba(108, 99, 255, 0.05);
+}
+
+.game-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-2);
+    background-color: var(--gray-200);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-icon.game1 { background-color: #FF9F43; }
+.game-icon.game2 { background-color: #4ECDC4; }
+.game-icon.game3 { background-color: #6C63FF; }
+.game-icon.game4 { background-color: #FF6B6B; }
+.game-icon.game5 { background-color: #2ECC71; }
+
+.game-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Charts section */
+.charts-section {
+    margin-bottom: var(--space-5);
+}
+
+.chart-container {
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    height: 300px;
+}
+
+/* Stats cards */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.score-icon {
+    background-color: var(--primary-light);
+    background-image: url('../images/star.svg');
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.time-icon {
+    background-color: var(--secondary-light);
+    background-image: url('../images/clock.svg');
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.attempts-icon {
+    background-color: var(--accent-light);
+    background-image: url('../images/refresh.svg');
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.accuracy-icon {
+    background-color: var(--success);
+    background-image: url('../images/check.svg');
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-title {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+
+.stat-value {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--gray-800);
+}
+
+/* Comparison section */
+.comparison-section {
+    margin-bottom: var(--space-4);
+}
+
+.table-container {
+    overflow-x: auto;
+    background-color: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--gray-200);
+    text-align: center;
+}
+
+.comparison-table th {
+    background-color: var(--primary);
+    color: var(--white);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.comparison-table th:first-child,
+.comparison-table td:first-child {
+    text-align: right;
+    font-weight: 600;
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+.comparison-table tr:nth-child(even) {
+    background-color: var(--gray-100);
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 992px) {
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .game-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .select-container {
+        flex-direction: column;
+    }
+    
+    .child-profiles {
+        flex-direction: column;
+    }
+    
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .game-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-2);
+    }
+}
+
+@media (max-width: 480px) {
+    .game-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-table {
+        font-size: var(--font-size-xs);
+    }
+    
+    .comparison-table th,
+    .comparison-table td {
+        padding: var(--space-1);
+    }
+}

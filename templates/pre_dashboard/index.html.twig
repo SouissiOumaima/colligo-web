@@ -1,0 +1,1831 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pré-Dashboard{% endblock %}
+
+{% block stylesheets %}
+    <!-- Load Bootstrap and Font Awesome via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Load Google Fonts for a playful, child-friendly font -->
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+
+    <style>
+        /* Styles spécifiques pour les boutons de professions */
+        .profession-btn {
+            position: relative;
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 150px;
+            width: 100%;
+            padding: 0;
+            background: transparent;
+            display: block;
+        }
+
+        .profession-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .profession-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .profession-btn:hover img {
+            transform: scale(1.05);
+            opacity: 0.9;
+        }
+
+        .profession-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 12px 5px 5px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .profession-btn:hover .profession-label {
+            padding-bottom: 8px;
+            background: linear-gradient(to top, rgba(227, 151, 134, 0.9), transparent);
+        }
+
+        /* Styles pour les modales des professions */
+        .profession-modal .modal-content {
+            background: linear-gradient(135deg, #fff7e6 0%, #e6f7ff 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid #f4a1c7;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        .profession-modal .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.1"><circle cx="30" cy="30" r="10" fill="#ffeb3b"/><circle cx="170" cy="50" r="15" fill="#ffeb3b"/><circle cx="50" cy="150" r="12" fill="#ffeb3b"/><circle cx="150" cy="170" r="8" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .profession-modal .modal-header {
+            background: linear-gradient(to right, #f4a1c7, #99caf1);
+            border-bottom: none;
+            padding: 15px 25px;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+        }
+
+        .profession-modal .modal-title {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .profession-modal .modal-title::before {
+            content: '\f005'; /* Font Awesome star icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: #ffeb3b;
+            font-size: 1.2rem;
+            animation: sparkle 1.5s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .profession-modal .modal-body {
+            padding: 20px;
+            background: transparent;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .profession-modal video {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            border: 3px solid #99caf1;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .profession-modal .description {
+            margin-top: 15px;
+            font-size: 1rem;
+            color: #ff6f91;
+            font-weight: 600;
+        }
+
+        .profession-modal .toggle-video-sound-btn {
+            margin-top: 10px;
+            background: linear-gradient(45deg, #ff6f91, #ffeb3b);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .profession-modal .toggle-video-sound-btn:hover {
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive adjustments for profession modals */
+        @media (max-width: 576px) {
+            .profession-modal video {
+                max-height: 150px;
+            }
+
+            .profession-modal .modal-title {
+                font-size: 1.1rem;
+            }
+
+            .profession-modal .description {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Responsive pour les boutons de profession */
+        @media (max-width: 768px) {
+            .profession-btn {
+                height: 120px;
+            }
+            
+            .profession-label {
+                font-size: 0.85rem;
+                padding: 8px 5px 3px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .profession-btn {
+                height: 100px;
+            }
+            
+            .profession-label {
+                font-size: 0.75rem;
+            }
+        }
+
+        .text-vivid-blue {
+            color: #007bff;
+        }
+
+        /* Advanced Avatar Picker Styles */
+        .avatar-picker {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            border: 2px dashed #f4a1c7;
+        }
+
+        .avatar-card {
+            position: relative;
+            background: #fff7e6;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .avatar-card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: #e6f7ff;
+        }
+
+        .avatar-card.selected {
+            border: 2px solid #ffeb3b;
+            background: #d1fae5;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .avatar-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid #99caf1;
+        }
+
+        .avatar-card .avatar-name {
+            font-size: 0.8rem;
+            color: #ff6f91;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .avatar-preview {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fff7e6;
+            border-radius: 15px;
+            border: 2px solid #99caf1;
+        }
+
+        .avatar-preview img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #ffeb3b;
+        }
+
+        .avatar-preview p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        :root {
+            --sidebar-bg: #e39786;
+            --sidebar-text: #ffffff;
+            --sidebar-hover: #d47a6c;
+            --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+            --sidebar-active-indicator: #FFD700;
+            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius-md: 10px;
+            --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: #F5E8E4;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+        }
+
+        .wrapper {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 80px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            overflow: hidden;
+            transition: width 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar:hover {
+            width: 220px;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .sidebar-header img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+        }
+
+        .sidebar-header h6 {
+            color: var(--sidebar-text);
+            font-weight: 500;
+            margin-top: 10px;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-label {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            white-space: nowrap;
+            margin-left: 12px;
+            font-size: 0.875rem;
+        }
+
+        .sidebar:hover .sidebar-label {
+            opacity: 1;
+        }
+
+        .nav-link {
+            color: var(--sidebar-text);
+            padding: 12px 16px;
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+            position: relative;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            background: var(--sidebar-hover);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: var(--sidebar-active-bg);
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 3px;
+            background: var(--sidebar-active-indicator);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-link i {
+            font-size: 1.25rem;
+            min-width: 24px;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-link:hover i {
+            transform: translateX(2px) scale(1.05);
+            color: var(--sidebar-active-indicator);
+        }
+
+        .ripple-effect {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 0, 0.3);
+            border-radius: 50%;
+            animation: ripple 0.6s linear;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(10);
+                opacity: 0;
+            }
+        }
+
+        .main-content {
+            margin-left: 80px;
+            padding: 30px;
+            transition: margin-left 0.5s ease;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar:hover ~ .main-content {
+            margin-left: 220px;
+        }
+
+        .top-section {
+            background-color: #e39786;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            display: block;
+        }
+
+        .title-label {
+            font-size: 32px;
+            font-weight: bold;
+            direction: rtl;
+            color: white;
+            margin: 0 auto;
+            display: inline-block;
+        }
+
+        .sound-toggle-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            z-index: 1;
+        }
+
+        .sound-toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .center-section {
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Fond décoratif pour la section centrale */
+        .center-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.15"><circle cx="30" cy="30" r="10" fill="#ffeb3b"/><circle cx="170" cy="50" r="15" fill="#ffeb3b"/><circle cx="50" cy="150" r="12" fill="#ffeb3b"/><circle cx="150" cy="170" r="8" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .add-child-section {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .add-child-button {
+            background-color: #e39786;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            padding: 10px 20px;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .add-child-button:hover {
+            background-color: #d47a6c;
+            transform: scale(1.05);
+        }
+
+        .children-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            padding: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .child-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 235, 205, 0.5));
+            border-radius: 20px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border: 3px solid transparent;
+            /* Suppression de overflow: hidden pour permettre à l'avatar de déborder */
+        }
+
+        .child-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.2"><path d="M50 10 L60 40 L90 40 L65 60 L75 90 L50 70 L25 90 L35 60 L10 40 L40 40 Z" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .child-box:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            border: 3px solid #ffeb3b;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); }
+        }
+
+        .child-box:focus {
+            outline: 3px solid #e39786;
+            outline-offset: 2px;
+        }
+
+        .child-box a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            height: 100%;
+        }
+
+        .child-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: absolute;
+            top: -20px; /* Ajusté pour rendre l'avatar plus visible */
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid #ffeb3b;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            background-color: rgb(180, 225, 201);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .child-avatar::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 120px;
+            height: 120px;
+            border: 3px dotted #99caf1;
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .child-box:hover .child-avatar {
+            transform: translateX(-50%) scale(1.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1.15); }
+            50% { transform: translateX(-50%) scale(1.25); }
+        }
+
+        .child-name {
+            font-family: 'Chewy', cursive;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ff6f91;
+            margin-top: 80px; /* Ajusté pour éviter le chevauchement avec l'avatar */
+            margin-bottom: 8px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .child-box:hover .child-name {
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .child-language {
+            font-family: 'Chewy', cursive;
+            font-size: 1rem;
+            color: #99caf1;
+            margin-bottom: 0;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .child-box:hover .child-language {
+            color: #ff6f91;
+        }
+
+        .bg-vivid-red {
+            background: linear-gradient(135deg, #eba099, #f4c7c3);
+        }
+
+        .bg-vivid-blue {
+            background: linear-gradient(135deg, #99caf1, #c3e4ff);
+        }
+
+        .bg-vivid-green {
+            background: linear-gradient(135deg, #66bb6a, #a5d6a7);
+        }
+
+        .bg-vivid-orange {
+            background: linear-gradient(135deg, #e1c777, #ffeead);
+        }
+
+        .bg-vivid-purple {
+            background: linear-gradient(135deg, #d1a9f0, #e1bee7);
+        }
+
+        .bg-vivid-pink {
+            background: linear-gradient(135deg, #f4a1c7, #f8bbd0);
+        }
+
+        /* Modal Styles for Child-Friendly Design */
+        .modal-content {
+            background: linear-gradient(135deg, #fff7e6 0%, #e6f7ff 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid #f4a1c7;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.1"><circle cx="30" cy="30" r="10" fill="#ffeb3b"/><circle cx="170" cy="50" r="15" fill="#ffeb3b"/><circle cx="50" cy="150" r="12" fill="#ffeb3b"/><circle cx="150" cy="170" r="8" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .modal-header {
+            background: linear-gradient(to right, #f4a1c7, #99caf1);
+            border-bottom: none;
+            padding: 20px 30px;
+            position: relative;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+        }
+
+        .modal-header .modal-title {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-header .modal-title::before {
+            content: '\f005'; /* Font Awesome star icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: #ffeb3b;
+            font-size: 1.3rem;
+            animation: sparkle 1.5s infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+
+        .modal-header .btn-close {
+            background: #ffffff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            opacity: 0.8;
+            transition: transform 0.3s ease;
+        }
+
+        .modal-header .btn-close:hover {
+            transform: rotate(90deg);
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 30px;
+            background: transparent;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-body .form-label {
+            color: #ff6f91;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-body .form-label::before {
+            content: '\f4d8'; /* Font Awesome paper-plane icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: #99caf1;
+            font-size: 1rem;
+        }
+
+        .modal-body .form-control,
+        .modal-body .form-select {
+            background-color: #fff1f8;
+            border: 2px solid #f4a1c7;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 1rem;
+            color: #1f2937;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-body .form-control:focus,
+        .modal-body .form-select:focus {
+            border-color: #99caf1;
+            box-shadow: 0 0 8px rgba(153, 202, 241, 0.5);
+            background-color: #ffffff;
+            transform: scale(1.02);
+        }
+
+        .modal-body .form-control:hover,
+        .modal-body .form-select:hover {
+            border-color: #ffeb3b;
+            background-color: #fef9e7;
+        }
+
+        .modal-body .btn-primary {
+            background: linear-gradient(45deg, #ff6f91, #ffeb3b);
+            border: none;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 20px auto 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-body .btn-primary:hover {
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-body .btn-primary::after {
+            content: '\f4ff'; /* Font Awesome magic-wand icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 1rem;
+        }
+
+        .alert-success {
+            background-color: #D1FAE5;
+            color: #66d7b7;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #dc3545;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        /* Styles for sound control modal */
+        .sound-modal .modal-content {
+            background: linear-gradient(135deg, #fff7e6 0%, #e6f7ff 100%);
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            border: 2px solid #f4a1c7;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .sound-modal .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.1"><circle cx="30" cy="30" r="10" fill="#ffeb3b"/><circle cx="170" cy="50" r="15" fill="#ffeb3b"/><circle cx="50" cy="150" r="12" fill="#ffeb3b"/><circle cx="150" cy="170" r="8" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .sound-modal .modal-header {
+            background: linear-gradient(to right, #f4a1c7, #99caf1);
+            border-bottom: none;
+            padding: 15px 25px;
+            border-top-left-radius: 18px;
+            border-top-right-radius: 18px;
+        }
+
+        .sound-modal .modal-title {
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1.3rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sound-modal .modal-title::before {
+            content: '\f001'; /* Font Awesome music icon */
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: #ffeb3b;
+            font-size: 1.2rem;
+            animation: sparkle 1.5s infinite;
+        }
+
+        .sound-modal .modal-body {
+            padding: 20px;
+            background: transparent;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sound-modal .modal-body .stars {
+            font-size: 2rem;
+            color: #ffeb3b;
+            margin-bottom: 10px;
+        }
+
+        .sound-modal .modal-body .btn {
+            background: linear-gradient(45deg, #ff6f91, #ffeb3b);
+            border: none;
+            border-radius: 15px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            margin: 0 5px;
+        }
+
+        .sound-modal .modal-body .btn:hover {
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar:hover {
+                width: 180px;
+            }
+
+            .main-content {
+                margin-left: 60px;
+            }
+
+            .sidebar:hover ~ .main-content {
+                margin-left: 180px;
+            }
+
+            .title-label {
+                font-size: 24px;
+            }
+
+            .children-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .child-box {
+                height: 200px;
+            }
+
+            .child-avatar {
+                width: 80px;
+                height: 80px;
+                top: -15px; /* Ajusté pour les écrans plus petits */
+            }
+
+            .child-avatar::after {
+                width: 100px;
+                height: 100px;
+                top: -10px;
+                left: -10px;
+            }
+
+            .child-name {
+                font-size: 1.3rem;
+                margin-top: 60px; /* Ajusté pour éviter le chevauchement */
+            }
+
+            .child-language {
+                font-size: 0.9rem;
+            }
+
+            .sound-toggle-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .avatar-picker {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+
+            .avatar-card img {
+                width: 50px;
+                height: 50px;
+            }
+
+            .avatar-preview img {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .title-label {
+                font-size: 20px;
+                text-align: center;
+            }
+
+            .children-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .child-box {
+                height: 180px;
+            }
+
+            .child-avatar {
+                width: 70px;
+                height: 70px;
+                top: -10px; /* Ajusté pour les petits écrans */
+            }
+
+            .child-avatar::after {
+                width: 90px;
+                height: 90px;
+                top: -10px;
+                left: -10px;
+            }
+
+            .child-name {
+                font-size: 1.2rem;
+                margin-top: 50px; /* Ajusté pour éviter le chevauchement */
+            }
+
+            .child-language {
+                font-size: 0.85rem;
+            }
+
+            .sound-toggle-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+
+            .avatar-picker {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+
+            .avatar-card img {
+                width: 40px;
+                height: 40px;
+            }
+
+            .avatar-preview img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        /* Styles for child view page */
+        .child-profile {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .child-profile .child-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 4px solid rgb(185, 230, 189);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: rgb(180, 225, 201);
+            margin-bottom: 20px;
+        }
+
+        .child-profile p {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        /* Style pour le bouton qui ouvre la modale */
+        .modal-open-btn {
+            background: linear-gradient(45deg, #ff6f91, #ffeb3b);
+            border: none;
+            border-radius: 15px;
+            padding: 10px 25px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-open-btn:hover {
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            transform: translateY(-2px);
+        }
+        .modal-open-btn i {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+        .modal-open-btn:hover i {
+            transform: rotate(360deg);
+        }
+
+        /* Style pour les icônes dans la liste de la modale de prononciation */
+        .pronunciation-tip {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .pronunciation-tip i {
+            margin-right: 10px;
+            color: #ff6f91;
+            font-size: 1.2rem;
+            animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    <!-- Load Bootstrap JS and Popper.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('videokids');
+            const toggleSoundBtn = document.getElementById('toggle-sound-btn');
+            const backgroundAudio = document.getElementById('background-audio');
+            const soundToggleBtn = document.getElementById('sound-toggle-btn');
+
+            // Auto-play background audio without modal
+            if (backgroundAudio) {
+                backgroundAudio.volume = 0.7; // Set initial volume to 50%
+                backgroundAudio.play().catch(error => {
+                    console.error('Erreur lors de la lecture automatique de l\'audio:', error);
+                    const errorMessage = document.createElement('p');
+                   
+                    soundToggleBtn.insertAdjacentElement('afterend', errorMessage);
+
+                    soundToggleBtn.addEventListener('click', () => {
+                        backgroundAudio.play().then(() => {
+                            errorMessage.remove();
+                            console.log('Audio démarré après interaction utilisateur');
+                        }).catch(err => {
+                            console.error('Erreur lors de la lecture manuelle:', err);
+                        });
+                    }, { once: true });
+                });
+            }
+
+            // Video sound toggle
+            if (video && toggleSoundBtn) {
+                // Initialiser la vidéo en muet
+                video.muted = true;
+                toggleSoundBtn.textContent = 'Activer le son';
+
+                // Gestion du bouton de son
+                toggleSoundBtn.addEventListener('click', () => {
+                    console.log('Bouton de son cliqué');
+                    if (video.muted) {
+                        video.muted = false;
+                        toggleSoundBtn.textContent = 'Désactiver le son';
+                        toggleSoundBtn.style.backgroundColor = 'green'; // Indicateur visuel
+                        console.log('Son activé');
+                    } else {
+                        video.muted = true;
+                        toggleSoundBtn.textContent = 'Activer le son';
+                        toggleSoundBtn.style.backgroundColor = ''; // Réinitialiser
+                        console.log('Son désactivé');
+                    }
+                });
+
+                // Essayer de démarrer la lecture automatiquement
+                video.play().catch(error => {
+                    console.error('Erreur lors de la lecture automatique de la vidéo:', error);
+                    const errorMessage = document.createElement('p');
+                    errorMessage.textContent = 'Veuillez cliquer sur la vidéo pour activer la lecture.';
+                    errorMessage.style.color = 'red';
+                    toggleSoundBtn.insertAdjacentElement('afterend', errorMessage);
+
+                    // Ajouter un événement pour démarrer la lecture au clic
+                    video.addEventListener('click', () => {
+                        video.play().then(() => {
+                            errorMessage.remove();
+                            console.log('Vidéo démarrée après interaction utilisateur');
+                        }).catch(err => {
+                            console.error('Erreur lors de la lecture manuelle:', err);
+                        });
+                    }, { once: true });
+                });
+
+                // Débogage de la piste audio
+                video.addEventListener('loadedmetadata', () => {
+                    if (video.mozHasAudio === false && video.webkitAudioDecodedByteCount === 0) {
+                        console.warn('La vidéo videokids.mp4 n’a pas de piste audio.');
+                        toggleSoundBtn.disabled = true;
+                        toggleSoundBtn.textContent = 'Pas de son disponible';
+                    }
+                });
+            } else {
+                console.error('Élément manquant :', { video, toggleSoundBtn });
+            }
+
+            // Gestion des modales pour les professions
+            document.querySelectorAll('.profession-btn').forEach(button => {
+                const label = button.querySelector('.profession-label');
+                const professionName = label ? label.textContent : null;
+                const modalId = button.getAttribute('data-modal-id');
+
+                if (professionName && modalId) {
+                    const modal = new bootstrap.Modal(document.getElementById(modalId), {
+                        backdrop: false,
+                        keyboard: false
+                    });
+
+                    button.addEventListener('mouseenter', () => {
+                        modal.show();
+                    });
+
+                    button.addEventListener('mouseleave', () => {
+                        modal.hide();
+                        const video = document.querySelector(`#${modalId} video`);
+                        if (video) {
+                            video.pause();
+                            video.currentTime = 0;
+                            video.muted = true;
+                        }
+                    });
+
+                    document.getElementById(modalId).addEventListener('click', (e) => {
+                        if (e.target === document.getElementById(modalId)) {
+                            modal.hide();
+                            const video = document.querySelector(`#${modalId} video`);
+                            if (video) {
+                                video.pause();
+                                video.currentTime = 0;
+                                video.muted = true;
+                            }
+                        }
+                    });
+
+                    document.getElementById(modalId).addEventListener('shown.bs.modal', () => {
+                        const video = document.querySelector(`#${modalId} video`);
+                        if (video) {
+                            setTimeout(() => {
+                                video.play().catch(error => {
+                                    console.error('Erreur lors de la lecture automatique de la vidéo:', error);
+                                });
+                            }, 100);
+                        }
+                    });
+
+                    const toggleVideoSoundBtn = document.querySelector(`#${modalId} .toggle-video-sound-btn`);
+                    if (toggleVideoSoundBtn) {
+                        toggleVideoSoundBtn.addEventListener('click', () => {
+                            const video = document.querySelector(`#${modalId} video`);
+                            if (video) {
+                                if (video.muted) {
+                                    video.muted = false;
+                                    toggleVideoSoundBtn.textContent = 'Désactiver le son';
+                                } else {
+                                    video.muted = true;
+                                    toggleVideoSoundBtn.textContent = 'Activer le son';
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Avatar Picker Logic
+            document.querySelectorAll('.avatar-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.avatar-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    const value = card.getAttribute('data-value');
+                    document.querySelector('#child_avatar').value = value;
+                    const imgSrc = card.querySelector('img').src;
+                    const label = card.querySelector('.avatar-name').textContent;
+                    document.querySelector('#avatarPreviewImg').src = imgSrc;
+                    document.querySelector('#avatarPreviewText').textContent = label;
+                });
+            });
+
+            const firstAvatarCard = document.querySelector('.avatar-card');
+            if (firstAvatarCard) {
+                firstAvatarCard.click();
+            }
+
+            // Sound toggle button functionality
+            if (soundToggleBtn) {
+                soundToggleBtn.addEventListener('click', () => {
+                    const soundModal = new bootstrap.Modal(document.getElementById('soundModal'));
+                    soundModal.show();
+                });
+            }
+
+            document.getElementById('muteSoundBtn').addEventListener('click', () => {
+                if (backgroundAudio) {
+                    backgroundAudio.muted = true;
+                    const soundModal = bootstrap.Modal.getInstance(document.getElementById('soundModal'));
+                    if (soundModal) soundModal.hide();
+                    console.log('Son d\'arrière-plan désactivé');
+                }
+            });
+
+            document.getElementById('keepSoundBtn').addEventListener('click', () => {
+                if (backgroundAudio) {
+                    backgroundAudio.muted = false;
+                    const soundModal = bootstrap.Modal.getInstance(document.getElementById('soundModal'));
+                    if (soundModal) soundModal.hide();
+                    console.log('Son d\'arrière-plan activé');
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+<div class="wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{{ asset('images/user.png') }}" alt="parent" loading="lazy">
+            <h6 class="text-white sidebar-label mt-2">{{ parent.email }}</h6>
+        </div>
+        <nav class="nav flex-column px-2 mt-2">
+            <!-- Remplacement de app_home par pre_dashboard -->
+            <a href="{{ path('pre_dashboard', {'parentId': parent.parentId}) }}" class="nav-link active">
+                <i class="fas fa-home"></i>
+                <span class="sidebar-label">Accueil</span>
+            </a>
+           <a href="{{ path('show_progress', { 'parentId': parent.parentId }) }}" class="nav-link">
+                <i class="fas fa-user"></i>
+                <span class="sidebar-label">Progrès Enfant</span>
+            </a>
+
+            <!-- Nouveau lien pour gérer les enfants -->
+            <a href="{{ path('app_manage_children', {'parentId': parent.parentId}) }}" class="nav-link">
+                <i class="fas fa-users"></i>
+                <span class="sidebar-label">Gérer Enfants</span>
+            </a>
+            <!-- Nouveau bouton Guide Parent -->
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#guideParentModal">
+                <i class="fas fa-book"></i>
+                <span class="sidebar-label">Guide Parent</span>
+            </a>
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="fas fa-cog"></i>
+                <span class="sidebar-label">Paramètres</span>
+            </a>
+            <a href="{{ path('app_login') }}" class="nav-link">
+    <i class="fas fa-sign-out-alt"></i>
+    <span class="sidebar-label">Déconnexion</span>
+</a>
+
+        </nav>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="main-content">
+        <!-- Section supérieure -->
+        <div class="top-section">
+            <button id="sound-toggle-btn" class="sound-toggle-btn" title="Contrôler le son">
+                <i class="fas fa-volume-up"></i>
+            </button>
+            <div class="title-label">علموا الاطفال وهم يلعبون</div>
+        </div>
+
+        <!-- Section centrale -->
+        <div class="center-section">
+            <div class="row">
+                <!-- Left Column: Children Grid (50%) -->
+                <div class="col-md-6">
+                    <!-- Grille des enfants (avec bouton Ajouter inclus) -->
+                    <div class="children-grid">
+                        <!-- Ajouter Enfant dans la grille -->
+                        <div class="child-box bg-vivid-blue d-flex flex-column justify-content-center align-items-center text-white text-center"
+                             data-bs-toggle="modal" data-bs-target="#addChildModal"
+                             style="cursor: pointer; font-size: 1.2rem;">
+                            <div style="font-size: 2.5rem;">+</div>
+                            <div class="mt-2">Ajouter Enfant</div>
+                        </div>
+
+                        {% if children|length > 0 %}
+                            {% for child in children %}
+                                {% set bgClass = loop.index0 % 6 == 0 ? 'bg-vivid-red' : (loop.index0 % 6 == 1 ? 'bg-vivid-blue' : (loop.index0 % 6 == 2 ? 'bg-vivid-green' : (loop.index0 % 6 == 3 ? 'bg-vivid-orange' : (loop.index0 % 6 == 4 ? 'bg-vivid-purple' : 'bg-vivid-pink')))) %}
+                                <div class="child-box {{ bgClass }}" tabindex="0">
+                                    <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}">
+                                        {% if child.avatar %}
+                                            <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') }}" alt="{{ child.name }} avatar" class="child-avatar" loading="lazy">
+                                        {% else %}
+                                            <img src="{{ asset('images/default-avatar.png') }}" alt="{{ child.name }} avatar" class="child-avatar" loading="lazy">
+                                        {% endif %}
+                                        <div class="child-name">{{ child.name }}</div>
+                                        <div class="child-language">{{ (child.language) }}</div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="child-name">Aucun enfant trouvé.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Right Column: Video and Professions (50%) -->
+                <div class="col-md-6">
+                    <!-- Child-Friendly Video -->
+                    <div class="video-section mb-4">
+                        <div class="ratio ratio-16x9">
+                            <video id="videokids" autoplay playsinline loop muted>
+                                <source src="{{ asset('videos/videokids.mp4') }}" type="video/mp4">
+                                Votre navigateur ne supporte pas la lecture de vidéos.
+                            </video>
+                        </div>
+                    </div>
+
+                    <!-- Professions Section -->
+                    <div class="other-content mb-4">
+                        <h5 class="text-vivid-blue"><i class="fas fa-briefcase me-2"></i>Professions</h5>
+                        <div class="row g-3">
+                            {% set professions = [
+                                { name: 'Médecin', image: 'medecin.jpg', modal_id: 'professionModalMedecin' },
+                                { name: 'Dentiste', image: 'dentist.png', modal_id: 'professionModalDentiste' },
+                                { name: 'Enseignant', image: 'enseignant.jpg', modal_id: 'professionModalEnseignant' },
+                                { name: 'Pilote', image: 'pilote.jpg', modal_id: 'professionModalPilote' }
+                            ] %}
+                            {% for profession in professions %}
+                                <div class="col-6 col-md-3">
+                                    <div class="profession-btn" data-modal-id="{{ profession.modal_id }}" style="display: block; height: 150px;">
+                                        <img src="{{ asset('images/professions/' ~ profession.image) }}" 
+                                             alt="{{ profession.name }}"
+                                             class="img-fluid h-100 w-100 object-fit-cover">
+                                        <span class="profession-label">{{ profession.name }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modales pour les professions -->
+        {% set professionData = {
+            'Médecin': { video: 'doctor.mp4', phrase: 'Les médecins soignent les malades !' },
+            'Dentiste': { video: 'dentist.mp4', phrase: 'Les dentistes protègent vos dents !' },
+            'Enseignant': { video: 'teacher.mp4', phrase: 'Les enseignants nous apprennent tout !' },
+            'Pilote': { video: 'pilot.mp4', phrase: 'Les pilotes volent dans le ciel !' }
+        } %}
+        {% for profession in professions %}
+            <div class="modal fade profession-modal" id="{{ profession.modal_id }}" tabindex="-1" aria-labelledby="{{ profession.modal_id }}Label" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="{{ profession.modal_id }}Label">{{ profession.name }}</h5>
+                        </div>
+                        <div class="modal-body">
+                            <video autoplay playsinline loop muted>
+                                <source src="{{ asset('videos/' ~ professionData[profession.name].video) }}" type="video/mp4">
+                                Votre navigateur ne supporte pas la lecture de vidéos.
+                            </video>
+                            <p class="description">{{ professionData[profession.name].phrase }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Modal pour ajouter un enfant -->
+        <div class="modal fade" id="addChildModal" tabindex="-1" aria-labelledby="addChildModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addChildModalLabel">Ajouter un Enfant</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {{ form_start(form, {'action': path('pre_dashboard', {'parentId': parent.parentId}), 'method': 'POST', 'attr': {'enctype': 'multipart/form-data'}}) }}
+                        {{ form_errors(form) }}
+                        <div class="mb-3">
+                            {{ form_label(form.name) }}
+                            {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.name) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form_label(form.age) }}
+                            {{ form_widget(form.age, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_errors(form.age) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form_label(form.language) }}
+                            {{ form_widget(form.language, {'attr': {'class': 'form-select'}}) }}
+                            {{ form_errors(form.language) }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form_label(form.avatar) }}
+                            {{ form_widget(form.avatar, {'attr': {'class': 'd-none'}}) }}
+                            <div class="avatar-picker">
+                                {% for choice in form.avatar.vars.choices %}
+                                    <div class="avatar-card" data-value="{{ choice.value }}">
+                                        <img src="{{ asset('avatars/' ~ choice.value ~ '.png') }}" alt="{{ choice.label }}">
+                                        <div class="avatar-name">{{ choice.label }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="avatar-preview">
+                                <img id="avatarPreviewImg" src="{{ asset('avatars/avatar1.png') }}" alt="Avatar Preview">
+                                <p id="avatarPreviewText">Choisis ton avatar !</p>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Ajouter</button>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      <!-- Modal Guide Parent -->
+<div class="modal fade profession-modal" id="guideParentModal" tabindex="-1" aria-labelledby="guideParentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="guideParentModalLabel">Guide pour les Parents</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Comment aider votre enfant ?</h6>
+        <p>Si votre enfant rencontre des difficultés dans un jeu, voici quelques conseils généraux :</p>
+        <ul>
+          <li>Encouragez-le à pratiquer régulièrement pour améliorer ses compétences.</li>
+          <li>Travaillez avec lui sur les sons ou les mots difficiles en dehors du jeu.</li>
+          <li>Utilisez des exemples concrets pour expliquer les concepts (par exemple, associer un son à un objet familier).</li>
+          <li>Restez patient et positif pour renforcer sa confiance.</li>
+        </ul>
+        <p>Pour des conseils spécifiques par jeu, explorez les guides ci-dessous :</p>
+
+        <!-- Boutons pour ouvrir les autres modales -->
+        <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#pronunciationGuideModal">Guide Prononciation</button><br>
+        <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#dragdropGuideModal">Guide Glisser-Déposer</button><br>
+        <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#guessingGuideModal">Guide Devinette</button><br>
+        <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#imagesGuideModal">Guide Jeu des Images</button><br>
+        <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#completeWordsGuideModal">Guide Compléter les Mots</button><br>
+        <button type="button" class="btn btn-secondary mb-2" data-bs-toggle="modal" data-bs-target="#wordsGuideModal">Guide Jeu des Mots</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modales des guides séparées (en dehors de la modale Guide Parent) -->
+
+<div class="modal fade profession-modal" id="pronunciationGuideModal" tabindex="-1" aria-labelledby="pronunciationGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="pronunciationGuideModalLabel">Guide du Jeu de Prononciation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Comment aider votre enfant à bien prononcer</h6>
+        <p>Ce jeu améliore la prononciation et la confiance à l’oral. Voici quelques conseils :</p>
+        <ul>
+          <li><i class="fas fa-microphone"></i> Encouragez à répéter plusieurs fois les mots ou phrases.</li>
+          <li><i class="fas fa-ear-listen"></i> Écoutez ensemble la bonne prononciation avant de répéter.</li>
+          <li><i class="fas fa-lips"></i> Faites attention à bien articuler et à parler lentement.</li>
+          <li><i class="fas fa-smile"></i> Restez patient et valorisez les efforts.</li>
+          <li><i class="fas fa-headphones"></i> Utilisez un casque pour mieux entendre les sons.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade profession-modal" id="dragdropGuideModal" tabindex="-1" aria-labelledby="dragdropGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dragdropGuideModalLabel">Guide du Jeu de Glisser-Déposer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Utilisation du glisser-déposer pour apprendre en s’amusant</h6>
+        <p>Ce jeu aide à associer les éléments en déplaçant des objets avec la souris ou le doigt :</p>
+        <ul>
+          <li><i class="fas fa-hand-pointer"></i> Expliquez clairement ce qu’il faut faire avant de commencer.</li>
+          <li><i class="fas fa-mouse"></i> Montrez comment cliquer, maintenir, glisser et relâcher.</li>
+          <li><i class="fas fa-brain"></i> Encouragez la réflexion avant de déplacer les éléments.</li>
+          <li><i class="fas fa-star"></i> Félicitez chaque bonne association pour motiver.</li>
+          <li><i class="fas fa-children"></i> Jouez avec l’enfant pour rendre l’activité plus ludique.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade profession-modal" id="guessingGuideModal" tabindex="-1" aria-labelledby="guessingGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="guessingGuideModalLabel">Guide du Jeu de Devinette</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Apprendre en devinant et posant des questions</h6>
+        <p>Ce jeu stimule la réflexion et la curiosité :</p>
+        <ul>
+          <li><i class="fas fa-question-circle"></i> Encouragez à poser des questions pour trouver la réponse.</li>
+          <li><i class="fas fa-lightbulb"></i> Aidez à formuler des hypothèses.</li>
+          <li><i class="fas fa-brain"></i> Stimulez la pensée logique et l’imagination.</li>
+          <li><i class="fas fa-thumbs-up"></i> Félicitez les bonnes réponses, même partielles.</li>
+          <li><i class="fas fa-users"></i> Faites le jeu en groupe pour plus de fun.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade profession-modal" id="imagesGuideModal" tabindex="-1" aria-labelledby="imagesGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="imagesGuideModalLabel">Guide du Jeu des Images</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Apprendre avec des images pour mieux mémoriser</h6>
+        <p>Ce jeu facilite la reconnaissance visuelle et le vocabulaire :</p>
+        <ul>
+          <li><i class="fas fa-image"></i> Regardez ensemble chaque image pour la nommer.</li>
+          <li><i class="fas fa-brain"></i> Associez l’image au mot ou à la phrase correspondante.</li>
+          <li><i class="fas fa-search"></i> Posez des questions sur les détails de l’image.</li>
+          <li><i class="fas fa-smile"></i> Rendez le jeu interactif et amusant.</li>
+          <li><i class="fas fa-star"></i> Félicitez la participation et les bonnes réponses.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade profession-modal" id="completeWordsGuideModal" tabindex="-1" aria-labelledby="completeWordsGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="completeWordsGuideModalLabel">Guide du Jeu de Compléter les Mots</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Compléter les mots pour enrichir le vocabulaire</h6>
+        <p>Ce jeu aide à orthographier et mémoriser les mots :</p>
+        <ul>
+          <li><i class="fas fa-pencil-alt"></i> Encouragez à réfléchir avant d’écrire.</li>
+          <li><i class="fas fa-book"></i> Faites revoir le mot complet après la tentative.</li>
+          <li><i class="fas fa-eye"></i> Regardez ensemble la correction pour mieux retenir.</li>
+          <li><i class="fas fa-thumbs-up"></i> Félicitez chaque effort, même si ce n’est pas parfait.</li>
+          <li><i class="fas fa-users"></i> Faites le jeu en duo pour motiver.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade profession-modal" id="wordsGuideModal" tabindex="-1" aria-labelledby="wordsGuideModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="wordsGuideModalLabel">Guide du Jeu des Mots</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6>Explorer et enrichir le vocabulaire</h6>
+        <p>Ce jeu stimule l’apprentissage des mots et leur usage :</p>
+        <ul>
+          <li><i class="fas fa-book-reader"></i> Encouragez à découvrir de nouveaux mots et leur signification.</li>
+          <li><i class="fas fa-comments"></i> Invitez à utiliser les mots dans des phrases simples.</li>
+          <li><i class="fas fa-brain"></i> Aidez à mémoriser avec des associations ou des images.</li>
+          <li><i class="fas fa-thumbs-up"></i> Félicitez la curiosité et l’effort.</li>
+          <li><i class="fas fa-users"></i> Faites le jeu en groupe pour plus d’interactions.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+        <!-- Nouvelle Modale pour le Guide de Prononciation -->
+        <div class="modal fade profession-modal" id="pronunciationGuideModal" tabindex="-1" aria-labelledby="pronunciationGuideModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="pronunciationGuideModalLabel">Guide du Jeu de Prononciation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Guide Spécifique : Jeu de Prononciation</h6>
+                        <p>Le jeu de prononciation aide votre enfant à maîtriser les sons et à parler plus clairement. Voici comment l'accompagner :</p>
+                        <ul>
+                            <li class="pronunciation-tip"><i class="fas fa-volume-up"></i> <strong>Pratique à voix haute :</strong> Répétez les sons ou mots du jeu ensemble. Exemple : si le jeu enseigne "b", dites "b-b-banane" en exagérant le son. Pour les voyelles comme "e", essayez "e-e-éléphant".</li>
+                            <li class="pronunciation-tip"><i class="fas fa-home"></i> <strong>Objets du quotidien :</strong> Utilisez des objets réels pour illustrer les sons, comme une "pomme" pour "p", une "lune" pour "l", ou une "chaise" pour "ch".</li>
+                            <li class="pronunciation-tip"><i class="fas fa-music"></i> <strong>Chansons et rimes :</strong> Chantez des comptines ou inventez des rimes avec les sons appris (ex. : "chat-chat, dans le sac" ou "soleil, il brille si bien").</li>
+                            <li class="pronunciation-tip"><i class="fas fa-user-secret"></i> <strong>Jeux de rôle :</strong> Faites semblant d’être un professeur ou un acteur et demandez à votre enfant de répéter après vous avec des expressions amusantes.</li>
+                            <li class="pronunciation-tip"><i class="fas fa-question"></i> <strong>Devinettes sonores :</strong> Proposez des devinettes comme "Quel animal fait 'm-m' ?" (réponse : la vache) pour rendre l’apprentissage ludique.</li>
+                            <li class="pronunciation-tip"><i class="fas fa-chart-line"></i> <strong>Suivi des progrès :</strong> Notez les sons qu’il maîtrise (ex. : "p", "b") et ceux à améliorer (ex. : "r", "s"), puis rejouez ces niveaux ensemble.</li>
+                            <li class="pronunciation-tip"><i class="fas fa-child"></i> <strong>Adaptation par âge :</strong> Pour les plus jeunes (3-5 ans), concentrez-vous sur des sons simples (voyelles, "m", "p"). Pour les 6-8 ans, ajoutez des consonnes complexes comme "ch" ou "gn".</li>
+                            <li class="pronunciation-tip"><i class="fas fa-star"></i> <strong>Motivation :</strong> Félicitez-le avec des étoiles ou des autocollants pour chaque progrès, comme dans le jeu, ou organisez une petite fête après une séance réussie !</li>
+                        </ul>
+                        <p>Pour plus d’idées, consultez :</p>
+                        <ul>
+                            <li><a href="{{ path('pre_dashboard', {'parentId': parent.parentId}) }}" class="text-decoration-none"><i class="fas fa-video"></i> Vidéos de prononciation amusantes</a></li>
+                            <li><a href="{{ path('pre_dashboard', {'parentId': parent.parentId}) }}" class="text-decoration-none"><i class="fas fa-file"></i> Fiches d’exercices téléchargeables</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal pour Paramètres -->
+        <div class="modal fade profession-modal" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="settingsModalLabel">Paramètres</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Informations du Compte</h6>
+                        <p><strong>Email :</strong> {{ parent.email }}</p>
+                            <a href="#" class="btn btn-primary mb-3">Changer le Mot de Passe</a>
+                        <h6>Préférences de Notification</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                            <label class="form-check-label" for="emailNotifications">
+                                Recevoir des notifications par email
+                            </label>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="appNotifications" checked>
+                            <label class="form-check-label" for="appNotifications">
+                                Recevoir des notifications dans l'application
+                            </label>
+                        </div>
+
+                        <h6>Langue de l'Interface</h6>
+                        <select class="form-select mb-3">
+                            <option value="fr" selected>Français</option>
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                        </select>
+
+                        <h6>Paramètres pour les Enfants</h6>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="defaultSound" checked>
+                            <label class="form-check-label" for="defaultSound">
+                                Activer le son par défaut pour les jeux
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dailyTimeLimit" class="form-label">Temps d'apprentissage quotidien (minutes)</label>
+                            <input type="number" class="form-control" id="dailyTimeLimit" value="30" min="10" max="120">
+                        </div>
+
+                        <h6>Personnalisation du Thème</h6>
+                        <select class="form-select mb-3">
+                            <option value="light" selected>Thème Clair</option>
+                            <option value="dark">Thème Sombre</option>
+                            <option value="pink">Thème Rose</option>
+                            <option value="blue">Thème Bleu</option>
+                        </select>
+
+                        <button class="btn btn-primary">Enregistrer les Paramètres</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal pour contrôler le son -->
+        <div class="modal fade sound-modal" id="soundModal" tabindex="-1" aria-labelledby="soundModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="soundModalLabel">Contrôle du Son</h5>
+                    </div>
+                    <div class="modal-body">
+                        <div class="stars">⭐⭐⭐</div>
+                        <p>Voulez-vous désactiver le son d'arrière-plan ?</p>
+                        <button id="muteSoundBtn" class="btn">Oui, désactiver</button>
+                        <button id="keepSoundBtn" class="btn">Non, garder</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio d'arrière-plan -->
+        <audio id="background-audio" loop>
+            <source src="{{ asset('/sons/background_music.mp3') }}" type="audio/mp3">
+            Votre navigateur ne supporte pas la lecture audio.
+        </audio>
+
+        <!-- Messages de succès et d'erreur -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+
+        {% if showModal is defined and showModal %}
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    new bootstrap.Modal(document.getElementById('addChildModal')).show();
+                });
+            </script>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

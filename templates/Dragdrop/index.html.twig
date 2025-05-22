@@ -1,0 +1,333 @@
+<?php
+// public/index.html.php
+header('Content-Type: text/html; charset=UTF-8');
+// Example: Inject childId from Symfony security (replace with actual logic if available)
+$childId = 1; // Hardcoded for testing; ideally get from $app->getUser()->getChildId()
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag and Drop Game</title>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .game-container {
+            background-color: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-section {
+            margin-bottom: 16px;
+        }
+
+        .feedback-section {
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            display: flex;
+            align-items: center;
+        }
+
+        .feedback-section img {
+            width: 48px;
+            height: 48px;
+            margin-right: 16px;
+        }
+
+        .words-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .word {
+            padding: 8px;
+            background-color: #bfdbfe;
+            border-radius: 4px;
+            cursor: move;
+        }
+
+        .sentence-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 16px;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            min-height: 40px;
+        }
+
+        .sentence-word {
+            padding: 8px;
+            background-color: #bbf7d0;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        .error-message {
+            color: red;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="container"></div>
+
+    <!-- React and ReactDOM CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.22.10/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const DragdropGame = () => {
+            const [gameState, setGameState] = useState({
+                level: 1,
+                language: 'Français',
+                unlockedLevel: 1,
+                score: 0,
+                correctSentencesInCurrentLevel: 0,
+                totalTries: 0,
+                levelStartTime: 0,
+                failedAttempts: 0,
+                incorrectAttempts: 0,
+                usedSentenceIds: [],
+            });
+            const [currentSentence, setCurrentSentence] = useState(null);
+            const [shuffledWords, setShuffledWords] = useState([]);
+            const [userSentence, setUserSentence] = useState([]);
+            const [attemptCount, setAttemptCount] = useState(0);
+            const [feedback, setFeedback] = useState(null);
+            const [error, setError] = useState(null);
+            const childId = <?php echo json_encode($childId); ?>;
+
+            useEffect(() => {
+                initializeGame();
+            }, []);
+
+            const initializeGame = async () => {
+                try {
+                    const response = await fetch('  /dragdrop/initialize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ childId, language: 'Français', level: 1 }),
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        setError(data.error);
+                        return;
+                    }
+                    setGameState(data);
+                    getNextSentence();
+                } catch (error) {
+                    console.error('Error initializing game:', error);
+                    setError('Failed to initialize game. Please try again.');
+                }
+            };
+
+            const getNextSentence = async () => {
+                try {
+                    const response = await fetch('/dragdrop/next-sentence', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            childId,
+                            level: gameState.level,
+                            language: gameState.language,
+                            usedSentenceIds: gameState.usedSentenceIds,
+                        }),
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        setError(data.error);
+                        return;
+                    }
+                    setCurrentSentence(data);
+                    setShuffledWords(data.shuffledWords);
+                    setUserSentence([]);
+                    setAttemptCount(0);
+                    setFeedback(null);
+                    setGameState(prev => ({ ...prev, usedSentenceIds: [...prev.usedSentenceIds, data.phraseId] }));
+                } catch (error) {
+                    console.error('Error fetching sentence:', error);
+                    setError('Failed to fetch sentence. Please try again.');
+                }
+            };
+
+            const checkSentence = async () => {
+                try {
+                    const userSentenceText = userSentence.join(' ');
+                    const response = await fetch('/api/dragdrop/check-sentence', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            childId,
+                            phraseId: currentSentence.phraseId,
+                            userSentence: userSentenceText,
+                            attemptCount,
+                            gameState,
+                        }),
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        setError(data.error);
+                        return;
+                    }
+
+                    setGameState(data.gameState);
+                    setFeedback({
+                        isCorrect: data.result.isCorrect,
+                        message: data.result.isCorrect ? 'برافو! 🎉' : 'حاول مرة أخرى! 😊',
+                        gif: data.result.isCorrect ? '/sahyt.gif' : '/error.gif',
+                    });
+
+                    if (data.result.isCorrect) {
+                        if (data.result.levelUp) {
+                            alert('Level Up! Moving to level ' + data.gameState.level);
+                            getNextSentence();
+                        } else if (data.result.gameCompleted) {
+                            alert('Congratulations! Game Completed!');
+                        } else {
+                            getNextSentence();
+                        }
+                    } else {
+                        setAttemptCount(attemptCount + 1);
+                    }
+                } catch (error) {
+                    console.error('Error checking sentence:', error);
+                    setError('Failed to check sentence. Please try again.');
+                }
+            };
+
+            const handleDragStart = (e, word, index) => {
+                e.dataTransfer.setData('text/plain', JSON.stringify({ word, index }));
+            };
+
+            const handleDrop = (e, targetIndex) => {
+                e.preventDefault();
+                const { word, index } = JSON.parse(e.dataTransfer.getData('text/plain'));
+                const newShuffledWords = [...shuffledWords];
+                const newUserSentence = [...userSentence];
+
+                newShuffledWords.splice(index, 1);
+                newUserSentence.splice(targetIndex, 0, word);
+
+                setShuffledWords(newShuffledWords);
+                setUserSentence(newUserSentence);
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            return (
+                <div className="game-container">
+                    {error && <div className="error-message">{error}</div>}
+                    <h1>Drag and Drop Game - Level {gameState.level}</h1>
+                    <div className="info-section">
+                        <p>Score: {gameState.score}</p>
+                        <p>Progress: {gameState.correctSentencesInCurrentLevel} / 10</p>
+                        {currentSentence && currentSentence.arabicTranslation && (
+                            <p>Translation: {currentSentence.arabicTranslation}</p>
+                        )}
+                    </div>
+
+                    {feedback && (
+                        <div className="feedback-section">
+                            <img src={feedback.gif} alt="Feedback" onError={(e) => e.target.src = 'https://via.placeholder.com/48'} />
+                            <p>{feedback.message}</p>
+                        </div>
+                    )}
+
+                    <div className="words-section">
+                        <h2>Available Words</h2>
+                        <div className="words-container">
+                            {shuffledWords.map((word, index) => (
+                                <div
+                                    key={index}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, word, index)}
+                                    className="word"
+                                >
+                                    {word}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="sentence-section">
+                        <h2>Your Sentence</h2>
+                        <div
+                            className="sentence-container"
+                            onDrop={(e) => handleDrop(e, userSentence.length)}
+                            onDragOver={handleDragOver}
+                        >
+                            {userSentence.map((word, index) => (
+                                <div
+                                    key={index}
+                                    className="sentence-word"
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    onDragOver={handleDragOver}
+                                >
+                                    {word}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button onClick={checkSentence}>Check Sentence</button>
+                </div>
+            );
+        };
+
+        try {
+            ReactDOM.render(<DragdropGame />, document.getElementById('root'));
+        } catch (e) {
+            console.error('React render error:', e);
+            document.getElementById('root').innerHTML = '<div class="error-message">Failed to load game. Please refresh the page.</div>';
+        }
+    </script>
+</body>
+</html>

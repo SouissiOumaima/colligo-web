@@ -1,0 +1,782 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لوحة ألعابي الممتعة{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        /* Général */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #45B7D1);
+            font-family: 'Baloo 2', 'Comic Neue', sans-serif;
+            color: #2A2A2A;
+            overflow-x: hidden;
+            direction: rtl;
+            position: relative;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .background-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800"%3E%3Ccircle cx="100" cy="100" r="10" fill="%23FFD700" opacity="0.6"/%3E%3Ccircle cx="700" cy="600" r="15" fill="%23FF69B4" opacity="0.5"/%3E%3Ccircle cx="300" cy="400" r="12" fill="%234ECDC4" opacity="0.7"/%3E%3C/svg%3E') repeat;
+            animation: float 20s infinite linear;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-50px); }
+            100% { transform: translateY(0); }
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Section Profil */
+        .profile-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg,  #d47a6c);
+            border-radius: 50px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 6px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            transition: transform 0.4s ease;
+        }
+        .profile-image:hover {
+            transform: scale(1.2) rotate(15deg);
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 20px;
+            align-items: center;
+            color: #FFF;
+            font-size: 22px;
+            padding: 0 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .info-grid .label {
+            font-weight: bold;
+            text-align: left;
+        }
+        .info-grid .value {
+            text-align: right;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .selected-mood {
+            font-size: 30px;
+            margin-right: 10px;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .selected-mood.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .progress-button {
+            background: linear-gradient(45deg, #FFD700, #FF6347);
+            color: #FFF;
+            font-weight: bold;
+            font-size: 20px;
+            padding: 15px 40px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        .progress-button:hover::after {
+            width: 200px;
+            height: 200px;
+        }
+        .progress-button:hover {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        .gif-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 25px;
+            border: 4px solid #FF69B4;
+            transition: transform 0.4s ease;
+        }
+        .gif-image:hover {
+            transform: scale(1.3) rotate(-10deg);
+        }
+
+        /* Section Humeur (adaptée pour enfants) */
+        .mood-section {
+            background: linear-gradient(135deg, #B0BEC5, #F8BBD0);
+            border-radius: 50px;
+            padding: 20px;
+            margin-bottom: 50px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            color: #FFF;
+            font-size: 24px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+        }
+        .mood-section:hover {
+            transform: scale(1.02);
+        }
+        .mood-question {
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        .mood-options {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .mood-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            border: 3px solid #FFF;
+            position: relative;
+        }
+        .mood-option.selected {
+            transform: scale(1.3);
+            font-size: 42px;
+            z-index: 2;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
+            border-color: #FFD700;
+        }
+        .mood-option:hover:not(.selected) {
+            transform: scale(1.15);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+        .mood-option:active {
+            transform: scale(1.1) translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .mood-happy { background: #F48FB1; }
+        .mood-ok { background: #FFCA28; }
+        .mood-sad { background: #FF7043; }
+        .mood-very-sad { background: #AB47BC; }
+
+        /* Boîte de dialogue pour l'humeur */
+        .mood-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: linear-gradient(45deg, #FFD700, #FF69B4);
+            border: 4px solid #4ECDC4;
+            border-radius: 30px;
+            padding: 20px;
+            max-width: 90vw;
+            min-width: 200px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            color: #FFF;
+            font-size: 20px;
+            font-weight: bold;
+            animation: dialogPopIn 0.5s ease forwards;
+        }
+        .mood-dialog.show {
+            display: block !important;
+            visibility: visible !important;
+        }
+        @keyframes dialogPopIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            80% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .mood-dialog.hide {
+            animation: dialogPopOut 0.5s ease forwards;
+        }
+        @keyframes dialogPopOut {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        }
+        .mood-dialog-message {
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .mood-dialog-button {
+            background: linear-gradient(45deg, #FF69B4, #FFD700);
+            color: #FFF;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .mood-dialog-button:hover {
+            transform: scale(1.1);
+        }
+        .mood-dialog-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Section Jeux (Liste Scrollable Horizontale) */
+        .games-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 50px;
+            position: relative;
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+        .games-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            padding: 20px 0;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+        }
+        .games-grid::-webkit-scrollbar {
+            display: none;
+        }
+        .game-container {
+            flex: 0 0 auto;
+            width: 180px;
+            height: 220px;
+            background: linear-gradient(135deg, #C8E6C9, #A5D6A7);
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            animation: floatAndRotate 4s infinite ease-in-out;
+        }
+        .game-container:nth-child(1) { animation-delay: 0s; }
+        .game-container:nth-child(2) { animation-delay: 0.2s; }
+        .game-container:nth-child(3) { animation-delay: 0.4s; }
+        .game-container:nth-child(4) { animation-delay: 0.6s; }
+        .game-container:nth-child(5) { animation-delay: 0.8s; }
+        .game-container:nth-child(6) { animation-delay: 1s; }
+        @keyframes floatAndRotate {
+            0% { transform: translateY(0) rotateX(-5deg) rotateY(5deg); }
+            50% { transform: translateY(-15px) rotateX(5deg) rotateY(-5deg); }
+            100% { transform: translateY(0) rotateX(-5deg) rotateY(5deg); }
+        }
+        .game-container:hover {
+            transform: scale(1.05) translateY(-10px) rotateX(0deg) rotateY(0deg);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        .game-container:nth-child(1) { background: linear-gradient(135deg, #F8BBD0, #F48FB1); }
+        .game-container:nth-child(2) { background: linear-gradient(135deg, #C8E6C9, #A5D6A7); }
+        .game-container:nth-child(3) { background: linear-gradient(135deg, #FFF9C4, #FFECB3); }
+        .game-container:nth-child(4) { background: linear-gradient(135deg, #CE93D8, #BA68C8); }
+        .game-container:nth-child(5) { background: linear-gradient(135deg, #FFE0B2, #FFCCBC); }
+        .game-container:nth-child(6) { background: linear-gradient(135deg, #BBDEFB, #90CAF9); }
+        .game-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.3s ease;
+        }
+        .game-container:hover .game-image {
+            transform: scale(1.1);
+        }
+        .game-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #FFF;
+            text-align: center;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .game-container:hover .game-name {
+            transform: translateY(-5px);
+        }
+
+        /* Boutons de navigation pour le scroll */
+        .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, #FFD700, #FF6347);
+            color: #FFF;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            z-index: 2;
+        }
+        .scroll-button:hover {
+            transform: translateY(-50%) scale(1.2);
+        }
+        .scroll-button.left {
+            left: 10px;
+        }
+        .scroll-button.right {
+            right: 10px;
+        }
+
+        /* Modale de progression */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #FFD700, #FF69B4);
+            border: 6px solid #4ECDC4;
+            border-radius: 30px;
+            padding: 20px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            animation: modalPop 0.6s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            80% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0); }
+        }
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFF;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        .progress-gif {
+            width: 300px;
+            height: 75px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: 3px solid #FF9F43;
+            box-shadow: 0 0 15px rgba(255, 159, 67, 0.5);
+        }
+        .game-progress {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 18px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .game-progress:hover {
+            transform: scale(1.05);
+        }
+        .game-progress .name {
+            color: #FF6347;
+            font-weight: bold;
+            text-align: right;
+        }
+        .game-progress .details {
+            color: #2A2A2A;
+            text-align: left;
+        }
+        .close-button {
+            background: linear-gradient(45deg, #FF69B4, #FFD700);
+            color: #FFF;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 10px 30px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .close-button:hover {
+            transform: scale(1.15) rotate(-5deg);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-box {
+                flex-direction: column;
+                padding: 20px;
+                text-align: center;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .mood-section {
+                padding: 15px;
+            }
+            .mood-option {
+                width: 50px;
+                height: 50px;
+                font-size: 30px;
+                border: 2px solid #FFF;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .mood-option.selected {
+                transform: scale(1.2);
+                font-size: 36px;
+                box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+            }
+            .mood-dialog {
+                max-width: 80%;
+                padding: 15px;
+                font-size: 18px;
+            }
+            .mood-dialog-button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            .modal-content {
+                width: 90%;
+                max-width: 350px;
+                padding: 15px;
+            }
+            .modal-title {
+                font-size: 20px;
+            }
+            .progress-gif {
+                width: 100%;
+                height: auto;
+            }
+            .game-progress {
+                font-size: 16px;
+                padding: 8px;
+            }
+            .close-button {
+                font-size: 14px;
+                padding: 8px 20px;
+            }
+            .game-container {
+                width: 140px;
+                height: 180px;
+            }
+            .game-image {
+                width: 80px;
+                height: 80px;
+            }
+            .game-name {
+                font-size: 16px;
+                padding: 4px 8px;
+            }
+            .scroll-button {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="background-particles"></div>
+    <div class="dashboard-container">
+        <section class="profile-box">
+            <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') | default('https://via.placeholder.com/120') }}" class="profile-image" alt="Profile Avatar">
+            <div class="info-grid">
+                <span class="label">الإسم:</span>
+                <span class="value">
+                    <span class="selected-mood" id="selectedMood"></span>
+                    {{ username }}
+                </span>
+                <span class="label">اللغة:</span>
+                <span class="value">{{ language }}</span>
+                <button class="progress-button" id="progressButton">تقدّمي</button>
+            </div>
+            <img src="{{ asset('gifs/welcome.gif') | default('https://via.placeholder.com/120') }}" class="gif-image" alt="Welcome GIF">
+        </section>
+
+        <section class="mood-section">
+            <div class="mood-question">كيف حالك اليوم؟</div>
+            <div class="mood-options">
+                <div class="mood-option mood-happy" data-mood="😊">😊</div>
+                <div class="mood-option mood-ok" data-mood="🙂">🙂</div>
+                <div class="mood-option mood-sad" data-mood="😔">😔</div>
+                <div class="mood-option mood-very-sad" data-mood="😢">😢</div>
+            </div>
+            <div id="moodDialog" class="mood-dialog">
+                <div class="mood-dialog-message" id="moodDialogMessage"></div>
+                <button class="mood-dialog-button" id="moodDialogButton">حسنا!</button>
+            </div>
+        </section>
+
+        <section class="games-section">
+            <button class="scroll-button left" onclick="scrollGames(-200)">❮</button>
+            <div class="games-grid">
+                {% set gameData = [
+                    {'name': 'لعبة الكلمة الدخيلة', 'image': 'medecin.jpg', 'index': 1},
+                    {'name': 'لعبة الكلمات', 'image': 'pilote.jpg', 'index': 2},
+                    {'name': 'لعبة الصور', 'image': 'dentist.png', 'index': 3},
+                    {'name': 'لعبة الجمل', 'image': 'enseignant.jpg', 'index': 4},
+                    {'name': 'لعبة المطابقة', 'image': 'chauffeur.png', 'index': 5},
+                    {'name': 'لعبة الصوت', 'image': 'musicien.jpg', 'index': 6}
+                ] %}
+                {% for game in gameData %}
+
+                    <a href="{% if game.index == 2 %}{{ path('fill_in_the_blank_cover', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% elseif game.index == 6 %}{{ path('jeu_accueil', {'childId': child.childId}) }}{% elseif game.index == 3 %}{{ path('main_menu', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}{% elseif game.index == 4 %}{{ path('app_dragdrop_game', {'childId': child.childId}) }}{% elseif game.index == 5 %}{{ path('game_match', {'childId': child.childId}) }}{% else %}{{ path('child_game', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': game.index}) }}{% endif %}" class="game-container">
+                        <img src="{{ asset('images/professions/' ~ game.image) | default('https://via.placeholder.com/100') }}" class="game-image" alt="Game {{ game.index }}">
+                        <div class="game-name">{{ game.name }}</div>
+                    </a>
+                {% endfor %}
+            </div>
+            <button class="scroll-button right" onclick="scrollGames(200)">❯</button>
+        </section>
+
+        <div id="progressModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-title">تقدّمي في الألعاب</div>
+                <img src="{{ asset('gifs/progress.gif') | default('https://via.placeholder.com/400x100') }}" class="progress-gif" alt="Progress GIF">
+                {% for game in gameData %}
+                    <div class="game-progress">
+                        <span class="name">{{ game.name }}:</span>
+                        <span class="details">المستوى {{ gameProgress[game.index] is defined ? gameProgress[game.index].level : 0 }} - النقاط: {{ gameProgress[game.index] is defined ? gameProgress[game.index].score : 0 }}</span>
+                    </div>
+                {% endfor %}
+                <button class="close-button" id="closeButton">إغلاق</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        console.log('Script loaded');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM fully loaded');
+
+            // Vérification des éléments critiques
+            const progressButton = document.getElementById('progressButton');
+            const progressModal = document.getElementById('progressModal');
+            const closeButton = document.getElementById('closeButton');
+            const moodDialog = document.getElementById('moodDialog');
+            const moodDialogMessage = document.getElementById('moodDialogMessage');
+            const moodDialogButton = document.getElementById('moodDialogButton');
+            const moodOptionsContainer = document.querySelector('.mood-options');
+            const selectedMood = document.getElementById('selectedMood');
+            const gamesGrid = document.querySelector('.games-grid');
+
+            // Logs pour vérifier l'existence des éléments
+            if (!progressButton) console.error('Progress button not found');
+            if (!progressModal) console.error('Progress modal not found');
+            if (!closeButton) console.error('Close button not found');
+            if (!moodDialog) console.error('Mood dialog not found');
+            if (!moodDialogMessage) console.error('Mood dialog message not found');
+            if (!moodDialogButton) console.error('Mood dialog button not found');
+            if (!moodOptionsContainer) console.error('Mood options container not found');
+            if (!selectedMood) console.error('Selected mood element not found');
+            if (!gamesGrid) console.error('Games grid not found');
+
+            // Fonction pour afficher la modal de progression
+            function showProgressModal() {
+                console.log('showProgressModal called');
+                if (progressModal) {
+                    progressModal.classList.add('show');
+                    progressModal.style.display = 'flex';
+                    progressModal.style.opacity = '1';
+                } else {
+                    console.error('progressModal not found');
+                }
+            }
+
+            // Fonction pour fermer la modal de progression
+            function closeProgressModal() {
+                console.log('closeProgressModal called');
+                if (progressModal) {
+                    progressModal.classList.remove('show');
+                    progressModal.style.opacity = '0';
+                    setTimeout(() => {
+                        progressModal.style.display = 'none';
+                    }, 300); // Attendre la fin de la transition d'opacité
+                } else {
+                    console.error('progressModal not found');
+                }
+            }
+
+            // Fonction pour le défilement des jeux
+            function scrollGames(offset) {
+                console.log('scrollGames called with offset:', offset);
+                if (gamesGrid) {
+                    gamesGrid.scrollBy({ left: offset, behavior: 'smooth' });
+                } else {
+                    console.error('gamesGrid not found');
+                }
+            }
+
+            // Gestion de la boîte de dialogue d'humeur
+            let dialogTimeout;
+            function showMoodDialog(mood) {
+                console.log('showMoodDialog called with mood:', mood);
+                if (!moodDialog || !moodDialogMessage) {
+                    console.error('Cannot show mood dialog: elements missing');
+                    return;
+                }
+
+                const messages = {
+                    '😊': 'يا مرحبا! 😄 حاضر تلعب وتستمتع؟',
+                    '🙂': 'محلاك فرحان! 😊 شرايك نلعبو لعبة ممتعة؟',
+                    '😔': '.آه علاش متقلق ، 😔 هيا نلعبو باش نرجعو الضحكة ',
+                    '😢': 'علاش الحزن يا بطل؟ 😢أحنا هنا باش نفرحوك! جرب لعبة!'
+                };
+
+                moodDialogMessage.textContent = messages[mood] || 'كيف حالك؟ 😊';
+                moodDialog.classList.remove('hide');
+                moodDialog.classList.add('show');
+
+                clearTimeout(dialogTimeout);
+                dialogTimeout = setTimeout(hideMoodDialog, 3000);
+            }
+
+            function hideMoodDialog() {
+                console.log('hideMoodDialog called');
+                if (!moodDialog) {
+                    console.error('Cannot hide mood dialog: moodDialog not found');
+                    return;
+                }
+
+                moodDialog.classList.add('hide');
+                setTimeout(() => {
+                    moodDialog.classList.remove('show', 'hide');
+                }, 500);
+            }
+
+            // Gestion de la sélection de l'humeur
+            let currentSelected = null;
+
+            function selectMood(option) {
+                console.log('selectMood called with option:', option.getAttribute('data-mood'));
+                if (!option || !selectedMood) {
+                    console.error('Cannot select mood: option or selectedMood missing');
+                    return;
+                }
+
+                if (currentSelected) {
+                    currentSelected.classList.remove('selected');
+                }
+
+                option.classList.add('selected');
+                currentSelected = option;
+
+                const mood = option.getAttribute('data-mood');
+                selectedMood.textContent = mood;
+                selectedMood.classList.add('active');
+
+                localStorage.setItem('childMood', mood);
+                showMoodDialog(mood);
+
+                option.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    option.style.transform = 'scale(1.3)';
+                }, 200);
+            }
+
+            // Ajout des écouteurs d'événements
+            if (progressButton) {
+                progressButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Progress button clicked');
+                    showProgressModal();
+                });
+            }
+
+            if (closeButton) {
+                closeButton.addEventListener('click', closeProgressModal);
+            }
+
+            if (moodOptionsContainer) {
+                moodOptionsContainer.addEventListener('click', (e) => {
+                    const option = e.target.closest('.mood-option');
+                    if (option) {
+                        console.log('Mood option clicked:', option.getAttribute('data-mood'));
+                        selectMood(option);
+                    }
+                });
+            }
+
+            if (moodDialogButton) {
+                moodDialogButton.addEventListener('click', hideMoodDialog);
+            }
+        });
+    </script>
+{% endblock %}
