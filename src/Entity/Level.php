@@ -15,6 +15,7 @@ class Level
     private int $id;
 
     #[ORM\Id]
+        #[ORM\ManyToOne(targetEntity: Child::class, inversedBy: "levels")]
     #[ORM\JoinColumn(name: 'childId', referencedColumnName: 'childId', onDelete: 'CASCADE')]
     private Child $childId;
 
