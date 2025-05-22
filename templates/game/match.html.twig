@@ -1,0 +1,284 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Jeu de Correspondance{% endblock %}
+
+{% block body %}
+    <div class="game-container">
+        <h1>Jeu de Correspondance</h1>
+
+        {% if app.flashes('error') %}
+            <div class="alert alert-danger" role="alert">
+                {% for message in app.flashes('error') %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if theme %}
+            <h2>Thème : {{ theme.name }} (Niveau : {% if current_level == 1 %}Facile{% elseif current_level == 2 %}Moyen{% elseif current_level == 3 %}Difficile{% endif %} - Langue : {{ language|upper }})</h2>
+            <p>Essais restants : <span id="tries-left">3</span></p>
+            <p>Score : <span id="score">0</span></p>
+            <div class="pair-list" role="list" aria-label="Liste des paires mot-synonyme">
+                <h3>Paires Mot-Synonyme</h3>
+                {% for pair in words %}
+                    <div class="pair-row">
+                        <div class="word" data-id="{{ pair.id }}" role="button" aria-label="Mot à associer : {{ pair.word }} (ID: {{ pair.id }})" tabindex="0">{{ pair.word }}</div>
+                        <div class="synonym" data-id="{{ pair.id }}" role="button" aria-label="Synonyme à associer : {{ pair.synonym }} (ID: {{ pair.id }})" tabindex="0">{{ pair.synonym }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div id="message" class="alert" role="status" aria-live="polite"></div>
+            <div class="button-container">
+                {# Exit button route: Redirects to the current game_match route with the same childId to allow restarting the game
+                   This replaces the original 'home' route which was undefined, ensuring a safe fallback within the game context #}
+                <a href="{{ path('game_match', {'childId': child_id}) }}" class="stats-button exit-button">Quitter</a>
+            </div>
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                <p>Aucun thème validé disponible pour ce niveau. Veuillez essayer un autre niveau ou contacter un administrateur.</p>
+                <a href="{{ path('game_match', {'childId': child_id}) }}" class="stats-button">Réessayer</a>
+                {# Exit button route: Redirects to the current game_match route with the same childId as a fallback
+                   since the original 'home' route was not defined #}
+                <a href="{{ path('game_match', {'childId': child_id}) }}" class="stats-button exit-button">Quitter</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5efe6 0%, #D9CFC1 100%);
+            font-family: 'Comic Neue', cursive;
+            overflow-x: hidden;
+        }
+        .game-container {
+            background: url('https://www.transparenttextures.com/patterns/rice-paper.png'), rgba(255, 255, 255, 0.95);
+            border: 5px solid #E8E8F5;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            animation: bounceIn 0.5s ease;
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: center;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pair-list {
+            margin: 20px 0;
+        }
+        .pair-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .word, .synonym {
+            padding: 15px;
+            margin: 0 10px;
+            border: 2px solid #C9E4F5;
+            border-radius: 10px;
+            background-color: #E8E8F5;
+            color: #5A4B6B;
+            cursor: pointer;
+            transition: transform 0.3s, opacity 0.3s;
+            font-size: 18px;
+            min-width: 120px;
+            text-align: center;
+            display: inline-block;
+        }
+        .word:hover, .synonym:hover {
+            transform: scale(1.1);
+        }
+        .word:focus, .synonym:focus {
+            outline: 3px solid #5A4B6B;
+            outline-offset: 2px;
+        }
+        .word.selected, .synonym.selected {
+            background-color: #D4D4F0;
+            border-color: #5A4B6B;
+        }
+        .word.disabled, .synonym.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .stats-button {
+            background-color: #E8E8F5;
+            color: #5A4B6B;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 2px solid #C9E4F5;
+            transition: transform 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+        .stats-button:hover {
+            transform: scale(1.1);
+            background-color: #D4D4F0;
+        }
+        .exit-button {
+            background-color: #F5C9C9;
+            border-color: #F5A9A9;
+        }
+        .exit-button:hover {
+            background-color: #F0A0A0;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .alert {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .alert.success {
+            color: green;
+        }
+        .alert.error {
+            color: red;
+        }
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+
+    {% if theme %}
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const words = document.querySelectorAll('.word');
+                const synonyms = document.querySelectorAll('.synonym');
+                const messageDiv = document.getElementById('message');
+                const triesLeftSpan = document.getElementById('tries-left');
+                const scoreSpan = document.getElementById('score');
+                let selectedWord = null;
+                let selectedSynonym = null;
+                let nbTries = 0;
+                let score = 0;
+                let correctPairs = new Set();
+                const startTime = Date.now();
+                const childId = {{ child_id|json_encode|raw }};
+
+                const handleSelection = (element, type) => {
+                    if (element.classList.contains('disabled')) return;
+                    if (type === 'word') {
+                        if (selectedWord) selectedWord.classList.remove('selected');
+                        selectedWord = element;
+                    } else {
+                        if (selectedSynonym) selectedSynonym.classList.remove('selected');
+                        selectedSynonym = element;
+                    }
+                    element.classList.add('selected');
+                    checkPair();
+                };
+
+                words.forEach(word => {
+                    word.addEventListener('click', () => handleSelection(word, 'word'));
+                    word.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelection(word, 'word');
+                        }
+                    });
+                });
+
+                synonyms.forEach(synonym => {
+                    synonym.addEventListener('click', () => handleSelection(synonym, 'synonym'));
+                    synonym.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelection(synonym, 'synonym');
+                        }
+                    });
+                });
+
+                function checkPair() {
+                    if (selectedWord && selectedSynonym) {
+                        nbTries++;
+                        fetch('{{ path('game_match_check', {'childId': child_id}) }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `wordId=${selectedWord.dataset.id}&synonymId=${selectedSynonym.dataset.id}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            messageDiv.textContent = data.message;
+                            messageDiv.className = 'alert ' + (data.success ? 'success' : 'error');
+                            triesLeftSpan.textContent = data.tries_left;
+
+                            if (data.success) {
+                                // Disable the entire row
+                                const pairRow = selectedWord.parentElement;
+                                pairRow.querySelector('.word').classList.add('disabled');
+                                pairRow.querySelector('.synonym').classList.add('disabled');
+                                selectedWord.classList.remove('selected');
+                                selectedSynonym.classList.remove('selected');
+                                correctPairs.add(selectedWord.dataset.id);
+                                // Update score based on number of tries
+                                if (nbTries <= 1) score += 1;
+                                else if (nbTries === 2) score += 3;
+                                else if (nbTries === 3) score += 5;
+                                scoreSpan.textContent = score;
+
+                                if (correctPairs.size === {{ words|length }}) {
+                                    const timeElapsed = Math.round((Date.now() - startTime) / 1000);
+                                    fetch('{{ path('game_match_complete', {'childId': child_id}) }}', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                        body: `themeId={{ theme.id }}&gameId={{ game_id }}&nbTries=${nbTries}&time=${timeElapsed}&allCorrect=true&score=${score}`
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        messageDiv.textContent = data.message;
+                                        messageDiv.className = 'alert ' + (data.success ? 'success' : 'error');
+                                        if (data.success && data.nextThemeId) {
+                                            setTimeout(() => {
+                                                window.location.href = '{{ path('game_match', {'childId': child_id}) }}';
+                                            }, 2000);
+                                        } else if (data.success && data.nextLevel) {
+                                            setTimeout(() => {
+                                                window.location.href = '{{ path('game_match', {'childId': child_id}) }}';
+                                            }, 2000);
+                                        } else {
+                                            setTimeout(() => {
+                                                window.location.href = '{{ path('game_match', {'childId': child_id}) }}';
+                                            }, 2000);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        messageDiv.textContent = 'Erreur lors de la progression.';
+                                        messageDiv.className = 'alert error';
+                                    });
+                                }
+                            } else if (data.repeat) {
+                                messageDiv.textContent = data.message;
+                                messageDiv.className = 'alert error';
+                                setTimeout(() => {
+                                    window.location.href = '{{ path('game_match', {'childId': child_id}) }}';
+                                }, 2000);
+                            }
+
+                            selectedWord = null;
+                            selectedSynonym = null;
+                        })
+                        .catch(error => {
+                            messageDiv.textContent = 'Erreur lors de la vérification.';
+                            messageDiv.className = 'alert error';
+                            if (selectedWord) selectedWord.classList.remove('selected');
+                            if (selectedSynonym) selectedSynonym.classList.remove('selected');
+                            selectedWord = null;
+                            selectedSynonym = null;
+                        });
+                    }
+                }
+            });
+        </script>
+    {% endif %}
+{% endblock %}

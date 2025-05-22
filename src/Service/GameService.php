@@ -8,6 +8,7 @@ use App\Entity\Level;
 use App\Entity\Theme;
 use App\Entity\Word;
 use Doctrine\ORM\EntityManagerInterface;
+use Normalizer;
 
 class GameService
 {
@@ -37,7 +38,12 @@ class GameService
         foreach ($themes as $theme) {
             $words = [];
             foreach ($theme->getWords() as $word) {
-                $words[$word->getWord()] = $word->getSynonym();
+                $normalizedWord = Normalizer::normalize(trim($word->getWord()), Normalizer::FORM_C);
+                $normalizedSynonym = Normalizer::normalize(trim($word->getSynonym()), Normalizer::FORM_C);
+                $words[$word->getId()] = [
+                    'word' => $normalizedWord,
+                    'synonym' => $normalizedSynonym,
+                ];
             }
             $themesData[$theme->getName()] = $words;
         }
@@ -51,7 +57,6 @@ class GameService
         $themeNames = $this->generateThemeNames($level, $themeCount);
 
         foreach ($themeNames as $index => $themeName) {
-            // Limiter les stages entre 1 et 10 avec réinitialisation
             $stage = ($index % 10) + 1;
 
             $theme = new Theme();
@@ -73,8 +78,8 @@ class GameService
                     }
 
                     $word = new Word();
-                    $word->setWord($wordData['mot']);
-                    $word->setSynonym($wordData['synonyme']['ar']);
+                    $word->setWord(Normalizer::normalize(trim($wordData['mot']), Normalizer::FORM_C));
+                    $word->setSynonym(Normalizer::normalize(trim($wordData['synonyme']['ar']), Normalizer::FORM_C));
                     $word->setTheme($theme);
                     $theme->addWord($word);
                     $this->entityManager->persist($word);
@@ -142,15 +147,15 @@ class GameService
                     'Trains', 'Films', 'Théâtre', 'Danse', 'Cuisine', 'Marché', 'Parc', 'Zoo', 'Cirque', 'Foire'
                 ],
                 'Difficile' => [
-                     'Livres célèbres', 'Artistes connus', 'Musique classique', 
-                     'Histoire des jouets', 'Peinture', 'Animaux',
+                    'Livres célèbres', 'Artistes connus', 'Musique classique', 
+                    'Histoire des jouets', 'Peinture', 'Animaux',
                     'Théâtre pour enfants', 'Danses du monde', 'Instruments de musique', 
                     'Écrivains célèbres', 'Fêtes culturelles', 'Histoire des costumes', 
                     'Animaux légendaires',
                     'Explorateurs célèbres', 'Monuments célèbres', 'Jeux anciens', 
                     'Nature et environnement', 'Histoire des sports', 
                     'Cuisine du monde', 'Chansons traditionnelles', 'Jardins célèbres', 
-                    'Découvertes scientifiques', 'Histoire des transports', 
+                    'Découvertes scientifiques', 'Histoire des transports'
                 ],
             ];
             $availableThemes = $themesByLevel[$levelText] ?? ['Divers'];
@@ -194,7 +199,17 @@ class GameService
             if (!is_array($words) || count($words) < $count) {
                 throw new \RuntimeException('Réponse IA invalide pour les mots');
             }
-            return array_slice($words, 0, $count);
+
+            $normalizedWords = [];
+            foreach (array_slice($words, 0, $count) as $wordData) {
+                $normalizedWords[] = [
+                    'mot' => Normalizer::normalize(trim($wordData['mot']), Normalizer::FORM_C),
+                    'synonyme' => [
+                        'ar' => Normalizer::normalize(trim($wordData['synonyme']['ar']), Normalizer::FORM_C)
+                    ]
+                ];
+            }
+            return $normalizedWords;
         } catch (\Exception $e) {
             throw new \RuntimeException("Échec de la génération des mots pour le thème '$theme': " . $e->getMessage());
         }
