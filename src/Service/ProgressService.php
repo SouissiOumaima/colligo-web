@@ -44,7 +44,7 @@ class ProgressService
         }
     }
 
-    public function ensureChildExists(int $childId, int $parentId, int $age, string $name = 'Default Child', string $language = 'English'): void
+    public function ensureChildExists(int $childId, int $parentId, int $age, string $name = 'Default Child', string $language = 'Anglais'): void
     {
         $conn = $this->em->getConnection();
         try {

@@ -1257,7 +1257,7 @@ class AdminController extends AbstractController
     public function manageContent(Request $request, DragdropRepository $repository, EntityManagerInterface $entityManager): Response
     {
         // Define valid languages at the method level
-        $validLanguages = ['Français', 'English', 'Espagnol', 'Allemand'];
+        $validLanguages = ['Français', 'Anglais', 'Espagnol', 'Allemand'];
 
         // Manual Creation Form
         $dragdrop = new Dragdrop();
@@ -1370,7 +1370,7 @@ class AdminController extends AbstractController
     {
         $langCode = match (strtolower($language)) {
             'français' => 'fr',
-            'english' => 'en',
+            'anglais' => 'en',
             'espagnol' => 'es',
             'allemand' => 'de',
             default => 'fr',

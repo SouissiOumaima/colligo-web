@@ -38,7 +38,7 @@ class DragdropType extends AbstractType
                 'label' => 'Langue',
                 'choices' => [
                     'Français' => 'Français',
-                    'English' => 'English',
+                    'Anglais' => 'Anglais',
                     'Espagnol' => 'Espagnol',
                     'Allemand' => 'Allemand',
                 ],
