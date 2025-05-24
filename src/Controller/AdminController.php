@@ -1207,7 +1207,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/validate-theme/{id}', name: 'admin_validate_theme', methods: ['POST'])]
-    // #[ParamConverter('theme', class: 'App\Entity\Theme')]
+    #[ParamConverter('theme', class: 'App\Entity\Theme')]
     public function validateTheme(Theme $theme, EntityManagerInterface $entityManager, Request $request): Response
     {
         $token = new CsrfToken('validate_theme', $request->request->get('_csrf_token'));
@@ -1227,7 +1227,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/delete-theme/{id}', name: 'admin_delete_theme', methods: ['POST'])]
-    // #[ParamConverter('theme', class: 'App\Entity\Theme')]
+    #[ParamConverter('theme', class: 'App\Entity\Theme')]
     public function deleteTheme(Theme $theme, EntityManagerInterface $entityManager, Request $request): Response
     {
         $token = new CsrfToken('delete_theme', $request->request->get('_csrf_token'));
