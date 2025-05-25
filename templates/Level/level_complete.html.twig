@@ -1,0 +1,285 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}تهانينا! المرحلة كاملة{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        /* Réinitialisation et style de base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tajawal', 'Arial', sans-serif;
+            direction: rtl;
+            overflow: hidden;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96c93d);
+            background-size: 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Conteneur principal */
+        .main-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Boîte de contenu */
+        .content-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            animation: slideIn 1s ease-out;
+            max-width: 80%;
+            width: clamp(250px, 40vw, 450px);
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Texte de félicitations */
+        .congrats-text {
+            color: #ff4b5c;
+            font-size: clamp(20px, 4vw, 32px);
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            animation: pulseText 2s infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Image GIF */
+        .gif-image {
+            width: clamp(80px, 25vw, 180px);
+            height: auto;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+        }
+
+        .gif-image:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Boutons */
+        .button {
+            font-size: clamp(14px, 2.5vw, 18px);
+            font-weight: 600;
+            padding: 12px 25px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            width: clamp(140px, 20vw, 200px);
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 1;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+            z-index: -1;
+        }
+
+        .button:hover::before {
+            left: 100%;
+        }
+
+        .button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .continue-button {
+            background: linear-gradient(45deg, #28a745, #34d058);
+        }
+
+        .continue-button:hover {
+            background: linear-gradient(45deg, #218838, #28a745);
+        }
+
+        .another-game-button {
+            background: linear-gradient(45deg, #007bff, #00c4ff);
+        }
+
+        .another-game-button:hover {
+            background: linear-gradient(45deg, #0056b3, #007bff);
+        }
+
+        /* Canvas pour les particules */
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .content-box {
+                padding: 15px;
+                width: 85%;
+            }
+
+            .congrats-text {
+                font-size: clamp(18px, 5vw, 28px);
+            }
+
+            .button {
+                font-size: clamp(12px, 3.5vw, 16px);
+                padding: 10px 20px;
+                width: clamp(120px, 35vw, 180px);
+            }
+
+            .gif-image {
+                width: clamp(70px, 30vw, 150px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-box {
+                padding: 10px;
+            }
+
+            .congrats-text {
+                font-size: clamp(16px, 6vw, 24px);
+            }
+
+            .button {
+                font-size: clamp(10px, 4vw, 14px);
+                padding: 8px 15px;
+                width: clamp(100px, 40vw, 150px);
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <canvas id="particles"></canvas>
+    <div class="main-container">
+        <div class="content-box">
+            <div class="congrats-text">ملاّ معلم(ة) أما تو جايك ما أصعب! حاضر؟</div>
+            <img src="{{ asset('gifs/yaaaay.gif') }}" class="gif-image" alt="Félicitations">
+            <a href="{{ path('child_game_play', {'parentId': child.parentId.parentId, 'childId': child.childId, 'gameIndex': 1}) }}" class="button continue-button">أي نكمّل</a>
+            <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="button another-game-button">نحبّ نلعب لعبة أخرى</a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particlesArray = [];
+            const numberOfParticles = 100;
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 5 + 1;
+                    this.speedX = Math.random() * 3 - 1.5;
+                    this.speedY = Math.random() * 3 - 1.5;
+                    this.color = `hsl(${Math.random() * 360}, 70%, 70%)`;
+                }
+
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.size > 0.2) this.size -= 0.05;
+                    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                }
+
+                draw() {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function init() {
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particlesArray.push(new Particle());
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particlesArray.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                    if (particle.size <= 0.2) {
+                        particlesArray.splice(particlesArray.indexOf(particle), 1);
+                        particlesArray.push(new Particle());
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+
+            init();
+            animate();
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+
+            // Animation des boutons au survol
+            const buttons = document.querySelectorAll('.button');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    button.style.transform = 'scale(1.1) translateY(-5px)';
+                });
+                button.addEventListener('mouseleave', () => {
+                    button.style.transform = 'scale(1)';
+                });
+            });
+        });
+    </script>
+{% endblock %}

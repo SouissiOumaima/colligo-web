@@ -1,0 +1,468 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gérer les Enfants{% endblock %}
+
+{% block stylesheets %}
+    <!-- Load Bootstrap and Font Awesome via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Load Google Fonts for a playful, child-friendly font -->
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-bg: #e39786;
+            --sidebar-text: #ffffff;
+            --sidebar-hover: #d47a6c;
+            --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+            --sidebar-active-indicator: #FFD700;
+            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius-md: 10px;
+            --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: #F5E8E4;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 80px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            overflow: hidden;
+            transition: width 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar:hover {
+            width: 220px;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .sidebar-header img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+        }
+
+        .sidebar-header h6 {
+            color: var(--sidebar-text);
+            font-weight: 500;
+            margin-top: 10px;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-label {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            white-space: nowrap;
+            margin-left: 12px;
+            font-size: 0.875rem;
+        }
+
+        .sidebar:hover .sidebar-label {
+            opacity: 1;
+        }
+
+        .nav-link {
+            color: var(--sidebar-text);
+            padding: 12px 16px;
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+            position: relative;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            background: var(--sidebar-hover);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: var(--sidebar-active-bg);
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 3px;
+            background: var(--sidebar-active-indicator);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-link i {
+            font-size: 1.25rem;
+            min-width: 24px;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-link:hover i {
+            transform: translateX(2px) scale(1.05);
+            color: var(--sidebar-active-indicator);
+        }
+
+        .main-content {
+            margin-left: 80px;
+            padding: 30px;
+            transition: margin-left 0.5s ease;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar:hover ~ .main-content {
+            margin-left: 220px;
+        }
+
+        .top-section {
+            background-color: #e39786;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .title-label {
+            font-family: 'Chewy', cursive;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .center-section {
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .center-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.15"><circle cx="30" cy="30" r="10" fill="#ffeb3b"/><circle cx="170" cy="50" r="15" fill="#ffeb3b"/><circle cx="50" cy="150" r="12" fill="#ffeb3b"/><circle cx="150" cy="170" r="8" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .children-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            padding: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .child-box {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 235, 205, 0.5));
+            border-radius: 20px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            height: 260px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 3px solid transparent;
+        }
+
+        .child-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.2"><path d="M50 10 L60 40 L90 40 L65 60 L75 90 L50 70 L25 90 L35 60 L10 40 L40 40 Z" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .child-box:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            border: 3px solid #ffeb3b;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); }
+        }
+
+        .child-box a {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            flex-grow: 1;
+        }
+
+        .child-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid #ffeb3b;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            background-color: rgb(180, 225, 201);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .child-avatar::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 120px;
+            height: 120px;
+            border: 3px dotted #99caf1;
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .child-box:hover .child-avatar {
+            transform: translateX(-50%) scale(1.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1.15); }
+            50% { transform: translateX(-50%) scale(1.25); }
+        }
+
+        .child-name {
+            font-family: 'Chewy', cursive;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ff6f91;
+            margin-top: 80px;
+            margin-bottom: 8px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .child-box:hover .child-name {
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .child-language {
+            font-family: 'Chewy', cursive;
+            font-size: 1rem;
+            color: #99caf1;
+            margin-bottom: 10px;
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .child-box:hover .child-language {
+            color: #ff6f91;
+        }
+
+        .bg-vivid-red { background: linear-gradient(135deg, #eba099, #f4c7c3); }
+        .bg-vivid-blue { background: linear-gradient(135deg, #99caf1, #c3e4ff); }
+        .bg-vivid-green { background: linear-gradient(135deg, #66bb6a, #a5d6a7); }
+        .bg-vivid-orange { background: linear-gradient(135deg, #e1c777, #ffeead); }
+        .bg-vivid-purple { background: linear-gradient(135deg, #d1a9f0, #e1bee7); }
+        .bg-vivid-pink { background: linear-gradient(135deg, #f4a1c7, #f8bbd0); }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: auto;
+            padding: 5px 0;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, #ff6f91, #ffeb3b);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            width: 80px;
+            justify-content: center;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.delete {
+            background: linear-gradient(45deg, #dc3545, #ff6f91);
+        }
+
+        .action-btn.delete:hover {
+            background: linear-gradient(45deg, #ff6f91, #dc3545);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar:hover { width: 180px; }
+            .main-content { margin-left: 60px; }
+            .sidebar:hover ~ .main-content { margin-left: 180px; }
+            .child-box { height: 220px; }
+            .child-avatar { width: 80px; height: 80px; top: -15px; }
+            .child-avatar::after { width: 100px; height: 100px; }
+            .child-name { font-size: 1.3rem; margin-top: 60px; }
+            .child-language { font-size: 0.9rem; }
+            .action-btn { font-size: 0.8rem; padding: 5px 10px; width: 70px; }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar { position: relative; width: 100%; height: auto; }
+            .main-content { margin-left: 0; }
+            .child-box { height: 200px; }
+            .child-avatar { width: 70px; height: 70px; top: -10px; }
+            .child-avatar::after { width: 90px; height: 90px; }
+            .child-name { font-size: 1.2rem; margin-top: 50px; }
+            .child-language { font-size: 0.85rem; }
+            .action-btn { font-size: 0.75rem; padding: 4px 8px; width: 65px; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="wrapper">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{{ asset('images/user.png') }}" alt="parent" loading="lazy">
+            <h6 class="text-white sidebar-label mt-2">{{ parent.email }}</h6>
+        </div>
+        <nav class="nav flex-column px-2 mt-2">
+            <a href="{{ path('pre_dashboard', {'parentId': parent.parentId}) }}" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span class="sidebar-label">Accueil</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fas fa-user"></i>
+                <span class="sidebar-label">Progrès Enfant</span>
+            </a>
+            <a href="{{ path('app_manage_children', {'parentId': parent.parentId}) }}" class="nav-link active">
+                <i class="fas fa-users"></i>
+                <span class="sidebar-label">Gérer Enfants</span>
+            </a>
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#guideParentModal">
+                <i class="fas fa-book"></i>
+                <span class="sidebar-label">Guide Parent</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fas fa-cog"></i>
+                <span class="sidebar-label">Paramètres</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-section">
+            <div class="title-label">Gérer les Enfants</div>
+        </div>
+
+        <div class="center-section">
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('info') %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+
+            {% if children|length > 0 %}
+                <div class="children-grid">
+                    {% for child in children %}
+                        {% set bgClass = loop.index0 % 6 == 0 ? 'bg-vivid-red' : (loop.index0 % 6 == 1 ? 'bg-vivid-blue' : (loop.index0 % 6 == 2 ? 'bg-vivid-green' : (loop.index0 % 6 == 3 ? 'bg-vivid-orange' : (loop.index0 % 6 == 4 ? 'bg-vivid-purple' : 'bg-vivid-pink')))) %}
+                        <div class="child-box {{ bgClass }}">
+                            <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}">
+                                {% if child.avatar %}
+                                    <img src="{{ asset('avatars/' ~ child.avatar ~ '.png') }}" alt="{{ child.name }} avatar" class="child-avatar" loading="lazy">
+                                {% else %}
+                                    <img src="{{ asset('images/default-avatar.png') }}" alt="{{ child.name }} avatar" class="child-avatar" loading="lazy">
+                                {% endif %}
+                                <div class="child-name">{{ child.name }}</div>
+                                <div class="child-language">{{ child.language }}</div>
+                            </a>
+                            <div class="action-buttons">
+                                <a href="{{ path('app_edit_child', {'childId': child.childId}) }}" class="action-btn">Modifier</a>
+                                <form action="{{ path('app_delete_child', {'childId': child.childId}) }}" method="post" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer {{ child.name }} ?')">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ child.childId) }}">
+                                    <input type="hidden" name="parentId" value="{{ parent.parentId }}">
+                                    <button type="submit" class="action-btn delete">Supprimer</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="child-name">Aucun enfant trouvé.</p>
+            {% endif %}
+
+            <div class="text-center mt-5">
+                <a href="{{ path('pre_dashboard', {'parentId': parent.parentId}) }}" class="btn btn-primary">Retour au Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <title>Inscription</title>
+    <style>
+        .toggle {
+            background: url("{{ asset('images/parent3.jpg') }}") no-repeat center center;
+            background-size: cover;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .alert-error {
+            background-color: transparent;
+        }
+        .sign-up button {
+            display: inline-block;
+            background: #FFAE9D;
+            color: #2d2d2d;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #FF997F;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            align-self: center;
+            box-shadow: 0 4px 10px rgba(255, 174, 157, 0.3);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+        }
+        .sign-up button:hover {
+            background: #F7E9D7;
+            border-color: #EFD5B7;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(247, 233, 215, 0.4);
+        }
+        .sign-up button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(247, 233, 215, 0.2);
+        }
+        .toggle-panel {
+            padding: 10px 20px;
+        }
+        .toggle-panel h1 {
+            text-align: center;
+        }
+        .toggle-panel p {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .toggle-panel.toggle-left {
+            text-align: left;
+        }
+        .toggle-panel a {
+            display: inline-block;
+            background: #F7E9D7;
+            color: #2d2d2d;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #EFD5B7;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(247, 233, 215, 0.3);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+            margin-bottom: 15px;
+        }
+        .toggle-panel a:hover {
+            background: #EFD5B7;
+            border-color: #E7C197;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(239, 213, 183, 0.4);
+        }
+        .toggle-panel a:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(239, 213, 183, 0.2);
+        }
+        .error-message {
+            color: #A7001E !important;
+            font-size: 14px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: transparent !important;
+            line-height: 1.5;
+        }
+        .password-container {
+            position: relative;
+        }
+        .sign-up .already-account {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 5px;
+            color: #2d2d2d;
+            font-size: 14px;
+            text-decoration: none;
+        }
+        .sign-up .already-account:hover {
+            color: #FFAE9D;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container active" id="container">
+        {# Affichage des messages flash uniquement après une action (POST) #}
+        {% if app.request.method == 'POST' %}
+            {% if app.flashes('success') is not empty %}
+                <div class="alert alert-success">
+                    {% for message in app.flashes('success') %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if app.flashes('error') is not empty %}
+                <div class="alert alert-error">
+                    {% for message in app.flashes('error') %}
+                        {{ message|raw }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {# Formulaire d'inscription #}
+        <div class="form-container sign-up">
+            <form method="post" id="register-form" action="{{ path('app_register') }}">
+                <h1>Créer un compte</h1>
+                <br><br>
+                <input type="email" name="email" placeholder="Email" value="{{ email ?? '' }}" required>
+                <div class="password-container">
+                    <input type="password" name="password" id="password" placeholder="Mot de passe" class="password-input" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+                <div class="password-container">
+                    <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirmer le mot de passe" class="password-input" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                    <a href="{{ path('app_login') }}" class="already-account">Déjà un compte ?</a>
+                </div>
+                <div id="password-error" class="error-message" style="display: none;"></div>
+                <button type="submit">S'inscrire</button>
+            </form>
+        </div>
+
+        {# Formulaire de connexion (caché) #}
+        <div class="form-container sign-in">
+            <form method="post" action="{{ path('app_login') }}">
+                <h1>Se connecter</h1>
+                <br>
+                <input type="email" name="email" placeholder="Email" required>
+                <div class="password-container">
+                    <input type="password" name="password" placeholder="Mot de passe" class="password-input" required>
+                    <i class="fas fa-eye toggle-password"></i>
+                </div>
+                <a href="{{ path('forgot_password_request') }}" class="forgot-password">Mot de passe oublié ?</a>
+                <button type="submit">Se connecter</button>
+            </form>
+        </div>
+
+        {# Panneau de bascule #}
+        <div class="toggle-container">
+            <div class="toggle">
+                <div class="toggle-panel toggle-left">
+                </div>
+                <div class="toggle-panel toggle-right">
+                    <a href="{{ path('app_register') }}" id="register">S'inscrire</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const passwordInput = this.previousElementSibling;
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+
+        // Password validation on form submission
+        document.getElementById('register-form').addEventListener('submit', function(event) {
+            const email = document.querySelector('input[name="email"]').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const errorDiv = document.getElementById('password-error');
+            let errors = [];
+
+            // Vérifier les champs vides
+            if (!email || !password || !confirmPassword) {
+                errors.push('Veuillez remplir tous les champs.');
+            }
+
+            // Vérifier les exigences du mot de passe
+            if (password.length < 6) {
+                errors.push('Le mot de passe doit contenir au moins 6 caractères.');
+            }
+            if (!/[A-Z]/.test(password)) {
+                errors.push('Le mot de passe doit contenir au moins une lettre majuscule.');
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                errors.push('Le mot de passe doit contenir au moins un caractère spécial.');
+            }
+            if (password !== confirmPassword) {
+                errors.push('Les mots de passe ne correspondent pas.');
+            }
+
+            // Afficher les erreurs ou soumettre le formulaire
+            if (errors.length > 0) {
+                event.preventDefault();
+                errorDiv.innerHTML = errors.join('<br>');
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
