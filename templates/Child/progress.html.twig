@@ -17,6 +17,7 @@
             --card-bg-2: #BBF7D0;
             --card-bg-3: #FBCB9C;
             --card-bg-4: #C3B1E1;
+            --card-bg-5: #A5F3FC; /* Added for new game to cycle colors */
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.15);
             --border-radius: 24px;
@@ -30,6 +31,107 @@
             background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
             overflow-x: hidden;
             color: var(--text-color);
+        }
+
+        .wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 24px;
+            color: var(--text-color);
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .sidebar-toggle:hover {
+            color: #FF3B6B;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 20px;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-title::before {
+            content: '🌟';
+            margin-right: 10px;
+            font-size: 22px;
+        }
+
+        .sidebar-title.active::before {
+            transform: rotate(45deg);
+        }
+
+        .children-list {
+            display: none;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .children-list.active {
+            display: block;
+        }
+
+        .child-item {
+            padding: 10px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: var(--transition);
+            background: var(--card-bg-1);
+            border-radius: var(--border-radius);
+            margin-bottom: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .child-item:hover {
+            background: var(--card-bg-2);
+            transform: scale(1.05);
         }
 
         .bg-animation {
@@ -66,9 +168,11 @@
         .bubble3 { width: 50px; height: 50px; top: 70%; left: -50px; animation-delay: 4s; }
 
         .container {
+            flex: 1;
             padding: 20px;
             max-width: 1280px;
-            margin: 0 auto;
+            margin-left: 270px;
+            margin-right: auto;
         }
 
         header {
@@ -186,7 +290,8 @@
         .game-card:nth-child(2) { background: var(--card-bg-2); }
         .game-card:nth-child(3) { background: var(--card-bg-3); }
         .game-card:nth-child(4) { background: var(--card-bg-4); }
-        .game-card:nth-child(5) { background: var(--card-bg-1); }
+        .game-card:nth-child(5) { background: var(--card-bg-5); }
+        .game-card:nth-child(6) { background: var(--card-bg-1); } /* Cycle back for new game */
 
         .game-card:hover {
             transform: scale(1.1) rotate(2deg);
@@ -439,7 +544,22 @@
         }
 
         @media (max-width: 768px) {
+            .wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: relative;
+                transform: translateX(0);
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
             .container {
+                margin-left: 0;
                 padding: 15px;
             }
 
@@ -525,141 +645,161 @@
         <div class="bubble bubble3"></div>
     </div>
 
-    <div class="container">
-        <header>
-            <a href="{{ path('pre_dashboard', {'parentId': parentId}) }}" class="back-button">
-                <span class="back-icon"></span>
-                <span>Retour</span>
-            </a>
-            <h1>Progrès de l'Enfant</h1>
-        </header>
-
-        <main class="progress-content">
-            <!-- Sélection des jeux -->
-            <div class="section game-selection">
-                <h2 class="section-title">Choisis un Jeu</h2>
-                <div class="game-cards">
-                    {% for game in games %}
-                        <div class="game-card {% if game.id == gameId %}active{% endif %}" data-game-id="{{ game.id }}">
-                            <img src="{{ asset('images/game' ~ game.id ~ '.jpg') }}" alt="Jeu {{ game.id }}" class="game-icon">
-                            <span class="game-name">
-                                {% if game.id == 1 %}Jeu de Devinettes
-                                {% elseif game.id == 2 %}Compléter les Mots
-                                {% elseif game.id == 3 %}Jeu des Images
-                                {% elseif game.id == 4 %}Jeu des Mots
-                                {% elseif game.id == 5 %}Glisser-Déposer
-                                {% endif %}
-                            </span>
-                        </div>
-                    {% endfor %}
-                </div>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Tableau de Bord</h2>
+                <button class="sidebar-toggle" id="sidebar-toggle">☰</button>
             </div>
+            <div class="sidebar-section">
+                <h3 class="sidebar-title parent-toggle" data-parent-id="{{ parentId }}">Les Enfants</h3>
+                <ul class="children-list" id="children-list">
+                    <!-- Children will be populated dynamically -->
+                </ul>
+            </div>
+        </aside>
 
-            <!-- Graphiques de progression -->
-            <div class="section charts-section" id="charts-section" {% if not childId or not gameId %}style="display: none;"{% endif %}>
-                <h2 class="section-title">Progrès dans <span id="selected-game-name">
-                    {% if gameId %}
-                        {% if gameId == 1 %}Jeu de Devinettes
-                        {% elseif gameId == 2 %}Compléter les Mots
-                        {% elseif gameId == 3 %}Jeu des Images
-                        {% elseif gameId == 4 %}Jeu des Mots
-                        {% elseif gameId == 5 %}Glisser-Déposer
+        <!-- Main Content -->
+        <div class="container">
+            <header>
+                <a href="{{ path('pre_dashboard', {'parentId': parentId}) }}" class="back-button">
+                    <span class="back-icon"></span>
+                    <span>Retour</span>
+                </a>
+                <h1>Progrès de l'Enfant</h1>
+            </header>
+
+            <main class="progress-content">
+                <!-- Sélection des jeux -->
+                <div class="section game-selection" id="game-selection" {% if not childId %}style="display: none;"{% endif %}>
+                    <h2 class="section-title">Choisis un Jeu</h2>
+                    <div class="game-cards">
+                        {% for game in games %}
+                            <div class="game-card {% if game.id == gameId %}active{% endif %}" data-game-id="{{ game.id }}">
+                                <img src="{{ asset('images/game' ~ game.id ~ '.jpg') }}" alt="Jeu {{ game.id }}" class="game-icon">
+                                <span class="game-name">
+                                    {% if game.id == 1 %}Jeu de Devinettes
+                                    {% elseif game.id == 2 %}Compléter les Mots
+                                    {% elseif game.id == 3 %}Jeu des Images
+                                    {% elseif game.id == 4 %}Jeu des Mots
+                                    {% elseif game.id == 5 %}Glisser-Déposer
+                                    {% elseif game.id == 6 %}Jeu de Prononciation
+                                    {% endif %}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Graphiques de progression -->
+                <div class="section charts-section" id="charts-section" {% if not childId or not gameId %}style="display: none;"{% endif %}>
+                    <h2 class="section-title">Progrès dans <span id="selected-game-name">
+                        {% if gameId %}
+                            {% if gameId == 1 %}Jeu de Devinettes
+                            {% elseif gameId == 2 %}Compléter les Mots
+                            {% elseif gameId == 3 %}Jeu des Images
+                            {% elseif gameId == 4 %}Jeu des Mots
+                            {% elseif gameId == 5 %}Glisser-Déposer
+                            {% elseif gameId == 6 %}Jeu de Prononcation
+                            {% endif %}
+                        {% else %}
+                            Jeu de Devinettes
                         {% endif %}
-                    {% else %}
-                        Jeu de Devinettes
-                    {% endif %}
-                </span></h2>
+                    </span></h2>
 
-                <!-- Graphique principal -->
-                <div class="original-chart-section">
-                    <div class="chart-container original-chart">
-                        <img id="game-image" src="" alt="Image du jeu" style="display: none;">
-                        <h3>Aperçu Général</h3>
-                        <canvas id="progress-chart"></canvas>
+                    <!-- Graphique principal -->
+                    <div class="original-chart-section">
+                        <div class="chart-container original-chart">
+                            <img id="game-image" src="" alt="Image du jeu" style="display: none;">
+                            <h3>Aperçu Général</h3>
+                            <canvas id="progress-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Autres graphiques -->
+                    <div class="other-charts-section">
+                        <div class="chart-container">
+                            <h3>Nombre d'Essais</h3>
+                            <canvas id="tries-chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Temps Passé (s)</h3>
+                            <canvas id="time-chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h3>Points Gagnés</h3>
+ಸ
+                            <canvas id="points-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Statistiques -->
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="stat-icon score-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">Points</h3>
+                                <p class="stat-value"><span id="total-points">0</span> pts</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon time-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">Temps</h3>
+                                <p class="stat-value"><span id="total-time">0</span> min</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon attempts-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">Essais</h3>
+                                <p class="stat-value"><span id="total-attempts">0</span></p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon accuracy-icon"></div>
+                            <div class="stat-content">
+                                <h3 class="stat-title">Précision</h3>
+                                <p class="stat-value"><span id="accuracy-percentage">0</span>%</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Autres graphiques -->
-                <div class="other-charts-section">
-                    <div class="chart-container">
-                        <h3>Nombre d'Essais</h3>
-                        <canvas id="tries-chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>Temps Passé (s)</h3>
-                        <canvas id="time-chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>Points Gagnés</h3>
-                        <canvas id="points-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Statistiques -->
-                <div class="stats-cards">
-                    <div class="stat-card">
-                        <div class="stat-icon score-icon"></div>
-                        <div class="stat-content">
-                            <h3 class="stat-title">Points</h3>
-                            <p class="stat-value"><span id="total-points">0</span> pts</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon time-icon"></div>
-                        <div class="stat-content">
-                            <h3 class="stat-title">Temps</h3>
-                            <p class="stat-value"><span id="total-time">0</span> min</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon attempts-icon"></div>
-                        <div class="stat-content">
-                            <h3 class="stat-title">Essais</h3>
-                            <p class="stat-value"><span id="total-attempts">0</span></p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon accuracy-icon"></div>
-                        <div class="stat-content">
-                            <h3 class="stat-title">Précision</h3>
-                            <p class="stat-value"><span id="accuracy-percentage">0</span>%</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Comparaison -->
-            <div class="section comparison-section" id="comparison-section" {% if not childId or not gameId %}style="display: none;"{% endif %}>
-                <h2 class="section-title">Comparaison des Résultats</h2>
-                <div class="table-container">
-                    <table class="comparison-table">
-                        <thead>
-                            <tr>
-                                <th>Niveau</th>
-                                <th>Points</th>
-                                <th>Essais</th>
-                                <th>Temps (s)</th>
-                                <th>Max</th>
-                                <th>%</th>
-                            </tr>
-                        </thead>
-                        <tbody id="comparison-body">
-                            {% for level in 1..3 %}
-                                {% set scoreComparison = scoreComparisons[level] ?? {'achieved': 0, 'max': (maxScores[level] ?? 0), 'percentage': 0} %}
+                <!-- Comparaison -->
+                <div class="section comparison-section" id="comparison-section" {% if not childId or not gameId %}style="display: none;"{% endif %}>
+                    <h2 class="section-title">Comparaison des Résultats</h2>
+                    <div class="table-container">
+                        <table class="comparison-table">
+                            <thead>
                                 <tr>
-                                    <td>Niveau {{ level }}</td>
-                                    <td>{{ scoreComparison.achieved }}</td>
-                                    <td>{{ tries[level] ?? 0 }}</td>
-                                    <td>{{ times[level] ?? 0 }}</td>
-                                    <td>{{ scoreComparison.max }}</td>
-                                    <td>{{ scoreComparison.percentage }}%</td>
+                                    <th>Niveau</th>
+                                    <th>Points</th>
+                                    <th>Essais</th>
+                                    <th>Temps (s)</th>
+                                    <th>Max</th>
+                                    <th>%</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody id="comparison-body">
+                                {% for level in 1..3 %}
+                                    {% set scoreComparison = scoreComparisons[level] ?? {'achieved': 0, 'max': (maxScores[level] ?? 0), 'percentage': 0} %}
+                                    <tr>
+                                        <td>Niveau {{ level }}</td>
+                                        <td>{{ scoreComparison.achieved }}</td>
+                                        <td>{{ tries[level] ?? 0 }}</td>
+                                        <td>{{ times[level] ?? 0 }}</td>
+                                        <td>{{ scoreComparison.max }}</td>
+                                        <td>{{ scoreComparison.percentage }}%</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- Badge de réussite -->
@@ -667,7 +807,7 @@
         <div class="badge-icon"></div>
         <div class="badge-content">
             <h3>Bravo !</h3>
-            <p>Niveau 1 réussi avec succès !</p>
+            <p>Niveau {{ highestLevel }} réussi avec succès !</p>
         </div>
     </div>
 
@@ -683,6 +823,64 @@
             };
 
             let isFetching = false;
+
+            // Sidebar toggle functionality
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                });
+            }
+
+            // Fetch and display children
+            const parentToggle = document.querySelector('.parent-toggle');
+            const childrenList = document.getElementById('children-list');
+            if (parentToggle && childrenList) {
+                parentToggle.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    if (isFetching || childrenList.classList.contains('active')) return;
+                    isFetching = true;
+
+                    try {
+                        const parentId = parentToggle.getAttribute('data-parent-id');
+                        const response = await fetch(`/api/children?parentId=${parentId}`, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch children: ' + response.statusText);
+                        }
+
+                        const children = await response.json();
+                        if (children.length === 0) {
+                            childrenList.innerHTML = '<li>Aucun enfant trouvé</li>';
+                            childrenList.classList.add('active');
+                            return;
+                        }
+
+                        childrenList.innerHTML = '';
+                        children.forEach(child => {
+                            const li = document.createElement('li');
+                            li.classList.add('child-item');
+                            li.setAttribute('data-child-id', child.id);
+                            li.textContent = child.name || `Enfant ${child.id}`;
+                            childrenList.appendChild(li);
+
+                            li.addEventListener('click', () => {
+                                window.location.href = `/progress/${parentId}?childId=${child.id}`;
+                            });
+                        });
+
+                        childrenList.classList.add('active');
+                    } catch (error) {
+                        console.error('Error fetching children:', error);
+                        alert('Une erreur est survenue lors du chargement des enfants. Veuillez réessayer.');
+                    } finally {
+                        isFetching = false;
+                    }
+                });
+            }
 
             // Détruit un graphique existant pour éviter les conflits
             function destroyChart(chartId) {
@@ -931,7 +1129,7 @@
                 });
             }
 
-            // Graphique des points (radar)
+            // Graphique des points (barres horizontales)
             function renderPointsChart(scores = {}, maxScores = {}) {
                 const chartId = 'points-chart';
                 destroyChart(chartId);
@@ -944,63 +1142,85 @@
 
                 const ctx = canvas.getContext('2d');
                 chartRegistry[chartId] = new Chart(ctx, {
-                    type: 'radar',
+                    type: 'bar',
                     data: {
                         labels: ['Niveau 1', 'Niveau 2', 'Niveau 3'],
                         datasets: [
                             {
                                 label: 'Points Gagnés',
                                 data: [scores[1] || 0, scores[2] || 0, scores[3] || 0],
-                                backgroundColor: 'rgba(149, 117, 205, 0.2)',
-                                borderColor: 'rgba(149, 117, 205, 1)',
-                                borderWidth: 2,
-                                pointBackgroundColor: 'rgba(149, 117, 205, 1)',
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 2,
-                                pointRadius: 3
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 8,
+                                barThickness: 16
                             },
                             {
                                 label: 'Points Max',
-                                data: [maxScores[1] || 0, maxScores[2] || 0, maxScores[3] || 0],
-                                backgroundColor: 'rgba(255, 183, 77, 0.2)',
-                                borderColor: 'rgba(255, 183, 77, 1)',
-                                borderWidth: 2,
-                                pointBackgroundColor: 'rgba(255, 183, 77, 1)',
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 2,
-                                pointRadius: 3
+                                data: [maxScores[1] || 60, maxScores[2] || 60, maxScores[3] || 60],
+                                backgroundColor: '#f87171',
+                                borderRadius: 8,
+                                barThickness: 16
                             }
                         ]
                     },
                     options: {
+                        indexAxis: 'y',
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: {
-                            duration: 1200,
-                            easing: 'easeInOutQuad'
-                        },
-                        scales: {
-                            r: {
-                                beginAtZero: true,
-                                max: 60,
-                                title: { display: true, text: 'Points', font: { family: 'Chewy', size: 14 } },
-                                ticks: { display: false },
-                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                                pointLabels: { font: { family: 'Chewy', size: 12 } }
-                            }
-                        },
                         plugins: {
                             legend: {
-                                position: 'top',
-                                labels: { font: { family: 'Chewy', size: 12 }, padding: 15, boxWidth: 15, usePointStyle: true }
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        family: 'Chewy',
+                                        size: 12
+                                    },
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
                             },
                             tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                titleFont: { family: 'Chewy', size: 14 },
-                                bodyFont: { family: 'Chewy', size: 12 },
+                                backgroundColor: '#1f2937',
+                                titleFont: { family: 'Chewy', size: 12 },
+                                bodyFont: { family: 'Chewy', size: 11 },
                                 padding: 8,
-                                cornerRadius: 5
+                                cornerRadius: 4
+                            },
+                            title: {
+                                display: true,
+                                text: 'Points Gagnés',
+                                font: {
+                                    family: 'Chewy',
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                padding: { bottom: 20 }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 60,
+                                ticks: {
+                                    stepSize: 10,
+                                    font: {
+                                        family: 'Chewy',
+                                        size: 11
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0,0,0,0.05)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    font: {
+                                        family: 'Chewy',
+                                        size: 11
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
                             }
                         }
                     }
@@ -1030,9 +1250,11 @@
                         // Afficher les sections
                         const chartsSection = document.getElementById('charts-section');
                         const comparisonSection = document.getElementById('comparison-section');
-                        if (chartsSection && comparisonSection) {
+                        const gameSelection = document.getElementById('game-selection');
+                        if (chartsSection && comparisonSection && gameSelection) {
                             chartsSection.style.display = 'block';
                             comparisonSection.style.display = 'block';
+                            gameSelection.style.display = 'block';
                         }
 
                         // Mettre à jour le nom du jeu
@@ -1041,7 +1263,8 @@
                             2: 'Compléter les Mots',
                             3: 'Jeu des Images',
                             4: 'Jeu des Mots',
-                            5: 'Glisser-Déposer'
+                            5: 'Glisser-Déposer',
+                            6: 'Jeu de Prononciation'
                         };
                         const selectedGameName = document.getElementById('selected-game-name');
                         if (selectedGameName) {
@@ -1109,6 +1332,13 @@
                             }
                         }
 
+                        // Afficher le badge si le plus haut niveau est atteint
+                        const achievementBadge = document.getElementById('achievement-badge');
+                        if (data.highestLevel > 0) {
+                            achievementBadge.style.display = 'flex';
+                            achievementBadge.querySelector('p').textContent = `Niveau ${data.highestLevel} réussi avec succès !`;
+                        }
+
                         // Rendre les graphiques
                         renderChart(scores, times, tries, maxScores);
                         renderTriesChart(tries);
@@ -1154,8 +1384,16 @@
                 document.getElementById('accuracy-percentage').textContent = initialAccuracy;
 
                 // Afficher les sections
+                document.getElementById('game-selection').style.display = 'block';
                 document.getElementById('charts-section').style.display = 'block';
                 document.getElementById('comparison-section').style.display = 'block';
+
+                // Afficher le badge si le plus haut niveau est atteint
+                const achievementBadge = document.getElementById('achievement-badge');
+                if ({{ highestLevel }} > 0) {
+                    achievementBadge.style.display = 'flex';
+                    achievementBadge.querySelector('p').textContent = `Niveau {{ highestLevel }} réussi avec succès !`;
+                }
 
                 // Rendre les graphiques initiaux
                 renderChart(initialScores, initialTimes, initialTries, initialMaxScores);
@@ -1171,6 +1409,7 @@
 
                 document.getElementById('charts-section').style.display = 'block';
                 document.getElementById('comparison-section').style.display = 'block';
+                document.getElementById('game-selection').style.display = 'block';
                 renderChart(testScores, testTimes, testTries, testMaxScores);
                 renderTriesChart(testTries);
                 renderTimeChart(testTimes);
