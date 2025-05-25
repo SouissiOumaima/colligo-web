@@ -15,12 +15,13 @@ class ProgressService
     private ?int $childId = null;
     private ?int $gameId = null;
     private array $gameRules = [
-        1 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
-        2 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
-        3 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
-        4 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
-        5 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
-    ];
+    1 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
+    2 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
+    3 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
+    4 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
+    5 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5],
+    6 => ['stagesPerLevel' => 10, 'maxPointsPerStage' => 5], // Add rules for game 6
+];
 
     public function __construct(EntityManagerInterface $em)
     {
@@ -88,12 +89,13 @@ class ProgressService
     {
         $conn = $this->em->getConnection();
         $games = [
-            ['id' => 1, 'name' => 'guessing game'],
-            ['id' => 2, 'name' => 'fill in the blank'],
-            ['id' => 3, 'name' => 'Picture Game'],
-            ['id' => 4, 'name' => 'word game'],
-            ['id' => 5, 'name' => 'Drag-and-Drop Game'],
-        ];
+    ['id' => 1, 'name' => 'guessing game'],
+    ['id' => 2, 'name' => 'fill in the blank'],
+    ['id' => 3, 'name' => 'Picture Game'],
+    ['id' => 4, 'name' => 'word game'],
+    ['id' => 5, 'name' => 'Drag-and-Drop Game'],
+    ['id' => 6, 'name' => 'Pronunciation Game'], // Add game 6
+];
 
         try {
             foreach ($games as $game) {

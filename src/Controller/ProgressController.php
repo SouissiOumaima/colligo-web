@@ -46,9 +46,9 @@ class ProgressController extends AbstractController
         $yAxisMax = 0;
 
         if ($childId && $gameId) {
-            if ($childId <= 0 || $gameId < 1 || $gameId > 5) {
-                throw new BadRequestHttpException('Invalid childId or gameId.');
-            }
+           if ($childId <= 0 || $gameId < 1 || $gameId > 6) {
+    throw new BadRequestHttpException('Invalid childId or gameId.');
+}
 
             $progressService->setChildId($childId);
             $progressService->setGameId($gameId);
@@ -90,13 +90,13 @@ class ProgressController extends AbstractController
         }
 
         $games = [
-            ['id' => 1, 'image' => 'game1.jpg'],
-            ['id' => 2, 'image' => 'game2.jpg'],
-            ['id' => 3, 'image' => 'game3.jpg'],
-            ['id' => 4, 'image' => 'game4.jpg'],
-            ['id' => 5, 'image' => 'game5.jpg'],
-        ];
-
+    ['id' => 1, 'image' => 'game1.jpg'],
+    ['id' => 2, 'image' => 'game2.jpg'],
+    ['id' => 3, 'image' => 'game3.jpg'],
+    ['id' => 4, 'image' => 'game4.jpg'],
+    ['id' => 5, 'image' => 'game5.jpg'],
+    ['id' => 6, 'image' => 'game6.jpg'], // Add game 6
+];
         return $this->render('Child/progress.html.twig', [
             'scores' => $scores,
             'times' => $times,

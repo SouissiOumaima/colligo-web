@@ -17,6 +17,7 @@
             --card-bg-2: #BBF7D0;
             --card-bg-3: #FBCB9C;
             --card-bg-4: #C3B1E1;
+            --card-bg-5: #A5F3FC; /* Added for new game to cycle colors */
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.15);
             --border-radius: 24px;
@@ -289,7 +290,8 @@
         .game-card:nth-child(2) { background: var(--card-bg-2); }
         .game-card:nth-child(3) { background: var(--card-bg-3); }
         .game-card:nth-child(4) { background: var(--card-bg-4); }
-        .game-card:nth-child(5) { background: var(--card-bg-1); }
+        .game-card:nth-child(5) { background: var(--card-bg-5); }
+        .game-card:nth-child(6) { background: var(--card-bg-1); } /* Cycle back for new game */
 
         .game-card:hover {
             transform: scale(1.1) rotate(2deg);
@@ -335,7 +337,7 @@
 
         .charts-section {
             background: transparent;
-            border-radius: var(---border-radius);
+            border-radius: var(--border-radius);
             padding: 20px;
         }
 
@@ -682,6 +684,7 @@
                                     {% elseif game.id == 3 %}Jeu des Images
                                     {% elseif game.id == 4 %}Jeu des Mots
                                     {% elseif game.id == 5 %}Glisser-Déposer
+                                    {% elseif game.id == 6 %}Jeu de Prononciation
                                     {% endif %}
                                 </span>
                             </div>
@@ -696,8 +699,9 @@
                             {% if gameId == 1 %}Jeu de Devinettes
                             {% elseif gameId == 2 %}Compléter les Mots
                             {% elseif gameId == 3 %}Jeu des Images
-                            {% elseif game.id == 4 %}Jeu des Mots
-                            {% elseif game.id == 5 %}Glisser-Déposer
+                            {% elseif gameId == 4 %}Jeu des Mots
+                            {% elseif gameId == 5 %}Glisser-Déposer
+                            {% elseif gameId == 6 %}Jeu de Prononcation
                             {% endif %}
                         {% else %}
                             Jeu de Devinettes
@@ -725,6 +729,7 @@
                         </div>
                         <div class="chart-container">
                             <h3>Points Gagnés</h3>
+ಸ
                             <canvas id="points-chart"></canvas>
                         </div>
                     </div>
@@ -1124,104 +1129,103 @@
                 });
             }
 
-            // Graphique des points (radar)
+            // Graphique des points (barres horizontales)
             function renderPointsChart(scores = {}, maxScores = {}) {
-  const chartId = 'points-chart';
-  destroyChart(chartId);
+                const chartId = 'points-chart';
+                destroyChart(chartId);
 
-  const canvas = document.getElementById(chartId);
-  if (!canvas) {
-    console.error(`Canvas element "${chartId}" not found.`);
-    return;
-  }
+                const canvas = document.getElementById(chartId);
+                if (!canvas) {
+                    console.error(`Canvas ${chartId} non trouvé.`);
+                    return;
+                }
 
-  const ctx = canvas.getContext('2d');
-
-  chartRegistry[chartId] = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['المستوى 1', 'المستوى 2', 'المستوى 3'],
-      datasets: [
-        {
-          label: 'النقاط المكتسبة',
-          data: [scores[1] || 0, scores[2] || 0, scores[3] || 0],
-          backgroundColor: '#3b82f6',
-          borderRadius: 8,
-          barThickness: 16
-        },
-        {
-          label: 'النقاط القصوى',
-          data: [maxScores[1] || 60, maxScores[2] || 60, maxScores[3] || 60],
-          backgroundColor: '#f87171',
-          borderRadius: 8,
-          barThickness: 16
-        }
-      ]
-    },
-    options: {
-      indexAxis: 'y', // ⬅️ horizontal orientation
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: {
-              family: 'Cairo',
-              size: 12
-            },
-            boxWidth: 12,
-            padding: 15
-          }
-        },
-        tooltip: {
-          backgroundColor: '#1f2937',
-          titleFont: { family: 'Cairo', size: 12 },
-          bodyFont: { family: 'Cairo', size: 11 },
-          padding: 8,
-          cornerRadius: 4
-        },
-        title: {
-          display: true,
-          text: 'النقاط المكتسبة',
-          font: {
-            family: 'Cairo',
-            size: 14,
-            weight: 'bold'
-          },
-          padding: { bottom: 20 }
-        }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          max: 60,
-          ticks: {
-            stepSize: 10,
-            font: {
-              family: 'Cairo',
-              size: 11
+                const ctx = canvas.getContext('2d');
+                chartRegistry[chartId] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Niveau 1', 'Niveau 2', 'Niveau 3'],
+                        datasets: [
+                            {
+                                label: 'Points Gagnés',
+                                data: [scores[1] || 0, scores[2] || 0, scores[3] || 0],
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 8,
+                                barThickness: 16
+                            },
+                            {
+                                label: 'Points Max',
+                                data: [maxScores[1] || 60, maxScores[2] || 60, maxScores[3] || 60],
+                                backgroundColor: '#f87171',
+                                borderRadius: 8,
+                                barThickness: 16
+                            }
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        family: 'Chewy',
+                                        size: 12
+                                    },
+                                    boxWidth: 12,
+                                    padding: 15
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleFont: { family: 'Chewy', size: 12 },
+                                bodyFont: { family: 'Chewy', size: 11 },
+                                padding: 8,
+                                cornerRadius: 4
+                            },
+                            title: {
+                                display: true,
+                                text: 'Points Gagnés',
+                                font: {
+                                    family: 'Chewy',
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                padding: { bottom: 20 }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 60,
+                                ticks: {
+                                    stepSize: 10,
+                                    font: {
+                                        family: 'Chewy',
+                                        size: 11
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0,0,0,0.05)'
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    font: {
+                                        family: 'Chewy',
+                                        size: 11
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
             }
-          },
-          grid: {
-            color: 'rgba(0,0,0,0.05)'
-          }
-        },
-        y: {
-          ticks: {
-            font: {
-              family: 'Cairo',
-              size: 11
-            }
-          },
-          grid: {
-            display: false
-          }
-        }
-      }
-    }
-  });
-}
 
             // Gestion des clics sur les cartes de jeu
             const gameCards = document.querySelectorAll('.game-card');
@@ -1259,7 +1263,8 @@
                             2: 'Compléter les Mots',
                             3: 'Jeu des Images',
                             4: 'Jeu des Mots',
-                            5: 'Glisser-Déposer'
+                            5: 'Glisser-Déposer',
+                            6: 'Jeu de Prononciation'
                         };
                         const selectedGameName = document.getElementById('selected-game-name');
                         if (selectedGameName) {
