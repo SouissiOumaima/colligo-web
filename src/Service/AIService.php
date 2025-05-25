@@ -78,10 +78,9 @@ class AIService
             return ["Error: No valid questions generated. Response: " . $result];
         }
 
-
-
         return [$result]; // Return array with raw response
     }
+
     private function callAIAPI(string $prompt): string
     {
         $generationConfig = [
@@ -160,10 +159,26 @@ class AIService
 
     private function buildPrompt(string $theme, int $level, string $language): string
     {
-        //$examples = $this->getExamplesForLanguage($language);
+        $langCode = match (strtolower($language)) {
+            'français' => 'fr',
+            'anglais' => 'en',
+            'espagnol' => 'es',
+            'allemand' => 'de',
+            default => 'fr',
+        };
+
+        $langName = match ($langCode) {
+            'fr' => 'French',
+            'en' => 'English',
+            'es' => 'Spanish',
+            'de' => 'German',
+            default => 'French',
+        };
+
+        $examples = $this->getExamplesForLanguage($langCode);
 
         return sprintf(
-            "You are an expert in generating educational content. Generate exactly 10 distinct and varied 'Fill in the Blanks' questions in %s on the theme '%s'. " .
+            "You are an expert in generating educational content. Generate exactly 10 distinct and varied 'Fill in the Blanks' questions in %s (language code: %s) on the theme '%s'. " .
             "Difficulty level: %d (1 = easy, 2 = medium, 3 = hard). " .
             "Each question MUST be unique and cover different aspects of the theme. Do not repeat similar questions or concepts. " .
             "Each question MUST have exactly one blank (represented as '____') and provide exactly three answer choices: one correct and two incorrect. " .
@@ -172,28 +187,29 @@ class AIService
             "Randomly shuffle the positions of the correct and incorrect answers in the list. " .
             "Output each question in the following format: 'Question: [question text] : [answer1, *correct answer*, answer3]' " .
             "Each question must be on a new line. Do not include any additional text, headings, or explanations beyond the questions themselves. " .
-            // "Here are a few examples to show the exact format:\n%s\n" .
-            "Now generate the 5 questions following the rules above.",
-            $language,
+            "Here are a few examples to show the exact format:\n%s\n" .
+            "Now generate the 10 questions following the rules above.",
+            $langName,
+            $langCode,
             $theme,
             $level,
-            // $examples
+            $examples
         );
     }
 
-    // private function getExamplesForLanguage(string $language): string
-    // {
-    //     return match (strtolower($language)) {
-    //         'german' => "Question: Der Himmel ist ____ : [rot, *blau*, grün]\n" .
-    //             "Question: Ein Apfel kann ____ sein : [*rot*, grün, gelb]\n",
-    //         'français' => "Question: Le ciel est ____ : [rouge, *bleu*, vert]\n" .
-    //             "Question: Une pomme peut être ____ : [*rouge*, verte, jaune]\n",
-    //         'anglais', 'en' => "Question: The sky is ____ : [red, *blue*, green]\n" .
-    //             "Question: An apple can be ____ : [*red*, green, yellow]\n",
-    //         'espagnol' => "Question: El cielo es ____ : [rojo, *azul*, verde]\n" .
-    //             "Question: Una manzana puede ser ____ : [*roja*, verde, amarilla]\n",
-    //         default => "Question: The sky is ____ : [red, *blue*, green]\n" .
-    //             "Question: An apple can be ____ : [*red*, green, yellow]\n",
-    //     };
-    // }
+    private function getExamplesForLanguage(string $langCode): string
+    {
+        return match ($langCode) {
+            'fr' => "Question: Le ciel est ____ : [rouge, *bleu*, vert]\n" .
+            "Question: Une pomme peut être ____ : [*rouge*, verte, jaune]\n",
+            'en' => "Question: The sky is ____ : [red, *blue*, green]\n" .
+            "Question: An apple can be ____ : [*red*, green, yellow]\n",
+            'es' => "Question: El cielo es ____ : [rojo, *azul*, verde]\n" .
+            "Question: Una manzana puede ser ____ : [*roja*, verde, amarilla]\n",
+            'de' => "Question: Der Himmel ist ____ : [rot, *blau*, grün]\n" .
+            "Question: Ein Apfel kann ____ sein : [*rot*, grün, gelb]\n",
+            default => "Question: The sky is ____ : [red, *blue*, green]\n" .
+            "Question: An apple can be ____ : [*red*, green, yellow]\n",
+        };
+    }
 }

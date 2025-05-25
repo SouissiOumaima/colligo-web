@@ -6,22 +6,32 @@ use App\Entity\Parents;
 use App\Entity\Admin;
 use App\Form\VerifyFormType;
 use App\Service\AuthService;
+use App\Repository\AdminRepository;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthController extends AbstractController
 {
     private $authService;
     private $logger;
+    private $passwordHasher;
+    private $adminRepository;
 
-    public function __construct(AuthService $authService, LoggerInterface $logger)
-    {
+    public function __construct(
+        AuthService $authService,
+        LoggerInterface $logger,
+        UserPasswordHasherInterface $passwordHasher,
+        AdminRepository $adminRepository
+    ) {
         $this->authService = $authService;
         $this->logger = $logger;
+        $this->passwordHasher = $passwordHasher;
+        $this->adminRepository = $adminRepository;
     }
 
     private function isValidPassword(string $password): bool
@@ -43,8 +53,8 @@ class AuthController extends AbstractController
 
         return $isValid;
     }
-    #[Route('/', name: 'app_root', methods: ['GET', 'POST'])]
 
+    #[Route('/', name: 'app_root', methods: ['GET', 'POST'])]
     #[Route('/login', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(Request $request): Response
     {
@@ -57,28 +67,34 @@ class AuthController extends AbstractController
             $this->logger->debug('Login form data', ['email' => $email]);
 
             try {
-                // Vérifier si l'email existe dans la table Admin et si le mot de passe correspond
-                $admin = $this->authService->verifyAdminCredentials($email, $password);
-                if ($admin) {
+                // Check if the email exists in the Admin table
+                $admin = $this->adminRepository->findOneBy(['email' => $email]);
+                if ($admin && $this->passwordHasher->isPasswordValid($admin, $password)) {
                     $this->logger->info('Admin credentials verified, redirecting to admin dashboard', ['email' => $email]);
                     $this->addFlash('success', 'Connexion admin réussie !');
                     return $this->redirectToRoute('admin_dashboard', ['adminId' => $admin->getAdminId()]);
                 }
 
-                // Si pas admin, tenter la connexion parent
+                // If not an admin or password doesn't match, try parent login
                 $user = $this->authService->login($email, $password);
                 $this->logger->info('Login successful, redirecting to parent dashboard', ['email' => $email]);
                 $this->addFlash('success', 'Connexion réussie !');
                 return $this->redirectToRoute('pre_dashboard', ['parentId' => $user->getParentId()]);
             } catch (AuthenticationException $e) {
                 $this->logger->error('Login failed: {error}', ['error' => $e->getMessage(), 'email' => $email]);
-                $this->addFlash('error', $e->getMessage());
-                return $this->redirectToRoute('app_login');
+                $this->addFlash('error', 'Vérifiez vos coordonnées.');
+                return $this->render('auth/login.html.twig', [
+                    'error' => 'Vérifiez vos coordonnées.',
+                    'email' => $email,
+                ]);
             }
         }
 
         $this->logger->info('Rendering login page');
-        return $this->render('auth/login.html.twig');
+        return $this->render('auth/login.html.twig', [
+            'error' => null,
+            'email' => '',
+        ]);
     }
 
     #[Route('/register', name: 'app_register', methods: ['GET', 'POST'])]

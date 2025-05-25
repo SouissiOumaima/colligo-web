@@ -209,7 +209,7 @@ class AdminController extends AbstractController
             'Métiers'
         ];
         $levels = [1, 2, 3];
-        $languages = ['Français', 'Anglais', 'Espagnol', 'German'];
+        $languages = ['Français', 'Anglais', 'Espagnol', 'Allemand'];
 
         $form = $this->createFormBuilder()
             ->add('theme', ChoiceType::class, [
@@ -426,7 +426,7 @@ class AdminController extends AbstractController
             'Métiers'
         ];
         $levels = [1, 2, 3];
-        $languages = ['Français', 'Anglais', 'Espagnol', 'German'];
+        $languages = ['Français', 'Anglais', 'Espagnol', 'Allemand'];
 
         $fillInTheBlank = new Fill_in_the_blank();
         $form = $this->createFormBuilder($fillInTheBlank)
@@ -536,7 +536,7 @@ class AdminController extends AbstractController
             'Formes géométriques',
             'Métiers'
         ];
-        $languages = ['Français', 'Anglais', 'Espagnol', 'German'];
+        $languages = ['Français', 'Anglais', 'Espagnol', 'Allemand'];
 
         $questions = $this->fillInTheBlankRepository->findAll();
 

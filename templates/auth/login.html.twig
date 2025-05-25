@@ -27,7 +27,6 @@
             background-color: #f2dede;
             border-color: #ebccd1;
         }
-     
         .no-account {
             display: block;
             text-align: center;
@@ -75,33 +74,35 @@
         .password-container {
             position: relative;
             display: flex;
-            align-items: center;
-            margin-bottom: 5px; /* Réduire la marge pour rapprocher le lien */
-        }
-        
-        .password-container {
-            display: flex;
             flex-direction: column;
             margin-bottom: 10px;
         }
-        
+        .password-input-container {
+            display: flex;
+            align-items: center;
+        }
         .forgot-password {
-            align-self: flex-end; /* Base alignée à droite */
-            margin-right: 10px; /* Décale vers la gauche */
+            align-self: flex-end;
+            margin-right: 10px;
             margin-top: 5px;
             font-size: 14px;
             color: #F9968B;
         }
-        
         .forgot-password:hover {
             color: #f78779;
             text-decoration: underline;
+        }
+        .error-message {
+            color: #a94442;
+            font-size: 14px;
+            margin-top: 5px;
+            align-self: flex-start;
         }
     </style>
 </head>
 <body>
     <div class="container" id="container">
-        {# Removed success flash messages #}
+        {# Display flash messages for general errors #}
         {% for message in app.flashes('error') %}
             <div class="alert alert-error">{{ message }}</div>
         {% endfor %}
@@ -111,12 +112,17 @@
             <form method="post" action="{{ path('app_login') }}">
                 <h1>Connexion</h1>
                 <br>
-                <input type="email" name="email" placeholder="Email" required>
+                <input type="email" name="email" placeholder="Email" value="{{ email }}" required>
                 <div class="password-container">
-                    <input type="password" name="password" placeholder="Mot de passe" class="password-input" required>
-                    <i class="fas fa-eye toggle-password"></i>
+                    <div class="password-input-container">
+                        <input type="password" name="password" placeholder="Mot de passe" class="password-input" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    {% if error %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endif %}
+                    <a href="{{ path('forgot_password') }}" class="forgot-password">Mot de passe oublié ?</a>
                 </div>
-                <a href="{{ path('forgot_password') }}" class="forgot-password">Mot de passe oublié ?</a>
                 <button type="submit">Connexion</button>
                 <a href="{{ path('app_register') }}" class="no-account">Vous n'avez pas de compte ?</a>
             </form>
