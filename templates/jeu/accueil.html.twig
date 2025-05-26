@@ -159,8 +159,48 @@
             color: var(--primary-color);
             font-weight: 700;
             margin-top: 20px;
-            animation: blinkText 1s infinite;
+            animation: pulse 1s infinite;
             font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .recording-indicator .mic-icon {
+            color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+
+        .recording-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: 10px;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 20px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+            animation: wave 0.5s infinite ease-in-out;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1.5); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         .modal {
@@ -231,6 +271,59 @@
             }
         }
 
+        @media (max-width: 576px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .prononcer {
+                font-size: 50px;
+            }
+
+            .btn {
+                font-size: 18px;
+                padding: 8px 20px;
+                margin: 5px;
+            }
+
+            .btn i {
+                font-size: 20px;
+            }
+
+            .recording-indicator {
+                font-size: 20px;
+            }
+
+            .navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .modal-content {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .modal-message {
+                font-size: 20px;
+            }
+
+            .gif {
+                max-width: 250px;
+            }
+
+            .wave-bar {
+                width: 2px;
+                height: 15px;
+            }
+        }
+
         @keyframes bounceTitle {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -253,10 +346,6 @@
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes blinkText {
-            50% { opacity: 0.7; }
-        }
-
         @keyframes popIn {
             0% { transform: scale(0.8); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
@@ -274,7 +363,7 @@
         <h1>لعبة النطق السحرية لـ {{ child.name }}! 🪄</h1>
 
         <p>
-            المستوى: {% if level_number == 0 %}1{% else %}المستوى {{ level_number + 1 }}{% endif %} | اللغة: {{ child.language }} 🌟
+            المستوى: {% if level_number == 1 %}1{% else %}المستوى {{ level_number + 1 }}{% endif %} | اللغة: {{ child.language }} 🌟
             <span style="color: var(--primary-color);">النتيجة: {{ average_score }} ⭐</span>
         </p>
 
@@ -293,7 +382,17 @@
                         <button id="pronounce-btn" class="btn btn-primary"><i class="fas fa-volume-up"></i> استمع</button>
                         <button id="record-btn" class="btn btn-success" disabled><i class="fas fa-microphone"></i> تكلم</button>
                     </div>
-                    <div id="recording-indicator" class="recording-indicator" style="display: none;">جارٍ التسجيل... 🎤</div>
+                    <div id="recording-indicator" class="recording-indicator" style="display: none;">
+                        <i class="fas fa-microphone mic-icon"></i>
+                        <span>جارٍ التسجيل...</span>
+                        <div class="recording-wave">
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                        </div>
+                    </div>
                 </div>
                 <nav class="navigation">
                     <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> عودة</a>
@@ -333,11 +432,14 @@
             const modalMessage = document.getElementById('modal-message');
             const modalGif = document.getElementById('modal-gif');
             const modalSound = document.getElementById('modal-sound');
-            const expectedText = document.getElementById('expected-text')?.value || 'default';
+            const expectedText = document.getElementById('expected-text')?.value || '';
             const childId = document.getElementById('child-id')?.value || '1';
             const contentId = document.getElementById('content-id')?.value || '1';
             const contentToPronounce = document.getElementById('content-to-pronounce');
+            const levelNumber = {{ level_number }};
             let isProcessing = false;
+            let isRecording = false;
+            let recordingTimeout;
 
             const correctSound = new Audio('/sounds/correct1.mp3');
             const incorrectSound = new Audio('/sounds/incorrect1.mp3');
@@ -347,125 +449,161 @@
             if (pronounceBtn) {
                 pronounceBtn.addEventListener('click', () => {
                     const utterance = new SpeechSynthesisUtterance(contentToPronounce.textContent);
-                    utterance.lang = 'ar';
-                    utterance.pitch = 1.3;
-                    utterance.rate = 0.7;
+                    utterance.lang = 'fr';
+                    utterance.pitch = 1.0;
+                    utterance.rate = 0.8;
                     window.speechSynthesis.speak(utterance);
                     recordBtn.disabled = false;
                 });
             }
 
-            let mediaRecorder;
-            let audioChunks = [];
-
             if (recordBtn) {
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(stream => {
-                        mediaRecorder = new MediaRecorder(stream);
-                        mediaRecorder.ondataavailable = event => {
-                            audioChunks.push(event.data);
-                            console.log('تم تسجيل مقطع صوتي:', event.data.size);
-                        };
-                        mediaRecorder.onstop = () => {
-                            if (isProcessing) return;
-                            isProcessing = true;
-                            recordBtn.disabled = true;
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                            audioChunks = [];
-                            console.log('حجم الملف الصوتي:', audioBlob.size);
-                            const formData = new FormData();
-                            formData.append('audio', audioBlob, 'recording.webm');
-                            formData.append('expectedText', expectedText);
-                            formData.append('childId', childId);
-                            formData.append('contentId', contentId);
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert('عذراً، متصفحك لا يدعم التعرف على الصوت. الرجاء استخدام Chrome أو Edge.');
+                    return;
+                }
 
-                            console.log('إرسال الطلب بـ:', {
-                                expectedText: expectedText,
-                                childId: childId,
-                                contentId: contentId,
-                                audioBlobSize: audioBlob.size,
-                            });
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'fr-FR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
 
-                            fetch('{{ path('verifier_pronunciation') }}', {
-                                method: 'POST',
-                                body: formData,
-                            })
-                            .then(response => {
-                                console.log('حالة الاستجابة:', response.status);
-                                if (!response.ok) {
-                                    throw new Error('الاستجابة غير صحيحة: ' + response.statusText);
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                console.log('تم استقبال الاستجابة:', JSON.stringify(data));
-                                recordingIndicator.style.display = 'none';
-                                modalMessage.textContent = data.message;
-                                modalGif.src = data.gif;
-                                modalSound.src = data.son;
-                                modalSound.play().catch(error => console.error('فشل تشغيل الصوت:', error));
-                                modal.style.display = 'flex';
-                                console.log('التصحيح:', data.debug);
+                recordBtn.addEventListener('click', async () => {
+                    if (isProcessing || isRecording) return;
+                    
+                    try {
+                        await navigator.mediaDevices.getUserMedia({ audio: true });
+                        
+                        isProcessing = true;
+                        isRecording = true;
+                        recordBtn.disabled = true;
+                        recordingIndicator.style.display = 'flex';
 
-                                setTimeout(() => {
-                                    modal.style.display = 'none';
-                                    if (data.next) {
-                                        window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}';
-                                    } else {
-                                        const nextIndex = {{ content_index }} + 1;
-                                        if (nextIndex < {{ content_size }}) {
-                                            window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
-                                        } else {
-                                            alert('مبروك! أنت بطل سحري! 🎉🌟');
-                                            window.location.reload();
-                                        }
-                                    }
-                                }, 2500);
-                            })
-                            .catch(error => {
-                                console.error('خطأ في الاستعلام:', error.message);
-                                recordingIndicator.style.display = 'none';
-                                modalMessage.textContent = 'جهد رائع! لقد حصلت على 3 نجوم! 🌟 (نقبل كل المحاولات للاستمتاع!)';
-                                modalGif.src = '/images/gifs/sahyt.gif';
-                                modalSound.src = '/sons/correct.mp3';
-                                modalSound.play().catch(err => console.error('فشل تشغيل الصوت:', err));
-                                modal.style.display = 'flex';
+                        // Clear any existing timeout
+                        if (recordingTimeout) {
+                            clearTimeout(recordingTimeout);
+                        }
 
-                                setTimeout(() => {
-                                    modal.style.display = 'none';
-                                    const nextIndex = {{ content_index }} + 1;
-                                    if (nextIndex < {{ content_size }}) {
-                                        window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
-                                    } else {
-                                        alert('مبروك! أنت بطل سحري! 🎉🌟');
-                                        window.location.reload();
-                                    }
-                                }, 2500);
-                            })
-                            .finally(() => {
-                                isProcessing = false;
-                                recordBtn.disabled = false;
-                            });
-                        };
+                        // Start recording with longer duration
+                        recognition.start();
+                        
+                        // Set timeout for recording
+                        const recordingDuration = levelNumber === 1 ? 4000 : levelNumber === 2 ? 5000 : 6000;
+                        recordingTimeout = setTimeout(() => {
+                            if (isRecording) {
+                                recognition.stop();
+                            }
+                        }, recordingDuration);
 
-                        recordBtn.addEventListener('click', () => {
-                            if (isProcessing) return;
-                            recordingIndicator.style.display = 'block';
-                            mediaRecorder.start();
-                            setTimeout(() => {
-                                mediaRecorder.stop();
-                            }, 3500);
-                        });
+                    } catch (err) {
+                        console.error('خطأ في الوصول إلى الميكروفون:', err);
+                        showError('الرجاء السماح باستخدام الميكروفون والمحاولة مرة أخرى.');
+                    }
+                });
+
+                recognition.onresult = (event) => {
+                    isRecording = false;
+                    const results = Array.from(event.results);
+                    const transcribedText = results[0][0].transcript;
+                    
+                    const formData = new FormData();
+                    formData.append('transcribedText', transcribedText);
+                    formData.append('expectedText', expectedText);
+                    formData.append('childId', childId);
+                    formData.append('contentId', contentId);
+                    formData.append('level', levelNumber);
+
+                    fetch('{{ path('verifier_pronunciation') }}', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        recordingIndicator.style.display = 'none';
+                        showFeedback(data);
                     })
                     .catch(error => {
-                        console.error('خطأ في الوصول إلى الميكروفون:', error);
-                        alert('فعّل ميكروفونك السحري للعب! 🎙️');
+                        console.error('Error:', error);
+                        showError('أحسنت المحاولة! حاول مرة أخرى! 🌟');
+                    })
+                    .finally(() => {
+                        isProcessing = false;
                     });
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('خطأ في التعرف على الصوت:', event.error);
+                    isRecording = false;
+                    
+                    let errorMessage = 'أحسنت المحاولة! حاول مرة أخرى! 🌟';
+                    if (event.error === 'not-allowed') {
+                        errorMessage = 'الرجاء السماح باستخدام الميكروفون والمحاولة مرة أخرى.';
+                    } else if (event.error === 'no-speech') {
+                        errorMessage = 'لم أسمعك جيداً. تحدث بصوت أعلى قليلاً! 🎤';
+                    }
+                    
+                    showError(errorMessage);
+                };
+
+                recognition.onend = () => {
+                    console.log('انتهى التسجيل');
+                    isRecording = false;
+                    if (!isProcessing) {
+                        recordingIndicator.style.display = 'none';
+                        recordBtn.disabled = false;
+                    }
+                };
+
+                function showFeedback(data) {
+                    modalMessage.textContent = data.message;
+                    modalGif.src = data.gif;
+                    modalSound.src = data.son;
+                    modalSound.play().catch(err => console.error('خطأ في تشغيل الصوت:', err));
+                    modal.style.display = 'flex';
+
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        if (data.retry) {
+                            recordBtn.disabled = false;
+                        } else {
+                            handleNavigation(data);
+                        }
+                    }, 3000);
+                }
+
+                function showError(message) {
+                    recordingIndicator.style.display = 'none';
+                    modalMessage.textContent = message;
+                    modalGif.src = '/gifs/encourage.gif';
+                    modalSound.src = '/sounds/incorrect1.mp3';
+                    modal.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        recordBtn.disabled = false;
+                        isProcessing = false;
+                    }, 3000);
+                }
+
+                function handleNavigation(data) {
+                    if (data.next) {
+                        window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}';
+                    } else {
+                        const nextIndex = {{ content_index }} + 1;
+                        if (nextIndex < {{ content_size }}) {
+                            window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
+                        } else {
+                            alert('مبروك! أنت بطل سحري! 🎉🌟');
+                            window.location.reload();
+                        }
+                    }
+                }
             }
 
             document.querySelectorAll('.navigation a').forEach(link => {
                 link.addEventListener('click', (e) => {
-                    console.log('تم النقر على التنقل:', link.href);
+                    console.log('Navigation cliquée:', link.href);
                 });
             });
         });
