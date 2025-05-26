@@ -237,9 +237,9 @@
             align-items: center;
             gap: 5px;
             text-decoration: none;
-            z-index: 10; /* Assure que le bouton est au-dessus des autres éléments */
-            position: relative; /* Nécessaire pour z-index */
-            cursor: pointer; /* Indique qu'il est cliquable */
+            z-index: 10;
+            position: relative;
+            cursor: pointer;
         }
 
         .btn:hover {
@@ -253,8 +253,8 @@
 
         .btn-primary:hover {
             background: linear-gradient(45deg, #ffeb3b, #ff6f91);
-            transform: scale(1.1); /* Effet d'agrandissement au survol */
-            box-shadow: 0 6px 15px rgba(255, 111, 145, 0.4); /* Ombre plus prononcée */
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(255, 111, 145, 0.4);
         }
 
         .btn-secondary {
@@ -385,6 +385,7 @@
         }
     </style>
 {% endblock %}
+
 {% block javascripts %}
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
@@ -452,44 +453,44 @@
         </div>
 
         <div class="center-section">
-          <form action="{{ path('app_edit_child', {'childId': child.getChildId()}) }}" method="post" class="edit-child-form">
-    <div class="form-group">
-        <label for="child_name" class="form-label">Nom</label>
-        <input type="text" id="child_name" name="child[name]" class="form-control" value="{{ child.name }}" required>
-    </div>
-    <div class="form-group">
-        <label for="child_age" class="form-label">Âge</label>
-        <input type="number" id="child_age" name="child[age]" class="form-control" value="{{ child.age }}" required>
-    </div>
-    <div class="form-group">
-        <label for="child_language" class="form-label">Langue</label>
-        <select id="child_language" name="child[language]" class="form-select" required>
-            {% for choice in form.language.vars.choices %}
-                <option value="{{ choice.value }}" {{ child.language == choice.value ? 'selected' : '' }}>{{ choice.label }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="child_avatar" class="form-label">Avatar</label>
-        <input type="hidden" id="child_avatar" name="child[avatar]" value="{{ child.avatar|default('avatar1') }}">
-        <div class="avatar-picker">
-            {% for choice in form.avatar.vars.choices %}
-                <div class="avatar-card" data-value="{{ choice.value }}">
-                    <img src="{{ asset('avatars/' ~ choice.value ~ '.png') }}" alt="{{ choice.label }}" loading="lazy">
-                    <div class="avatar-name">{{ choice.label }}</div>
+            {{ form_start(form, {'attr': {'class': 'edit-child-form'}, 'action': path('app_edit_child', {'childId': child.getChildId(), 'parentId': parentId})}) }}
+                <div class="form-group">
+                    {{ form_label(form.name, 'Nom', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.name) }}
                 </div>
-            {% endfor %}
-        </div>
-        <div class="avatar-preview">
-            <img id="avatarPreviewImg" src="{{ asset('avatars/' ~ child.avatar|default('avatar1') ~ '.png') }}" alt="Avatar Preview" loading="lazy">
-            <p id="avatarPreviewText">{{ form.avatar.vars.choices|filter(c => c.value == child.avatar)|first.label|default('Choisis ton avatar !') }}</p>
-        </div>
-    </div>
-    <div class="text-center mt-4">
-                    <input type="hidden" name="_token" value="{{ csrf_token('edit' ~ child.getChildId()) }}">
+                <div class="form-group">
+                    {{ form_label(form.age, 'Âge', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.age, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.age) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.language, 'Langue', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.language, {'attr': {'class': 'form-select'}}) }}
+                    {{ form_errors(form.language) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.avatar, 'Avatar', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.avatar, {'attr': {'id': 'child_avatar', 'class': 'form-control'}}) }}
+                    <div class="avatar-picker">
+                        {% for choice in form.avatar.vars.choices %}
+                            <div class="avatar-card" data-value="{{ choice.value }}">
+                                <img src="{{ asset('avatars/' ~ choice.value ~ '.png') }}" alt="{{ choice.label }}" loading="lazy">
+                                <div class="avatar-name">{{ choice.label }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="avatar-preview">
+                        <img id="avatarPreviewImg" src="{{ asset('avatars/' ~ child.avatar|default('avatar1') ~ '.png') }}" alt="Avatar Preview" loading="lazy">
+                        <p id="avatarPreviewText">{{ form.avatar.vars.choices|filter(c => c.value == child.avatar)|first.label|default('Choisis ton avatar !') }}</p>
+                    </div>
+                    {{ form_errors(form.avatar) }}
+                </div>
+                <div class="text-center mt-4">
+                    {{ form_widget(form._token) }}
                     <button type="submit" class="btn btn-primary">Enregistrer 🐻</button>
                 </div>
-            </form>
+            {{ form_end(form) }}
 
             <div class="text-center mt-4">
                 <a href="{{ path('app_manage_children', {'parentId': parentId}) }}" class="btn btn-secondary">Retour au Dashboard 🌟</a>

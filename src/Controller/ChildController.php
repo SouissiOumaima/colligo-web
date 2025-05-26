@@ -125,71 +125,73 @@ class ChildController extends AbstractController
         ]);
     }
 
-   #[Route('/child/{childId}/edit/{parentId}', name: 'app_edit_child', methods: ['GET', 'POST'], requirements: ['childId' => '\d+', 'parentId' => '\d+'])]
-public function editChild(Request $request, int $childId, EntityManagerInterface $entityManager, LoggerInterface $logger, ?int $parentId = null): Response
-{
-    $childRepository = $entityManager->getRepository(Child::class);
-    $child = $childRepository->find($childId);
+    #[Route('/child/{childId}/edit/{parentId?}', name: 'app_edit_child', methods: ['GET', 'POST'], requirements: ['childId' => '\d+', 'parentId' => '\d+'])]
+    public function editChild(Request $request, int $childId, EntityManagerInterface $entityManager, LoggerInterface $logger, ?int $parentId = null): Response
+    {
+        $childRepository = $entityManager->getRepository(Child::class);
+        $child = $childRepository->find($childId);
 
-    if (!$child) {
-        $logger->error('Enfant non trouvé', ['childId' => $childId]);
-        $this->addFlash('error', 'Enfant non trouvé avec l\'ID ' . $childId);
-        return $this->redirectToRoute('app_manage_children', ['parentId' => $parentId ?? $request->query->get('parentId', 0)]);
-    }
-
-    $parent = $child->getParentId();
-    if (!$parent) {
-        $logger->error('Parent non trouvé pour l\'enfant', ['childId' => $childId]);
-        $this->addFlash('error', 'Parent associé non trouvé.');
-        return $this->redirectToRoute('app_manage_children', ['parentId' => $parentId ?? $request->query->get('parentId', 0)]);
-    }
-
-    $form = $this->createForm(ChildType::class, $child);
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted()) {
-        if (!$this->isCsrfTokenValid('edit' . $childId, $request->request->get('_token'))) {
-            $logger->error('Échec de la validation CSRF pour la modification', ['childId' => $childId]);
-            $this->addFlash('error', 'Échec de la validation du jeton CSRF.');
-            return $this->render('child/edit.html.twig', [
-                'child' => $child,
-                'parentId' => $parent->getParentId(),
-                'form' => $form->createView(),
-            ]);
+        if (!$child) {
+            $logger->error('Enfant non trouvé', ['childId' => $childId]);
+            $this->addFlash('error', 'Enfant non trouvé avec l\'ID ' . $childId);
+            return $this->redirectToRoute('app_manage_children', ['parentId' => $parentId ?? $request->query->get('parentId', 0)]);
         }
 
-        if ($form->isValid()) {
-            $logger->info('Formulaire de modification soumis', [
-                'childId' => $child->getChildId(),
-                'data' => [
-                    'name' => $form->get('name')->getData(),
-                    'age' => $form->get('age')->getData(),
-                    'language' => $form->get('language')->getData(),
-                    'avatar' => $form->get('avatar')->getData(),
-                ],
+        $parent = $child->getParentId();
+        if (!$parent) {
+            $logger->error('Parent non trouvé pour l\'enfant', ['childId' => $childId]);
+            $this->addFlash('error', 'Parent associé non trouvé.');
+            return $this->redirectToRoute('app_manage_children', ['parentId' => $parentId ?? $request->query->get('parentId', 0)]);
+        }
+
+        $parentId = $parentId ?? $parent->getParentId();
+
+        $form = $this->createForm(ChildType::class, $child);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $logger->debug('Form submitted', [
+                'childId' => $childId,
+                'form_data' => $request->request->all(),
+                'session_id' => $request->getSession()->getId(),
             ]);
 
-            try {
-                $entityManager->flush();
-                $logger->info('Enfant mis à jour', ['childId' => $child->getChildId()]);
-                $this->addFlash('success', 'L\'enfant a été modifié avec succès.');
-                return $this->redirectToRoute('app_manage_children', ['parentId' => $parent->getParentId()]);
-            } catch (\Exception $e) {
-                $logger->error('Erreur lors de la mise à jour', ['childId' => $child->getChildId(), 'error' => $e->getMessage()]);
-                $this->addFlash('error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+            if ($form->isValid()) {
+                $logger->info('Formulaire de modification soumis', [
+                    'childId' => $child->getChildId(),
+                    'data' => [
+                        'name' => $form->get('name')->getData(),
+                        'age' => $form->get('age')->getData(),
+                        'language' => $form->get('language')->getData(),
+                        'avatar' => $form->get('avatar')->getData(),
+                    ],
+                ]);
+
+                try {
+                    $entityManager->flush();
+                    $logger->info('Enfant mis à jour', ['childId' => $child->getChildId()]);
+                    $this->addFlash('success', 'L\'enfant a été modifié avec succès.');
+                    return $this->redirectToRoute('app_manage_children', ['parentId' => $parent->getParentId()]);
+                } catch (\Exception $e) {
+                    $logger->error('Erreur lors de la mise à jour', ['childId' => $child->getChildId(), 'error' => $e->getMessage()]);
+                    $this->addFlash('error', 'Erreur lors de la mise à jour : ' . $e->getMessage());
+                }
+            } else {
+                $logger->warning('Erreurs de validation du formulaire', [
+                    'childId' => $childId,
+                    'errors' => $form->getErrors(true),
+                    'form_data' => $request->request->all(),
+                ]);
+                $this->addFlash('error', 'Erreur dans le formulaire. Vérifiez les champs.');
             }
-        } else {
-            $logger->warning('Erreurs de validation du formulaire', ['childId' => $childId, 'errors' => $form->getErrors(true)]);
-            $this->addFlash('error', 'Erreur dans le formulaire. Vérifiez les champs.');
         }
-    }
 
-    return $this->render('child/edit.html.twig', [
-        'child' => $child,
-        'parentId' => $parent->getParentId(),
-        'form' => $form->createView(),
-    ]);
-}
+        return $this->render('child/edit.html.twig', [
+            'child' => $child,
+            'parentId' => $parentId,
+            'form' => $form->createView(),
+        ]);
+    }
 
 
 
