@@ -10,7 +10,7 @@ use App\Entity\Word;
 use Doctrine\ORM\EntityManagerInterface;
 use Normalizer;
 
-class GameService
+class MatchingGameService
 {
     private $entityManager;
     private $apiKey;

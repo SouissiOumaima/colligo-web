@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Theme;
 use App\Entity\Word;
-use App\Service\GameService;
+use App\Service\MatchingGameService; // Corrected from GamematchService
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,7 +41,7 @@ class AdminController_match extends AbstractController
     }
 
     #[Route('/generate-themes', name: 'admin_generate_themes', methods: ['POST'])]
-    public function generateThemes(Request $request, GameService $gameService, SessionInterface $session): Response
+    public function generateThemes(Request $request, MatchingGameService $matchingGameService, SessionInterface $session): Response
     {
         $language = $request->request->get('language');
         $level = $request->request->get('level');
@@ -53,14 +53,14 @@ class AdminController_match extends AbstractController
         }
 
         try {
-            $generatedThemes = $gameService->generateThemes($language, $level, 30); // Générer 30 thèmes
+            $generatedThemes = $matchingGameService->generateThemes($language, $level, 30); // Générer 30 thèmes
             $this->addFlash('success', 'Thèmes générés avec succès.');
         } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de la génération des thèmes : ' . $e->getMessage());
+            $this->addFlash('error', 'Erreur lors de la génération des thème: ' . $e->getMessage());
         }
 
         $session->set('admin_filter_language', $language);
-        $session->set('admin_filter_level', $gameService->convertLevel($level));
+        $session->set('admin_filter_level', $matchingGameService->convertLevel($level));
 
         return $this->redirectToRoute('admin_themes');
     }
@@ -72,7 +72,7 @@ class AdminController_match extends AbstractController
     }
 
     #[Route('/save-theme', name: 'admin_save_theme', methods: ['POST'])]
-    public function saveTheme(Request $request, EntityManagerInterface $entityManager, CsrfTokenManagerInterface $csrfTokenManager, GameService $gameService): Response
+    public function saveTheme(Request $request, EntityManagerInterface $entityManager, CsrfTokenManagerInterface $csrfTokenManager, MatchingGameService $matchingGameService): Response
     {
         $token = new CsrfToken('save_theme', $request->request->get('_csrf_token'));
         if (!$csrfTokenManager->isTokenValid($token)) {
@@ -103,7 +103,7 @@ class AdminController_match extends AbstractController
         $theme = new Theme();
         $theme->setName($name);
         $theme->setLanguage($language);
-        $theme->setLevel($gameService->convertLevel($level));
+        $theme->setLevel($matchingGameService->convertLevel($level));
         $theme->setStage((int)$stage);
         $theme->setIsValidated(false);
 
