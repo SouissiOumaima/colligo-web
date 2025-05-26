@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .mood-section { text-align: center; padding: 20px; }
+        .mood-options { display: flex; justify-content: center; gap: 20px; }
+        .mood-option { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; cursor: pointer; background: #F48FB1; }
+        .mood-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #FFD700, #FF69B4);
+            border: 4px solid #4ECDC4;
+            border-radius: 30px;
+            padding: 20px;
+            max-width: 400px;
+            text-align: center;
+            z-index: 1001;
+            color: #FFF;
+            font-size: 20px;
+        }
+        .mood-dialog.show { display: block !important; }
+        .mood-dialog-button { padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <section class="mood-section">
+        <div class="mood-options">
+            <div class="mood-option" data-mood="😊">😊</div>
+        </div>
+        <div id="moodDialog" class="mood-dialog">
+            <div id="moodDialogMessage"></div>
+            <button class="mood-dialog-button" onclick="hideMoodDialog()">تمام!</button>
+        </div>
+    </section>
+    <script>
+        console.log('Test script loaded');
+        const moodDialog = document.getElementById('moodDialog');
+        const moodDialogMessage = document.getElementById('moodDialogMessage');
+        console.log('moodDialog:', moodDialog);
+        console.log('moodDialogMessage:', moodDialogMessage);
+
+        function showMoodDialog(mood) {
+            console.log('showMoodDialog called with mood:', mood);
+            if (!moodDialog || !moodDialogMessage) return;
+            moodDialogMessage.textContent = 'Test message for ' + mood;
+            moodDialog.classList.add('show');
+            console.log('moodDialog classes:', moodDialog.classList.toString());
+        }
+
+        function hideMoodDialog() {
+            console.log('hideMoodDialog called');
+            if (!moodDialog) return;
+            moodDialog.classList.remove('show');
+        }
+
+        document.querySelectorAll('.mood-option').forEach(option => {
+            console.log('Attaching click to:', option.getAttribute('data-mood'));
+            option.addEventListener('click', () => {
+                console.log('Clicked:', option.getAttribute('data-mood'));
+                showMoodDialog(option.getAttribute('data-mood'));
+            });
+        });
+    </script>
+</body>
+</html>

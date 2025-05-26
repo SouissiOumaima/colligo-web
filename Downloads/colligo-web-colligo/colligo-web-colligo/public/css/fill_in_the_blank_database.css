@@ -1,0 +1,329 @@
+/* Reset and Global Styles */
+html, body {
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #f7f5fa !important;
+    font-family: 'Poppins', sans-serif !important;
+    overflow-x: hidden !important;
+    color: #2d3748 !important;
+}
+
+/* Main Content Styling */
+.main-content {
+    margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
+    padding: 30px !important;
+    min-height: 100vh !important;
+    transition: all 0.3s ease !important;
+    background: #f7f5fa !important;
+}
+
+.main-content.expanded {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+}
+
+.sidebar.collapsed ~ .main-content {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+}
+
+/* Title Styling */
+.dashboard-title {
+    font-size: 36px !important;
+    font-weight: 700 !important;
+    color: #2d3748 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    text-align: center !important;
+    margin-bottom: 30px !important;
+}
+
+/* Glassmorphism Card (Container for Table and Filters) */
+.glass-card {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 12px !important;
+    padding: 25px !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.03) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Filter Section */
+.filter-section {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Form Labels */
+.form-label {
+    color: #2d3748 !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    margin-bottom: 5px !important;
+}
+
+/* Custom Select Styling for Filters (Language, Level, Theme) */
+.custom-select-wrapper {
+    position: relative !important;
+    width: 100% !important;
+}
+
+.form-select {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    color: #2d3748 !important;
+    border-radius: 8px !important;
+    padding: 10px 30px 10px 15px !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+    width: 100% !important;
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%232d3748' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 12px !important;
+}
+
+.form-select:focus {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-color: rgba(52, 152, 219, 0.5) !important;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.15) !important;
+    outline: none !important;
+}
+
+/* Glass Input (Editable Fields in Table) */
+.glass-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #2d3748 !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1) !important;
+    outline: none !important;
+}
+
+/* Glass Table with Attractive Colors */
+.glass-table {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    color: #2d3748 !important;
+}
+
+.glass-table thead {
+    background: linear-gradient(135deg, #ff7f50, #ff9999) !important; /* Vibrant orange gradient */
+}
+
+.glass-table th {
+    background: transparent !important;
+    color: #ffffff !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    padding: 12px !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.glass-table tbody {
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.glass-table td {
+    vertical-align: middle !important;
+    color: #2d3748 !important;
+    font-size: 14px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    background: transparent !important;
+    padding: 12px !important;
+    transition: background 0.3s ease !important;
+}
+
+.glass-table tr:nth-child(even) {
+    background: rgba(52, 152, 219, 0.05) !important; /* Light blue for even rows */
+}
+
+.glass-table tr:nth-child(odd) {
+    background: rgba(46, 204, 113, 0.05) !important; /* Light green for odd rows */
+}
+
+.glass-table tr:hover {
+    background: rgba(241, 196, 15, 0.1) !important; /* Yellow glow on hover */
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.2) !important;
+}
+
+.glass-table tr:last-child td {
+    border-bottom: none !important;
+}
+
+/* Creative Button (Add Question, Clear Filters) */
+.creative-button {
+    background: linear-gradient(135deg, #ff7f50, #ff9999) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 12px 25px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    min-width: 120px !important;
+    text-align: center !important;
+}
+
+.creative-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
+    background: linear-gradient(135deg, #ff6f40, #ff8888) !important;
+}
+
+.creative-button:active {
+    transform: scale(0.97) !important;
+}
+
+/* Action Icons (Edit, Confirm, Cancel, Delete) */
+.action-icon {
+    font-size: 18px !important;
+    transition: color 0.3s ease !important;
+    margin: 0 5px !important;
+    background: none !important; /* Remove any background */
+    border: none !important; /* Remove any border */
+    padding: 0 !important; /* Remove padding to avoid box effect */
+}
+
+.edit-btn .fa-pencil-alt {
+    color: #3498db !important; /* Blue for edit pencil */
+}
+
+.edit-btn .fa-pencil-alt:hover {
+    color: #2980b9 !important;
+}
+
+.save-btn .fa-check {
+    color: #27ae60 !important; /* Green checkmark for confirm */
+}
+
+.save-btn .fa-check:hover {
+    color: #219653 !important;
+}
+
+.cancel-btn .fa-times {
+    color: #e74c3c !important; /* Red 'X' for cancel */
+}
+
+.cancel-btn .fa-times:hover {
+    color: #c0392b !important;
+}
+
+.delete-question .fa-trash-alt {
+    color: #e74c3c !important; /* Red trash can for delete */
+}
+
+.delete-question .fa-trash-alt:hover {
+    color: #c0392b !important;
+}
+
+/* Alert Styling */
+.alert {
+    position: relative !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    border-radius: 8px !important;
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.1) !important;
+    color: #28a745 !important;
+    border: 1px solid rgba(40, 167, 69, 0.3) !important;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545 !important;
+    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .main-content {
+        margin-left: 60px !important;
+        width: calc(100% - 60px) !important;
+        padding: 20px !important;
+    }
+
+    .dashboard-title {
+        font-size: 28px !important;
+    }
+
+    .glass-card {
+        padding: 15px !important;
+    }
+
+    .creative-button {
+        padding: 10px 20px !important;
+        font-size: 14px !important;
+    }
+
+    .form-select {
+        padding: 8px 25px 8px 12px !important;
+        background-size: 10px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 15px !important;
+    }
+
+    .dashboard-title {
+        font-size: 24px !important;
+    }
+
+    .glass-card {
+        padding: 10px !important;
+    }
+
+    .filter-section .row > div {
+        margin-bottom: 10px !important;
+    }
+
+    .creative-button {
+        padding: 8px 15px !important;
+        font-size: 12px !important;
+    }
+
+    .form-select {
+        padding: 6px 20px 6px 10px !important;
+        background-size: 8px !important;
+        font-size: 12px !important;
+    }
+
+    .glass-table th,
+    .glass-table td {
+        font-size: 12px !important;
+        padding: 8px !important;
+    }
+}

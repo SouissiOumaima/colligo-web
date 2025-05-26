@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}تهانينا! لقد أكملت اللعبة{% endblock %}
+
+{% block body %}
+    <div class="bg-animation light">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+    </div>
+
+    <div class="container">
+        <header class="game-header">
+            <h2 class="section-title">تهانينا!</h2>
+        </header>
+
+        <main class="game-content">
+            <div class="completion-card">
+                <div class="completion-content">
+                    <h3>لقد أكملت لعبة مطابقة الصور!</h3>
+                    <p>نتيجتك النهائية: {{ finalScore }} / 50</p>
+
+                    <div class="action-buttons">
+                        <a href="{{ path('main_menu', {'childId': childId, 'parentId': parentId}) }}" class="btn primary-btn">العودة إلى القائمة الرئيسية</a>
+                    </div>
+                </div>
+
+                <div class="celebration-container">
+                    <div class="result-animation">
+                        <img src="{{ asset('images/yes.gif') }}" alt="Celebration">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/game.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Cairo', sans-serif;
+            text-align: center;
+        }
+        .section-title {
+            font-size: 48px;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 4px solid #7b61ff;
+            padding-bottom: 10px;
+        }
+        .completion-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+        .completion-content {
+            width: 100%;
+        }
+        .completion-content h3 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .completion-content p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            width: 100%;
+        }
+        .btn {
+            padding: 8px 16px;
+            font-size: 16px;
+            font-family: 'Cairo', sans-serif;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+        }
+        .primary-btn {
+            background-color: #b19cd9;
+            color: white;
+        }
+        .primary-btn:hover {
+            background-color: #9b83c1;
+        }
+        .celebration-container {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .result-animation {
+            display: flex;
+            justify-content: center;
+        }
+        .result-animation img {
+            width: 300px; /* Adjust size as needed */
+            height: auto;
+            object-fit: contain;
+        }
+    </style>
+{% endblock %}

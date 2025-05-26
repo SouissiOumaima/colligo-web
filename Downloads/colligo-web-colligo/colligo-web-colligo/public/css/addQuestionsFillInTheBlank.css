@@ -1,0 +1,154 @@
+/* Reset and Global Styles */
+html, body {
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #f7f5fa !important;
+    font-family: 'Poppins', sans-serif !important;
+    overflow-x: hidden !important;
+    color: #2d3748 !important;
+}
+
+/* Dashboard Wrapper */
+.dashboard-wrapper {
+    display: flex !important;
+    min-height: 100vh !important;
+}
+
+/* Main Content Styling */
+.main-content {
+    margin-left: 250px !important;
+    width: calc(100% - 250px) !important;
+    padding: 20px !important;
+    transition: all 0.3s ease !important;
+}
+
+.main-content.expanded {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+}
+
+/* Dashboard Title */
+.dashboard-title {
+    font-size: 48px !important;
+    font-weight: 700 !important;
+    color: #2d3748 !important;
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+    text-align: center !important;
+    margin-bottom: 40px !important;
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 15px !important;
+    padding: 20px !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Creative Button */
+.creative-button {
+    background: linear-gradient(135deg, #3498db, #87ceeb) !important; /* Updated to blue gradient */
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    border-radius: 25px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.creative-button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    background: linear-gradient(135deg, #2980b9, #76c0de) !important; /* Updated to darker blue gradient */
+}
+
+.creative-button:active {
+    transform: scale(0.95) !important;
+}
+
+/* Cancel Button */
+.cancel-button {
+    background: linear-gradient(135deg, #6c757d, #adb5bd) !important;
+    color: #ffffff !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    border-radius: 25px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.cancel-button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3) !important;
+    background: linear-gradient(135deg, #5c636a, #9ea7af) !important;
+}
+
+.cancel-button:active {
+    transform: scale(0.95) !important;
+}
+
+/* Glass Input (for Filters and Form Inputs) */
+.glass-input {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #2d3748 !important;
+    border-radius: 8px !important;
+    padding: 8px !important;
+    transition: all 0.3s ease !important;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.1) !important; /* Updated to blue theme */
+    outline: none !important;
+}
+
+.glass-input::placeholder {
+    color: rgba(45, 55, 72, 0.5) !important;
+}
+
+/* Form Labels */
+.form-label {
+    color: #2d3748 !important;
+    font-weight: 500 !important;
+    margin-bottom: 5px !important;
+}
+
+/* List Group Item (for Add Question Form) */
+.list-group-item {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: none !important;
+    padding: 10px !important;
+    color: #2d3748 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 60px !important;
+        width: calc(100% - 60px) !important;
+    }
+
+    .dashboard-title {
+        font-size: 32px !important;
+    }
+}

@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sélection de Questions -Remplir les Blancs{% endblock %}
+{% block stylesheets %}
+    <link href="{{ asset('css/generate_questions.css') }}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+{% endblock %}
+{% block body %}
+    <div class="d-flex">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content flex-grow-1 p-5">
+            <h1 class="dashboard-title mb-4">Sélection de Questions - Remplir les Blancs</h1>
+
+            <!-- Form for selecting theme, level, and language -->
+            <div class="selection-container mb-4">
+                {{ form_start(form, {'attr': {'class': 'row g-3 justify-content-center'}}) }}
+                    <div class="col-md-3">
+                        <div class="custom-select-wrapper">
+                            {{ form_widget(form.theme, {'attr': {'class': 'form-select custom-select'}}) }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-select-wrapper">
+                            {{ form_widget(form.level, {'attr': {'class': 'form-select custom-select'}}) }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="custom-select-wrapper">
+                            {{ form_widget(form.language, {'attr': {'class': 'form-select custom-select'}}) }}
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        {{ form_widget(form.generate, {'attr': {'class': 'creative-button w-100'}}) }}
+                    </div>
+                {{ form_end(form) }}
+            </div>
+
+            <!-- Display flash messages -->
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+
+            <!-- List of generated questions -->
+            {% if questions is not empty %}
+                <div class="list-container">
+                    <form method="post" action="{{ path('admin_generate_questions') }}">
+                        <!-- Include hidden fields to pass form data for Rafraîchir -->
+                        <input type="hidden" name="theme" value="{{ form.vars.data.theme ?? 'Animaux' }}">
+                        <input type="hidden" name="level" value="{{ form.vars.data.level ?? 1 }}">
+                        <input type="hidden" name="language" value="{{ form.vars.data.language ?? 'Français' }}">
+
+                        <ul class="list-group">
+                            {% for question in questions %}
+                                <li class="list-group-item d-flex align-items-center">
+                                    <input type="checkbox" name="selected_questions[]" value="{{ question.questionText }}" class="me-3">
+                                    <div class="flex-grow-1">
+                                        <strong>{{ question.questionText }}</strong>
+                                        <br>
+                                        Answers: {{ question.allAnswers|join(', ') }}
+                                        <br>
+                                        Correct Answer: {{ question.correctAnswer }}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <div class="d-flex justify-content-center mt-4">
+                            <button type="submit" name="save" value="1" class="creative-button me-3">Sauvegarder</button>
+                            <button type="submit" name="refresh" value="1" class="creative-button me-3">Rafraîchir</button>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <p class="text-center text-white">Aucune question générée. Veuillez sélectionner un thème, un niveau et une langue, puis cliquer sur "Générer".</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

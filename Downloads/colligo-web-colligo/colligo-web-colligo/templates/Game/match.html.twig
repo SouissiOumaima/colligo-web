@@ -1,0 +1,496 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Jeu de Correspondance{% endblock %}
+
+{% block body %}
+    <div class="game-container">
+
+        {% if app.flashes('error') %}
+            <div class="alert alert-danger" role="alert">
+                {% for message in app.flashes('error') %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if theme %}
+            <h2>Thème : {{ theme.name }} (Niveau : {% if current_level == 1 %}Facile{% elseif current_level == 2 %}Moyen{% elseif current_level == 3 %}Difficile{% endif %} )</h2>
+            <div class="stats-container">
+                <button class="stats-button tries-button" disabled>
+                    Essais restants : <span id="tries-left">3</span>
+                </button>
+                <button class="stats-button score-button" disabled>
+                    Score : <span id="score">{{ cumulative_score }}</span>
+                </button>
+            </div>
+            <div class="pair-list" role="list" aria-label="Liste des paires mot-synonyme">
+                <h2>قم باختيار الكلمة و مرادفتها</h2>
+                {% for pair in words %}
+                    <div class="pair-row">
+                        <div class="word" data-id="{{ pair.id }}" role="button" aria-label="Mot à associer : {{ pair.word }} (ID: {{ pair.id }})" tabindex="0">{{ pair.word }}</div>
+                        <div class="synonym" data-id="{{ pair.id }}" role="button" aria-label="Synonyme à associer : {{ pair.synonym }} (ID: {{ pair.id }})" tabindex="0">{{ pair.synonym }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div id="message" class="alert" role="status" aria-live="polite"></div>
+            <div class="button-container">
+                <a href="{{ path('game_match', {'childId': child_id}) }}" class="stats-button exit-button">خروج</a>
+            </div>
+
+            <!-- Audio Elements -->
+            <audio id="correctAudio" src="/sounds/correct1.mp3"></audio>
+            <audio id="incorrectAudio" src="/sounds/incorrect1.mp3"></audio>
+
+            <!-- Failure Modal -->
+            <div id="failureModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">×</span>
+                    <h2>فشل</h2>
+                    <p>لقد نفدت محاولاتك. سيتم إعادة تشغيل هذه المرحلة.</p>
+                    <img src="/images/no.gif" alt="Failure animation" class="modal-gif">
+                    <button id="retryButton" class="stats-button">إعادة المحاولة</button>
+                </div>
+            </div>
+
+            <!-- Success Modal -->
+            <div id="successModal" class="modal">
+                <div class="modal-content">
+                    <span class="close">×</span>
+                    <h2>نجاح</h2>
+                    <p>تم اجتياز المرحلة بنجاح !</p>
+                    <img src="/images/fun.gif" alt="Success animation" class="modal-gif">
+                    <p id="nextInfo"></p>
+                    <button id="nextButton" class="stats-button">متابعة</button>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                <p>Aucun thème validé disponible pour ce niveau. Veuillez essayer un autre niveau ou contacter un administrateur.</p>
+                <a href="{{ path('game_match', {'childId': child_id}) }}" class="stats-button">Réessayer</a>
+                <a href="{{ path('game_match', {'childId': child_id}) }}" class="stats-button exit-button">خروج</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffecd2 0%, #fceae6 100%);
+            font-family: 'Bubblegum Sans', cursive;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: url('https://www.transparenttextures.com/patterns/stardust.png'), rgba(255, 255, 255, 0.98);
+            border: 6px solid #d6cffa;
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            animation: bounceIn 0.7s ease;
+            margin: 30px auto;
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            color: #ff6f61;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #4a90e2;
+            font-size: 1.8rem;
+            margin: 10px 0;
+        }
+
+        h3 {
+            color: #4a90e2;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .stats-button {
+            background: linear-gradient(145deg, #FFF9A3, #FFE066);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            transition: transform 0.3s ease, background 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 8px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-button:hover {
+            transform: scale(1.1);
+            background: linear-gradient(145deg, #FFFDC4, #FFF9A3);
+        }
+
+        .stats-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .tries-button {
+            background: linear-gradient(145deg, #FFF9A3, #FFE066);
+        }
+
+        .tries-button:hover {
+            background: linear-gradient(145deg, #FFFDC4, #FFF9A3);
+        }
+
+        .score-button {
+            background: linear-gradient(145deg, #FFF9A3, #FFE066);
+        }
+
+        .score-button:hover {
+            background: linear-gradient(145deg, #FFFDC4, #FFF9A3);
+        }
+
+        .pair-list {
+            margin: 25px 0;
+            padding: 10px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .pair-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+            gap: 50px;
+        }
+
+        .word, .synonym {
+            padding: 15px 20px;
+            margin: 0 15px;
+            border: 3px solid #FFF9A3;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #FFFDE7, #FFF9A3);
+            color: #333;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            font-size: 1.2rem;
+            min-width: 140px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .word:hover, .synonym:hover {
+            transform: scale(1.1) rotate(2deg);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(145deg, #FFFFF0, #FFFDC4);
+        }
+
+        .word:focus, .synonym:focus {
+            outline: none;
+            border-color: #ff6f61;
+            box-shadow: 0 0 0 4px rgba(255, 111, 97, 0.3);
+        }
+
+        .word.selected, .synonym.selected {
+            background: linear-gradient(145deg, #B0BEC5, #90A4AE); /* Changed from blue to gray */
+            border-color: #90A4AE; /* Changed border to gray */
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        .word.disabled, .synonym.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+            background: #ccc;
+            border-color: #999;
+        }
+
+        .exit-button {
+            background: linear-gradient(145deg, #ff9999, #ff6666);
+            border: none;
+        }
+
+        .exit-button:hover {
+            background: linear-gradient(145deg, #ffcccc, #ff9999);
+        }
+
+        .button-container {
+            margin-top: 30px;
+        }
+
+        .alert {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        .alert.success {
+            background: #FFFDE7;
+            color: #5C4B00;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            margin: 15% auto;
+            padding: 25px;
+            border: 4px solid #d6cffa;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-content h2 {
+            color: #ff6f61;
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .modal-gif {
+            max-width: 100%;
+            height: auto;
+            margin: 15px 0;
+        }
+
+        .close {
+            color: #ff6f61;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #ff3333;
+        }
+    </style>
+
+    {% if theme %}
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const words = document.querySelectorAll('.word');
+                const synonyms = document.querySelectorAll('.synonym');
+                const messageDiv = document.getElementById('message');
+                const triesLeftSpan = document.getElementById('tries-left');
+                const scoreSpan = document.getElementById('score');
+                let selectedWord = null;
+                let selectedSynonym = null;
+                let nbTries = 0;
+                let score = {{ cumulative_score|default(0) }};
+                let correctPairs = new Set();
+                const startTime = Date.now();
+                const childId = {{ child_id|json_encode|raw }};
+                const failureModal = document.getElementById('failureModal');
+                const successModal = document.getElementById('successModal');
+                const retryButton = document.getElementById('retryButton');
+                const nextButton = document.getElementById('nextButton');
+                const nextInfo = document.getElementById('nextInfo');
+                const correctAudio = document.getElementById('correctAudio');
+                const incorrectAudio = document.getElementById('incorrectAudio');
+
+                sessionStorage.setItem('nbTries', 0);
+
+                const handleSelection = (element, type) => {
+                    if (element.classList.contains('disabled')) return;
+                    if (type === 'word') {
+                        if (selectedWord) selectedWord.classList.remove('selected');
+                        selectedWord = element;
+                    } else {
+                        if (selectedSynonym) selectedSynonym.classList.remove('selected');
+                        selectedSynonym = element;
+                    }
+                    element.classList.add('selected');
+                    checkPair();
+                };
+
+                words.forEach(word => {
+                    word.addEventListener('click', () => handleSelection(word, 'word'));
+                    word.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelection(word, 'word');
+                        }
+                    });
+                });
+
+                synonyms.forEach(synonym => {
+                    synonym.addEventListener('click', () => handleSelection(synonym, 'synonym'));
+                    synonym.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelection(synonym, 'synonym');
+                        }
+                    });
+                });
+
+                function checkPair() {
+                    if (selectedWord && selectedSynonym) {
+                        fetch('{{ path('game_match_check', {'childId': child_id}) }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: `wordId=${selectedWord.dataset.id}&synonymId=${selectedSynonym.dataset.id}`
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            messageDiv.textContent = data.message;
+                            messageDiv.className = 'alert ' + (data.success ? 'success' : 'error');
+                            triesLeftSpan.textContent = data.tries_left;
+
+                            if (data.success) {
+                                correctAudio.play();
+                                const pairRow = selectedWord.parentElement;
+                                pairRow.querySelector('.word').classList.add('disabled');
+                                pairRow.querySelector('.synonym').classList.add('disabled');
+                                selectedWord.classList.remove('selected');
+                                selectedSynonym.classList.remove('selected');
+                                correctPairs.add(selectedWord.dataset.id);
+                            } else {
+                                incorrectAudio.play();
+                                nbTries = parseInt(sessionStorage.getItem('nbTries')) + 1;
+                                sessionStorage.setItem('nbTries', nbTries);
+                            }
+
+                            if (data.tries_left === 0 && !data.success) {
+                                failureModal.style.display = 'block';
+                            }
+
+                            if (correctPairs.size === {{ words|length }}) {
+                                const timeElapsed = Math.round((Date.now() - startTime) / 1000);
+                                fetch('{{ path('game_match_complete', {'childId': child_id}) }}', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: `themeId={{ theme.id }}&gameId={{ game_id }}&nbTries=${nbTries}&time=${timeElapsed}&allCorrect=${correctPairs.size === {{ words|length }}}
+`
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        score = data.score || 0;
+                                        scoreSpan.textContent = score;
+                                        successModal.style.display = 'block';
+                                        if (data.nextLevel) {
+                                            nextInfo.textContent = `سوف تمر إلى المستوى ${data.nextLevel} !`;
+                                        } else if (data.nextThemeId) {
+                                            nextInfo.textContent = 'سيتم تحميل مرحلة جديدة من نفس المستوى.';
+                                        }
+                                    } else if (data.repeat) {
+                                        failureModal.style.display = 'block';
+                                    }
+                                })
+                                .catch(error => {
+                                    messageDiv.textContent = 'Erreur lors de la progression.';
+                                    messageDiv.className = 'alert error';
+                                });
+                            }
+
+                            selectedWord.classList.remove('selected');
+                            selectedSynonym.classList.remove('selected');
+                            selectedWord = null;
+                            selectedSynonym = null;
+                        })
+                        .catch(error => {
+                            messageDiv.textContent = 'Erreur lors de la vérification.';
+                            messageDiv.className = 'alert error';
+                            if (selectedWord) selectedWord.classList.remove('selected');
+                            if (selectedSynonym) selectedSynonym.classList.remove('selected');
+                            selectedWord = null;
+                            selectedSynonym = null;
+                        });
+                    }
+                }
+
+                document.querySelectorAll('.close').forEach(close => {
+                    close.addEventListener('click', () => {
+                        failureModal.style.display = 'none';
+                        successModal.style.display = 'none';
+                    });
+                });
+
+                retryButton.addEventListener('click', () => {
+                    failureModal.style.display = 'none';
+                    window.location.href = '{{ path('game_match', {'childId': child_id}) }}';
+                });
+
+                nextButton.addEventListener('click', () => {
+                    successModal.style.display = 'none';
+                    window.location.href = '{{ path('game_match', {'childId': child_id}) }}';
+                });
+
+                window.addEventListener('click', (event) => {
+                    if (event.target === failureModal || event.target === successModal) {
+                        failureModal.style.display = 'none';
+                        successModal.style.display = 'none';
+                    }
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

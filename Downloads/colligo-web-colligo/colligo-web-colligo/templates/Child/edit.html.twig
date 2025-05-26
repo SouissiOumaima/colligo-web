@@ -1,0 +1,500 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'Enfant{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --sidebar-bg: #e39786;
+            --sidebar-text: #ffffff;
+            --sidebar-hover: #d47a6c;
+            --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+            --sidebar-active-indicator: #FFD700;
+            --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius-md: 10px;
+            --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            background-color: #F5E8E4;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 80px;
+            background: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            overflow: hidden;
+            transition: width 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar:hover {
+            width: 220px;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .sidebar-header img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+        }
+
+        .sidebar-header h6 {
+            color: var(--sidebar-text);
+            font-weight: 500;
+            margin-top: 10px;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-label {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            white-space: nowrap;
+            margin-left: 12px;
+            font-size: 0.875rem;
+        }
+
+        .sidebar:hover .sidebar-label {
+            opacity: 1;
+        }
+
+        .nav-link {
+            color: var(--sidebar-text);
+            padding: 12px 16px;
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            border-radius: var(--radius-md);
+            transition: var(--transition-base);
+            position: relative;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            background: var(--sidebar-hover);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: var(--sidebar-active-bg);
+            color: white;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%;
+            width: 3px;
+            background: var(--sidebar-active-indicator);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .nav-link i {
+            font-size: 1.25rem;
+            min-width: 24px;
+            transition: transform 0.2s ease;
+        }
+
+        .nav-link:hover i {
+            transform: translateX(2px) scale(1.05);
+            color: var(--sidebar-active-indicator);
+        }
+
+        .main-content {
+            margin-left: 80px;
+            padding: 30px;
+            transition: margin-left 0.5s ease;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .sidebar:hover ~ .main-content {
+            margin-left: 220px;
+        }
+
+        .top-section {
+            background-color: #e39786;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .title-label {
+            font-family: 'Chewy', cursive;
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .center-section {
+            background-color: #FFFFFF;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .center-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.15"><circle cx="30" cy="30" r="10" fill="#ffeb3b"/><circle cx="170" cy="50" r="15" fill="#ffeb3b"/><circle cx="50" cy="150" r="12" fill="#ffeb3b"/><circle cx="150" cy="170" r="8" fill="#ffeb3b"/></svg>') repeat;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-label {
+            font-family: 'Chewy', cursive;
+            font-size: 1.5rem;
+            color: #ff6f91;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-label::before {
+            content: '🌟';
+            font-size: 1.2rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #ffeb3b;
+            background-color: #f9f9f9;
+            font-size: 1rem;
+            padding: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control:focus, .form-select:focus {
+            transform: scale(1.02);
+            border-color: #ff6f91;
+            background-color: #fff;
+            box-shadow: 0 4px 10px rgba(255, 111, 145, 0.2);
+        }
+
+        .form-error {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            border: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            z-index: 10; /* Assure que le bouton est au-dessus des autres éléments */
+            position: relative; /* Nécessaire pour z-index */
+            cursor: pointer; /* Indique qu'il est cliquable */
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff6f91, #ffeb3b);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #ffeb3b, #ff6f91);
+            transform: scale(1.1); /* Effet d'agrandissement au survol */
+            box-shadow: 0 6px 15px rgba(255, 111, 145, 0.4); /* Ombre plus prononcée */
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #99caf1, #b0e0e6);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #b0e0e6, #99caf1);
+        }
+
+        .avatar-picker {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            border: 2px dashed #f4a1c7;
+        }
+
+        .avatar-card {
+            position: relative;
+            background: #fff7e6;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .avatar-card:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background: #e6f7ff;
+        }
+
+        .avatar-card.selected {
+            border: 2px solid #ffeb3b;
+            background: #d1fae5;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .avatar-card img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid #99caf1;
+        }
+
+        .avatar-card .avatar-name {
+            font-size: 0.8rem;
+            color: #ff6f91;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        .avatar-preview {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #fff7e6;
+            border-radius: 15px;
+            border: 2px solid #99caf1;
+        }
+
+        .avatar-preview img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #ffeb3b;
+        }
+
+        .avatar-preview p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar:hover { width: 180px; }
+            .main-content { margin-left: 60px; }
+            .sidebar:hover ~ .main-content { margin-left: 180px; }
+            .title-label { font-size: 24px; }
+            .form-label { font-size: 1.2rem; }
+            .form-control, .form-select { font-size: 0.9rem; padding: 8px; }
+            .btn { font-size: 1rem; padding: 8px 15px; }
+            .avatar-picker {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+            .avatar-card img {
+                width: 50px;
+                height: 50px;
+            }
+            .avatar-preview img {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar { position: relative; width: 100%; height: auto; }
+            .main-content { margin-left: 0; }
+            .title-label { font-size: 20px; }
+            .form-label { font-size: 1rem; }
+            .form-control, .form-select { font-size: 0.85rem; padding: 6px; }
+            .btn { font-size: 0.9rem; padding: 6px 12px; }
+            .avatar-picker {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            }
+            .avatar-card img {
+                width: 40px;
+                height: 40px;
+            }
+            .avatar-preview img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+{% endblock %}
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const avatarCards = document.querySelectorAll('.avatar-card');
+            avatarCards.forEach(card => {
+                card.addEventListener('click', function () {
+                    avatarCards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    const value = card.getAttribute('data-value');
+                    document.querySelector('#child_avatar').value = value;
+                    const imgSrc = card.querySelector('img').src;
+                    const label = card.querySelector('.avatar-name').textContent;
+                    document.querySelector('#avatarPreviewImg').src = imgSrc;
+                    document.querySelector('#avatarPreviewText').textContent = label;
+                });
+            });
+
+            const currentAvatar = "{{ child.avatar|default('avatar1') }}";
+            const currentCard = document.querySelector(`.avatar-card[data-value="${currentAvatar}"]`);
+            if (currentCard) {
+                currentCard.click();
+            } else {
+                document.querySelector('.avatar-card[data-value="avatar1"]').click();
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+<div class="wrapper">
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{{ asset('images/user.png') }}" alt="parent" loading="lazy">
+            <h6 class="text-white sidebar-label mt-2">{{ child.getParentId() ? child.getParentId().email : 'Parent inconnu' }}</h6>
+        </div>
+        <nav class="nav flex-column px-2 mt-2">
+            <a href="{{ child.getParentId() ? path('pre_dashboard', {'parentId': child.getParentId().getParentId()}) : '#' }}" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span class="sidebar-label">Accueil</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fas fa-user"></i>
+                <span class="sidebar-label">Progrès Enfant</span>
+            </a>
+            <a href="{{ child.getParentId() ? path('app_manage_children', {'parentId': child.getParentId().getParentId()}) : '#' }}" class="nav-link active">
+                <i class="fas fa-users"></i>
+                <span class="sidebar-label">Gérer Enfants</span>
+            </a>
+            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#guideParentModal">
+                <i class="fas fa-book"></i>
+                <span class="sidebar-label">Guide Parent</span>
+            </a>
+            <a href="#" class="nav-link">
+                <i class="fas fa-cog"></i>
+                <span class="sidebar-label">Paramètres</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="top-section">
+            <div class="title-label">Modifier {{ child.name }} ✨</div>
+        </div>
+
+        <div class="center-section">
+          <form action="{{ path('app_edit_child', {'childId': child.getChildId()}) }}" method="post" class="edit-child-form">
+    <div class="form-group">
+        <label for="child_name" class="form-label">Nom</label>
+        <input type="text" id="child_name" name="child[name]" class="form-control" value="{{ child.name }}" required>
+    </div>
+    <div class="form-group">
+        <label for="child_age" class="form-label">Âge</label>
+        <input type="number" id="child_age" name="child[age]" class="form-control" value="{{ child.age }}" required>
+    </div>
+    <div class="form-group">
+        <label for="child_language" class="form-label">Langue</label>
+        <select id="child_language" name="child[language]" class="form-select" required>
+            {% for choice in form.language.vars.choices %}
+                <option value="{{ choice.value }}" {{ child.language == choice.value ? 'selected' : '' }}>{{ choice.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="child_avatar" class="form-label">Avatar</label>
+        <input type="hidden" id="child_avatar" name="child[avatar]" value="{{ child.avatar|default('avatar1') }}">
+        <div class="avatar-picker">
+            {% for choice in form.avatar.vars.choices %}
+                <div class="avatar-card" data-value="{{ choice.value }}">
+                    <img src="{{ asset('avatars/' ~ choice.value ~ '.png') }}" alt="{{ choice.label }}" loading="lazy">
+                    <div class="avatar-name">{{ choice.label }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="avatar-preview">
+            <img id="avatarPreviewImg" src="{{ asset('avatars/' ~ child.avatar|default('avatar1') ~ '.png') }}" alt="Avatar Preview" loading="lazy">
+            <p id="avatarPreviewText">{{ form.avatar.vars.choices|filter(c => c.value == child.avatar)|first.label|default('Choisis ton avatar !') }}</p>
+        </div>
+    </div>
+    <div class="text-center mt-4">
+                    <input type="hidden" name="_token" value="{{ csrf_token('edit' ~ child.getChildId()) }}">
+                    <button type="submit" class="btn btn-primary">Enregistrer 🐻</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-4">
+                <a href="{{ path('app_manage_children', {'parentId': parentId}) }}" class="btn btn-secondary">Retour au Dashboard 🌟</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
