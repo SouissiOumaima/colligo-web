@@ -1,1 +1,0 @@
-if(!ext.has('mapPath')) ext.mapPath = { path -> path }

@@ -1,0 +1,28 @@
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###
+
+###> symfony/phpunit-bridge ###
+.phpunit.result.cache
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+LSI3/DEV_MOBILE/TP/gradle/wrapper/gradle-wrapper.jar
+LSI3/DEV_MOBILE/TP/gradle/wrapper/gradle-wrapper.properties
+LSI3/DEV_MOBILE/TP/gradlew
+LSI3/DEV_MOBILE/TP/gradlew.bat
+LSI3/DEV_MOBILE/TP/settings.gradle.kts
+LSI3/DEV_MOBILE/TP/gradle.properties
+/AppData/Local/Google/AndroidStudio2022.3/caches/resources
+/AppData
