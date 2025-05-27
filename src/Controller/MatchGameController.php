@@ -54,8 +54,8 @@ class MatchGameController extends AbstractController
      * Normalise les codes de langue pour la base de données (ex. "francais" -> "fr") ou retourne le code tel quel si déjà un code court.
      * Retourne le code court utilisé dans la base de données ou null si non supporté.
      *
-     * @param string|null $appLanguage Le code de langue de l'application (ex. "francais")
-     * @return string|null Le code court de la base de données (ex. "fr") ou null si non supporté
+     * @param string|null $appLanguage Le code de langue de l'application
+     * @return string|null Le code court de la transformation
      */
     private function normalizeDatabaseLanguage(?string $appLanguage): ?string
     {
@@ -101,8 +101,8 @@ class MatchGameController extends AbstractController
             $language = $this->convertChildLanguageToCode($child->getLanguage());
             $validLanguages = ['francais', 'anglais', 'allemand', 'espagnol'];
             if (!$language || !in_array($language, $validLanguages)) {
-                $logger->error('Unsupported or missing language for child ID: ' . $childId . ', Language: ' . ($language ?? 'null'));
-                $this->addFlash('error', 'Langue non supportée pour cet utilisateur: ' . ($child->getLanguage() ?? 'aucune langue définie'));
+                $logger->error('Langue non supportée ou manquante pour child ID: ' . $childId . ', Language: ' . ($language ?? 'null'));
+                $this->addFlash('error', 'Langue non supportée pour cet utilisateur : ' . ($child->getLanguage() ?? 'aucune langue définie'));
                 return $this->render('Game/match.html.twig', [
                     'theme' => null,
                     'words' => [],
@@ -224,9 +224,9 @@ class MatchGameController extends AbstractController
                     $game->setName('Match Game');
                     $entityManager->persist($game);
                     $entityManager->flush();
-                    $logger->info('New Game created with ID: 4');
+                    $logger->info('New Game created with ID: ' . 4);
                 } else {
-                    $logger->info('Existing Game found with ID: 4');
+                    $logger->info('Existing Game found with ID: ' . 4);
                 }
             } catch (\Exception $e) {
                 $logger->error('Game creation/retrieval failed: ' . $e->getMessage());
@@ -396,10 +396,14 @@ class MatchGameController extends AbstractController
         $session->set('cumulative_score', $cumulativeScore);
 
         try {
-            // Check if a record already exists for this themeId and gameId
+            // Get current level for id
+            $currentLevel = $session->get('current_level', 1);
+
+            // Check if a record already exists for this level, child, and game
             $existingLevel = $entityManager->getRepository(Level::class)
                 ->findOneBy([
-                    'id' => $themeId,
+                    'id' => $currentLevel,
+                    'childId' => $child,
                     'gameId' => $game,
                 ]);
 
@@ -408,13 +412,12 @@ class MatchGameController extends AbstractController
                 $existingLevel->setScore($cumulativeScore);
                 $existingLevel->setNbtries($nbTries);
                 $existingLevel->setTime($time);
-                $existingLevel->setChildId($child);
                 $entityManager->flush();
-                $logger->info('Level updated: themeId=' . $themeId . ', gameId=' . $gameId . ', childId=' . $childId . ', cumulative_score=' . $cumulativeScore);
+                $logger->info('Level updated: id=' . $currentLevel . ', gameId=' . $gameId . ', childId=' . $childId . ', cumulative_score=' . $cumulativeScore);
             } else {
                 // Insert a new record
                 $level = new Level();
-                $level->setId($themeId);
+                $level->setId($currentLevel);
                 $level->setChildId($child);
                 $level->setGameId($game);
                 $level->setScore($cumulativeScore);
@@ -422,7 +425,7 @@ class MatchGameController extends AbstractController
                 $level->setTime($time);
                 $entityManager->persist($level);
                 $entityManager->flush();
-                $logger->info('Level created: themeId=' . $themeId . ', gameId=' . $gameId . ', childId=' . $childId . ', cumulative_score=' . $cumulativeScore);
+                $logger->info('Level created: id=' . $currentLevel . ', gameId=' . $gameId . ', childId=' . $childId . ', cumulative_score=' . $cumulativeScore);
             }
         } catch (\Exception $e) {
             $logger->error('Level creation/update failed: ' . $e->getMessage());
