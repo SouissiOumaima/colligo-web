@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <title>Connexion</title>
+    <style>
+        .toggle {
+            background: url("{{ asset('images/parent3.jpg') }}") no-repeat center center;
+            background-size: cover;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #3c763d;
+            background-color: #dff0d8;
+            border-color: #d6e9c6;
+        }
+        .alert-error {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+        .no-account {
+            display: block;
+            text-align: center;
+            margin: 10px 0;
+            color: #F9968B;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        .no-account:hover {
+            color: #f78779;
+            text-decoration: underline;
+        }
+        .sign-in button {
+            display: inline-block;
+            background: #FFAE9D;
+            color: #2d2d2d;
+            padding: 14px 28px;
+            font-size: 14px;
+            font-weight: 700;
+            border: 2px solid #FF997F;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            align-self: center;
+            box-shadow: 0 4px 10px rgba(255, 174, 157, 0.3);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+        }
+        .sign-in button:hover {
+            background: #F7E9D7;
+            border-color: #EFD5B7;
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(247, 233, 215, 0.4);
+        }
+        .sign-in button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(247, 233, 215, 0.2);
+        }
+        .toggle-panel p {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .password-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+        .password-input-container {
+    display: flex;
+    align-items: center;
+    position: relative; /* Permet de positionner l'icône à l'intérieur de l'input */
+    width: 100%;
+}
+
+.password-input {
+    flex-grow: 1; /* Le champ prend toute la largeur disponible */
+    padding-right: 40px; /* Ajoute de l'espace à droite pour l'icône */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px; /* Positionne l'icône à droite du champ */
+    top: 50%;
+    transform: translateY(-50%); /* Centre verticalement l'icône */
+    cursor: pointer;
+    color: #F9968B; /* Couleur assortie au thème */
+}
+        .forgot-password {
+            align-self: flex-end;
+            margin-right: 10px;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #F9968B;
+        }
+        .forgot-password:hover {
+            color: #f78779;
+            text-decoration: underline;
+        }
+        .error-message {
+            color: #a94442;
+            font-size: 14px;
+            margin-top: 5px;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        {# Display flash messages for general errors #}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-error">{{ message }}</div>
+        {% endfor %}
+
+        {# Formulaire de connexion #}
+        <div class="form-container sign-in">
+            <form method="post" action="{{ path('app_login') }}">
+                <h1>Connexion</h1>
+                <br>
+                <input type="email" name="email" placeholder="Email" value="{{ email }}" required>
+                <div class="password-container">
+                    <div class="password-input-container">
+                        <input type="password" name="password" placeholder="Mot de passe" class="password-input" required>
+                        <i class="fas fa-eye toggle-password"></i>
+                    </div>
+                    {% if error %}
+                        <div class="error-message">{{ error }}</div>
+                    {% endif %}
+                    <a href="{{ path('forgot_password') }}" class="forgot-password">Mot de passe oublié ?</a>
+                </div>
+                <button type="submit">Connexion</button>
+                <a href="{{ path('app_register') }}" class="no-account">Vous n'avez pas de compte ?</a>
+            </form>
+        </div>
+
+        {# Panneau de bascule #}
+        <div class="toggle-container">
+            <div class="toggle">
+                <div class="toggle-panel toggle-right">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const passwordInput = this.previousElementSibling;
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+    </script>
+</body>
+</html>

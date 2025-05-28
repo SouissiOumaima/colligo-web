@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord - Remplir les Blancs{% endblock %}
+
+{% block stylesheets %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/fillInTheBlankDashboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        {% include 'admin/sidebar.html.twig' %}
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="container py-5">
+                <h1 class="dashboard-title">Tableau de Bord - Remplir les Blancs</h1>
+
+                <div class="dashboard-container">
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        <!-- AI-Generated Questions Card -->
+                        <div class="col">
+                            <a href="{{ path('admin_generate_questions') }}" class="game-card glass-card text-decoration-none">
+                                <div class="card-content">
+                                    <i class="fas fa-robot fa-2x card-icon"></i>
+                                    <span class="card-label">Questions Générées par IA</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <!-- Database Questions Card -->
+                        <div class="col">
+                            <a href="{{ path('admin_fill_in_the_blank_database') }}" class="game-card glass-card text-decoration-none">
+                                <div class="card-content">
+                                    <i class="fas fa-database fa-2x card-icon"></i>
+                                    <span class="card-label">Questions dans la Base de Données</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة مطابقة الصور{% endblock %}
+
+{% block body %}
+    <div class="bg-animation light">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+    </div>
+
+    <div class="container">
+        <header class="game-header">
+            <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" class="back-button-form">
+                <input type="hidden" name="game_id" value="{{ gameId }}">
+                <input type="hidden" name="exit" value="true">
+                <button type="submit" class="back-button">
+                    <span class="back-icon"></span>
+                    <span>الرئيسية</span>
+                </button>
+            </form>
+            <div class="level-info">
+                <span class="level-label">المستوى <span id="current-level">{{ currentLevel }}</span></span>
+                <span class="stage-label">المرحلة <span id="current-stage">{{ currentStage }}</span> من <span id="total-stages">10</span></span>
+            </div>
+            <div class="score-display">
+                <span class="score-icon"></span>
+                <span class="score-value" id="current-score">{{ currentScore }} / 50</span>
+            </div>
+        </header>
+
+        <main class="game-content">
+            <div class="question-container">
+                <h2 class="question-text" id="question-text">هل هذا "{{ correctWord }}"؟</h2>
+
+                <div class="tries-container">
+                    <span class="tries-label">المحاولات المتبقية: <span id="tries-remaining">{{ maxTriesPerStage - currentStageTries }}</span> من {{ maxTriesPerStage }}</span>
+                </div>
+
+                <div class="progress-indicator">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="stage-progress" style="width: {{ (currentStage / 10) * 100 }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-grid" id="game-grid">
+                {% for image in currentImages %}
+                    <div class="image-option">
+                        <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" class="image-form">
+                            <input type="hidden" name="image_url" value="{{ image.url }}">
+                            <input type="hidden" name="game_id" value="{{ gameId }}">
+                            <button type="submit" class="image-button">
+                                <div class="image-container">
+                                    <img src="{{ image.url }}" alt="{{ image.word }}" class="game-image">
+                                </div>
+                            </button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="feedback-container" id="feedback-container">
+                {% if isCorrect is defined and isCorrect is not null %}
+                    <p class="feedback-text {% if isCorrect %}text-success{% else %}text-danger{% endif %}">
+                        {% if isCorrect %}
+                            إجابة صحيحة! لقد حصلت على {{ points|default(0) }} نقاط.
+                        {% else %}
+                            {% if maxTriesReached is defined and maxTriesReached %}
+                                لقد نفدت المحاولات! الانتقال إلى المرحلة التالية.
+                            {% else %}
+                                إجابة خاطئة! لديك {{ maxTriesPerStage - currentStageTries }} محاولات متبقية.
+                            {% endif %}
+                        {% endif %}
+                    </p>
+                {% endif %}
+            </div>
+        </main>
+
+        {% if isCorrect is defined and isCorrect is not null %}
+            <div class="modal" id="result-modal">
+                <div class="modal-content result-modal-content">
+                    <div class="result-header">
+                        <h3 id="result-title">
+                            {% if isCorrect %}
+                                إجابة صحيحة!!
+                            {% else %}
+                                {% if maxTriesReached is defined and maxTriesReached %}
+                                    نفدت المحاولات!
+                                {% else %}
+                                    إجابة خاطئة!
+                                {% endif %}
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <div class="result-body">
+                        <div class="result-animation" id="result-animation">
+                            <img src="{{ asset('images/' ~ (isCorrect ? 'yes' : 'no') ~ '.gif') }}" alt="{{ isCorrect ? 'Correct' : 'Incorrect' }}">
+                        </div>
+                        <p class="result-message" id="result-message">
+                            {% if isCorrect %}
+                                ممتاز جدًا! استمر هكذا
+                            {% else %}
+                                {% if maxTriesReached is defined and maxTriesReached %}
+                                    لقد نفدت المحاولات! حاول مرة أخرى في المرحلة التالية.
+                                {% else %}
+                                    حاول مرة أخرى! لديك {{ maxTriesPerStage - currentStageTries }} محاولات متبقية.
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                        <div class="result-buttons">
+                            <form method="post" action="{{ path('proceed_or_retry', {'childId': childId, 'parentId': parentId}) }}" id="proceed-form">
+                                <input type="hidden" name="game_id" value="{{ gameId }}">
+                                <button type="submit" class="btn primary-btn" id="continue-btn">
+                                    {% if isCorrect or (maxTriesReached is defined and maxTriesReached) %}المتابعة{% else %}إعادة المحاولة{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('check_answer', {'childId': childId, 'parentId': parentId}) }}" id="main-menu-form">
+                                <input type="hidden" name="game_id" value="{{ gameId }}">
+                                <input type="hidden" name="exit" value="true">
+                                <button type="submit" class="btn secondary-btn" id="home-btn">العودة للرئيسية</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="character-container">
+            <img src="{{ asset('images/character-happy.svg') }}" alt="شخصية مساعدة" id="game-character" class="game-character">
+            <div class="character-speech" id="character-speech">
+                <p>اختر الصورة الصحيحة!!</p>
+            </div>
+        </div>
+
+        <!-- Audio elements for correct and incorrect answers -->
+        <audio id="correct-sound" src="{{ asset('sounds/correct1.mp3') }}"></audio>
+        <audio id="incorrect-sound" src="{{ asset('sounds/incorrect1.mp3') }}"></audio>
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/game.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: 'Cairo', sans-serif;
+        }
+        .question-text {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .image-option {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            width: 100%;
+            aspect-ratio: 1/1;
+            background-color: #f0f4f8;
+        }
+        .image-button {
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            border: none;
+            border-radius: 15px;
+            padding: 0;
+            display: block;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .image-button:hover {
+            opacity: 0.9;
+        }
+        .image-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+        .game-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background-color: transparent;
+        }
+        .tries-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .tries-label {
+            font-size: 18px;
+            color: #333;
+            font-weight: 600;
+        }
+        .progress-indicator {
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e5e5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #ff4b4b;
+            transition: width 0.3s ease;
+        }
+        .modal {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .result-header h3 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .result-animation {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .result-message {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .result-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .primary-btn {
+            background-color: #b19cd9;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .primary-btn:hover {
+            background-color: #9b83c1;
+        }
+        .primary-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .secondary-btn {
+            background-color: #66d9d1;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+        .secondary-btn:hover {
+            background-color: #55c1b9;
+        }
+        .text-success {
+            color: green;
+            font-weight: bold;
+        }
+        .text-danger {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/animations.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const continueBtn = document.getElementById('continue-btn');
+            const proceedForm = document.getElementById('proceed-form');
+            const correctSound = document.getElementById('correct-sound');
+            const incorrectSound = document.getElementById('incorrect-sound');
+
+            // Play sound based on isCorrect when modal is shown
+            {% if isCorrect is defined and isCorrect is not null %}
+                if ({{ isCorrect ? 'true' : 'false' }}) {
+                    correctSound.play().catch(function(error) {
+                        console.error('Error playing correct sound:', error);
+                    });
+                } else {
+                    incorrectSound.play().catch(function(error) {
+                        console.error('Error playing incorrect sound:', error);
+                    });
+                }
+            {% endif %}
+
+            if (continueBtn && proceedForm) {
+                continueBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Disable the button to prevent multiple submissions
+                    continueBtn.disabled = true;
+                    continueBtn.textContent = 'جاري التحميل...';
+                    proceedForm.submit();
+                });
+            }
+        });
+    </script>
+{% endblock %}

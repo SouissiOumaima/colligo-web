@@ -1,0 +1,28 @@
+<div class="ratio ratio-16x9 bg-dark mb-4">
+    {% set videoPath = 'videos/' ~ profession.video %}
+    
+    <video controls class="rounded">
+        {% if file_exists(videoPath) %}
+            <source src="{{ asset(videoPath) }}" type="video/mp4">
+        {% else %}
+            <!-- Message d'erreur amélioré -->
+            <div class="d-flex flex-column justify-content-center align-items-center h-100 text-white">
+                <i class="fas fa-exclamation-triangle fa-3x mb-3 text-danger"></i>
+                <h4 class="mb-2">Vidéo non trouvée</h4>
+                <p class="small bg-dark p-2 rounded">Erreur : {{ videoPath }} n'existe pas</p>
+                <div class="alert alert-dark mt-3">
+                    <strong>Solution :</strong>
+                    <ol class="mb-0">
+                        <li>Vérifiez que le fichier est dans <code>public/{{ videoPath }}</code></li>
+                        <li>Vérifiez le nom exact (sensible à la casse)</li>
+                    </ol>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Fallback pour navigateurs sans support HTML5 -->
+        <div class="video-fallback">
+            Votre navigateur ne supporte pas les vidéos HTML5
+        </div>
+    </video>
+</div>

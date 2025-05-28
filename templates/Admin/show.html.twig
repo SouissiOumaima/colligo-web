@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin Details{% endblock %}
+
+{% block body %}
+    <h1>Admin Details</h1>
+    <p>ID: {{ admin.adminId }}</p>
+    <p>Email: {{ admin.email }}</p>
+    <!-- Pas de username ici, sauf si vous l'ajoutez à l'entité -->
+{% endblock %}

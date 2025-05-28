@@ -1,0 +1,31 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        App\Entity\Parents:
+            algorithm: auto
+        App\Entity\Admin:
+            algorithm: auto
+
+    providers:
+        users_in_memory: { memory: null }
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: users_in_memory
+            logout:
+                path: app_logout
+                target: app_login
+
+    access_control:
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/verify-account, roles: PUBLIC_ACCESS }
+        - { path: ^/forgot-password-request, roles: PUBLIC_ACCESS }
+        - { path: ^/forgot-password, roles: PUBLIC_ACCESS }
+        - { path: ^/change-password, roles: PUBLIC_ACCESS }
+        - { path: ^/pre_dashboard, roles: PUBLIC_ACCESS }
+        - { path: ^/admin_dashboard, roles: PUBLIC_ACCESS }

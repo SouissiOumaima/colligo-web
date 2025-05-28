@@ -1,0 +1,611 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}لعبة النطق السحرية{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ff6f61;
+            --gradient-start: #ffcc80;
+            --gradient-end: #80d8ff;
+            --background-light: #fff3e0;
+            --text-dark: #333;
+            --text-grey: #666;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--gradient-start), var(--primary-color), var(--gradient-end));
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            margin: 0;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 30px;
+            text-align: center;
+            background: #ffffff;
+            border-radius: 25px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border: 4px solid var(--primary-color);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: scale(1.02);
+        }
+
+        h1 {
+            font-family: 'Comic Neue', cursive;
+            font-size: 60px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(255, 111, 97, 0.3);
+            animation: bounceTitle 2s infinite;
+        }
+
+        .progress-bar {
+            height: 15px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gradient-end), var(--gradient-start));
+            transition: width 0.5s ease;
+        }
+
+        .content-card {
+            background: var(--background-light);
+            border-radius: 20px;
+            border: 3px dashed var(--gradient-end);
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .content-card::before {
+            content: '🌟';
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            font-size: 30px;
+            animation: sparkle 2s infinite;
+        }
+
+        .prononcer {
+            font-family: 'Comic Neue', cursive;
+            font-size: 100px;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            animation: pulseText 2s infinite;
+        }
+
+        .btn {
+            font-size: 24px;
+            padding: 15px 40px;
+            border-radius: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--gradient-end), #40c4ff);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, var(--gradient-start), #ffab40);
+            color: #fff;
+        }
+
+        .btn i {
+            font-size: 28px;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        p {
+            font-size: 28px;
+            color: var(--text-grey);
+            margin-bottom: 20px;
+            animation: fadeInUp 1s;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .recording-indicator {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-top: 20px;
+            animation: pulse 1s infinite;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .recording-indicator .mic-icon {
+            color: #ff0000;
+            animation: pulse 1s infinite;
+        }
+
+        .recording-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin-left: 10px;
+        }
+
+        .wave-bar {
+            width: 3px;
+            height: 20px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+            animation: wave 0.5s infinite ease-in-out;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1.5); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            direction: rtl;
+        }
+
+        .modal-content {
+            background: var(--background-light);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            border: 3px solid var(--gradient-start);
+            animation: popIn 0.5s;
+        }
+
+        .modal-message {
+            font-size: 30px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .gif {
+            max-width: 400px;
+            border-radius: 15px;
+            margin: 20px 0;
+            animation: bounceGif 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                border-width: 3px;
+            }
+            h1 {
+                font-size: 40px;
+            }
+            .prononcer {
+                font-size: 70px;
+            }
+            .btn {
+                font-size: 20px;
+                padding: 10px 30px;
+            }
+            p {
+                font-size: 22px;
+            }
+            .modal-content {
+                max-width: 90%;
+                padding: 20px;
+            }
+            .modal-message {
+                font-size: 24px;
+            }
+            .gif {
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+                width: 95%;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .prononcer {
+                font-size: 50px;
+            }
+
+            .btn {
+                font-size: 18px;
+                padding: 8px 20px;
+                margin: 5px;
+            }
+
+            .btn i {
+                font-size: 20px;
+            }
+
+            .recording-indicator {
+                font-size: 20px;
+            }
+
+            .navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .modal-content {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .modal-message {
+                font-size: 20px;
+            }
+
+            .gif {
+                max-width: 250px;
+            }
+
+            .wave-bar {
+                width: 2px;
+                height: 15px;
+            }
+        }
+
+        @keyframes bounceTitle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulseText {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes sparkle {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounceGif {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="container">
+        <h1>لعبة النطق السحرية لـ {{ child.name }}! 🪄</h1>
+
+        <p>
+            المستوى: {% if level_number == 1 %}1{% else %}المستوى {{ level_number + 1 }}{% endif %} | اللغة: {{ child.language }} 🌟
+            <span style="color: var(--primary-color);">النتيجة: {{ average_score }} ⭐</span>
+        </p>
+
+        <div class="progress-bar">
+            <div class="progress-bar-fill" style="width: {{ content_size > 0 ? ((content_index + 1) / content_size * 100) : 0 }}%;"></div>
+        </div>
+
+        <section id="game-area">
+            {% if current_content %}
+                <div class="content-card">
+                    <h2 class="prononcer" id="content-to-pronounce">{{ current_content.content }}</h2>
+                    <input type="hidden" id="expected-text" value="{{ current_content.content }}">
+                    <input type="hidden" id="child-id" value="{{ child.childId }}">
+                    <input type="hidden" id="content-id" value="{{ current_content.id }}">
+                    <div class="btn-group" role="group">
+                        <button id="pronounce-btn" class="btn btn-primary"><i class="fas fa-volume-up"></i> استمع</button>
+                        <button id="record-btn" class="btn btn-success" disabled><i class="fas fa-microphone"></i> تكلم</button>
+                    </div>
+                    <div id="recording-indicator" class="recording-indicator" style="display: none;">
+                        <i class="fas fa-microphone mic-icon"></i>
+                        <span>جارٍ التسجيل...</span>
+                        <div class="recording-wave">
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                        </div>
+                    </div>
+                </div>
+                <nav class="navigation">
+                    <a href="{{ path('child_dashboard', {'parentId': child.parentId.parentId, 'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> عودة</a>
+                    {% if content_index > 0 %}
+                        <a href="{{ path('jeu_accueil', {'childId': child.childId, 'contentIndex': content_index - 1}) }}" class="btn btn-primary"><i class="fas fa-arrow-right"></i> السابق</a>
+                    {% endif %}
+                    {% if content_index < content_size - 1 %}
+                        <a href="{{ path('jeu_accueil', {'childId': child.childId, 'contentIndex': content_index + 1}) }}" class="btn btn-primary"><i class="fas fa-arrow-left"></i> التالي</a>
+                    {% endif %}
+                </nav>
+            {% else %}
+                <p>لا توجد حروف للتعلم الآن! عود قريبًا! 🕒</p>
+                <nav class="navigation">
+                    <a href="{{ path('jeu_accueil', {'childId': child.childId}) }}" class="btn btn-primary"><i class="fas fa-home"></i> عودة</a>
+                </nav>
+            {% endif %}
+        </section>
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <p id="modal-message" class="modal-message"></p>
+                <img id="modal-gif" class="gif" src="" alt="النتيجة">
+                <audio id="modal-sound" autoplay></audio>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const pronounceBtn = document.getElementById('pronounce-btn');
+            const recordBtn = document.getElementById('record-btn');
+            const recordingIndicator = document.getElementById('recording-indicator');
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modal-message');
+            const modalGif = document.getElementById('modal-gif');
+            const modalSound = document.getElementById('modal-sound');
+            const expectedText = document.getElementById('expected-text')?.value || '';
+            const childId = document.getElementById('child-id')?.value || '1';
+            const contentId = document.getElementById('content-id')?.value || '1';
+            const contentToPronounce = document.getElementById('content-to-pronounce');
+            const levelNumber = {{ level_number }};
+            let isProcessing = false;
+            let isRecording = false;
+            let recordingTimeout;
+
+            const correctSound = new Audio('/sounds/correct1.mp3');
+            const incorrectSound = new Audio('/sounds/incorrect1.mp3');
+            correctSound.preload = 'auto';
+            incorrectSound.preload = 'auto';
+
+            if (pronounceBtn) {
+                pronounceBtn.addEventListener('click', () => {
+                    const utterance = new SpeechSynthesisUtterance(contentToPronounce.textContent);
+                    utterance.lang = 'fr';
+                    utterance.pitch = 1.0;
+                    utterance.rate = 0.8;
+                    window.speechSynthesis.speak(utterance);
+                    recordBtn.disabled = false;
+                });
+            }
+
+            if (recordBtn) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    alert('عذراً، متصفحك لا يدعم التعرف على الصوت. الرجاء استخدام Chrome أو Edge.');
+                    return;
+                }
+
+                const recognition = new SpeechRecognition();
+                recognition.lang = 'fr-FR';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recordBtn.addEventListener('click', async () => {
+                    if (isProcessing || isRecording) return;
+                    
+                    try {
+                        await navigator.mediaDevices.getUserMedia({ audio: true });
+                        
+                        isProcessing = true;
+                        isRecording = true;
+                        recordBtn.disabled = true;
+                        recordingIndicator.style.display = 'flex';
+
+                        // Clear any existing timeout
+                        if (recordingTimeout) {
+                            clearTimeout(recordingTimeout);
+                        }
+
+                        // Start recording with longer duration
+                        recognition.start();
+                        
+                        // Set timeout for recording
+                        const recordingDuration = levelNumber === 1 ? 4000 : levelNumber === 2 ? 5000 : 6000;
+                        recordingTimeout = setTimeout(() => {
+                            if (isRecording) {
+                                recognition.stop();
+                            }
+                        }, recordingDuration);
+
+                    } catch (err) {
+                        console.error('خطأ في الوصول إلى الميكروفون:', err);
+                        showError('الرجاء السماح باستخدام الميكروفون والمحاولة مرة أخرى.');
+                    }
+                });
+
+                recognition.onresult = (event) => {
+                    isRecording = false;
+                    const results = Array.from(event.results);
+                    const transcribedText = results[0][0].transcript;
+                    
+                    const formData = new FormData();
+                    formData.append('transcribedText', transcribedText);
+                    formData.append('expectedText', expectedText);
+                    formData.append('childId', childId);
+                    formData.append('contentId', contentId);
+                    formData.append('level', levelNumber);
+
+                    fetch('{{ path('verifier_pronunciation') }}', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        recordingIndicator.style.display = 'none';
+                        showFeedback(data);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('أحسنت المحاولة! حاول مرة أخرى! 🌟');
+                    })
+                    .finally(() => {
+                        isProcessing = false;
+                    });
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('خطأ في التعرف على الصوت:', event.error);
+                    isRecording = false;
+                    
+                    let errorMessage = 'أحسنت المحاولة! حاول مرة أخرى! 🌟';
+                    if (event.error === 'not-allowed') {
+                        errorMessage = 'الرجاء السماح باستخدام الميكروفون والمحاولة مرة أخرى.';
+                    } else if (event.error === 'no-speech') {
+                        errorMessage = 'لم أسمعك جيداً. تحدث بصوت أعلى قليلاً! 🎤';
+                    }
+                    
+                    showError(errorMessage);
+                };
+
+                recognition.onend = () => {
+                    console.log('انتهى التسجيل');
+                    isRecording = false;
+                    if (!isProcessing) {
+                        recordingIndicator.style.display = 'none';
+                        recordBtn.disabled = false;
+                    }
+                };
+
+                function showFeedback(data) {
+                    modalMessage.textContent = data.message;
+                    modalGif.src = data.gif;
+                    modalSound.src = data.son;
+                    modalSound.play().catch(err => console.error('خطأ في تشغيل الصوت:', err));
+                    modal.style.display = 'flex';
+
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        if (data.retry) {
+                            recordBtn.disabled = false;
+                        } else {
+                            handleNavigation(data);
+                        }
+                    }, 3000);
+                }
+
+                function showError(message) {
+                    recordingIndicator.style.display = 'none';
+                    modalMessage.textContent = message;
+                    modalGif.src = '/gifs/encourage.gif';
+                    modalSound.src = '/sounds/incorrect1.mp3';
+                    modal.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        recordBtn.disabled = false;
+                        isProcessing = false;
+                    }, 3000);
+                }
+
+                function handleNavigation(data) {
+                    if (data.next) {
+                        window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}';
+                    } else {
+                        const nextIndex = {{ content_index }} + 1;
+                        if (nextIndex < {{ content_size }}) {
+                            window.location.href = '{{ path('jeu_accueil', {childId: child.childId}) }}?contentIndex=' + nextIndex;
+                        } else {
+                            alert('مبروك! أنت بطل سحري! 🎉🌟');
+                            window.location.reload();
+                        }
+                    }
+                }
+            }
+
+            document.querySelectorAll('.navigation a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    console.log('Navigation cliquée:', link.href);
+                });
+            });
+        });
+    </script>
+{% endblock %}
