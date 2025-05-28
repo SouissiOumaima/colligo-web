@@ -7,7 +7,17 @@ security:
             algorithm: auto
 
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\Parents
+                property: email
+        admin_provider:
+            entity:
+                class: App\Entity\Admin
+                property: email
+        chain_provider:
+            chain:
+                providers: [app_user_provider, admin_provider]
 
     firewalls:
         dev:
@@ -15,7 +25,7 @@ security:
             security: false
         main:
             lazy: true
-            provider: users_in_memory
+            provider: chain_provider
             logout:
                 path: app_logout
                 target: app_login

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Doctrine\ORM\EntityManagerInterface; // Added
+use Doctrine\ORM\EntityManagerInterface;
 
 class AuthController extends AbstractController
 {
@@ -22,20 +22,20 @@ class AuthController extends AbstractController
     private $logger;
     private $passwordHasher;
     private $adminRepository;
-    private $entityManager; // Added
+    private $entityManager;
 
     public function __construct(
         AuthService $authService,
         LoggerInterface $logger,
         UserPasswordHasherInterface $passwordHasher,
         AdminRepository $adminRepository,
-        EntityManagerInterface $entityManager // Added
+        EntityManagerInterface $entityManager
     ) {
         $this->authService = $authService;
         $this->logger = $logger;
         $this->passwordHasher = $passwordHasher;
         $this->adminRepository = $adminRepository;
-        $this->entityManager = $entityManager; // Initialize
+        $this->entityManager = $entityManager;
     }
 
     private function isValidPassword(string $password): bool
@@ -58,6 +58,22 @@ class AuthController extends AbstractController
         return $isValid;
     }
 
+    private function getPasswordRequirementsError(string $password): string
+    {
+        $error = 'Le mot de passe doit contenir :<ul>';
+        $error .= strlen($password) < 6 ? '<li>Au moins 6 caractères</li>' : '';
+        $error .= !preg_match('/[A-Z]/', $password) ? '<li>Au moins une majuscule</li>' : '';
+        $error .= !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password) ? '<li>Au moins un caractère spécial</li>' : '';
+        $error .= '</ul>';
+        return $error;
+    }
+
+    private function getAndClearFlash(string $type): ?string
+    {
+        $flashBag = $this->container->get('request_stack')->getSession()->getFlashBag();
+        return $flashBag->has($type) ? $flashBag->get($type)[0] : null;
+    }
+
     #[Route('/', name: 'app_root', methods: ['GET', 'POST'])]
     #[Route('/login', name: 'app_login', methods: ['GET', 'POST'])]
     public function login(Request $request): Response
@@ -67,6 +83,7 @@ class AuthController extends AbstractController
         if ($request->isMethod('POST')) {
             $email = $request->request->get('email');
             $password = $request->request->get('password');
+            $session = $request->getSession();
 
             $this->logger->debug('Login form data', ['email' => $email]);
 
@@ -74,14 +91,30 @@ class AuthController extends AbstractController
                 // Check if the email exists in the Admin table
                 $admin = $this->adminRepository->findOneBy(['email' => $email]);
                 if ($admin && $this->passwordHasher->isPasswordValid($admin, $password)) {
-                    $this->logger->info('Admin credentials verified, redirecting to admin dashboard', ['email' => $email]);
+                    // Set session variables
+                    $session->set('user_email', $email);
+                    $session->set('user_type', 'admin');
+                    $session->set('admin_id', $admin->getAdminId());
+
+                    $this->logger->info('Admin credentials verified, session set, redirecting to admin dashboard', [
+                        'email' => $email,
+                        'admin_id' => $admin->getAdminId()
+                    ]);
                     $this->addFlash('success', 'Connexion admin réussie !');
                     return $this->redirectToRoute('admin_dashboard', ['adminId' => $admin->getAdminId()]);
                 }
 
-                // If not an admin or password doesn't match, try parent login
+                // Try parent login
                 $user = $this->authService->login($email, $password);
-                $this->logger->info('Login successful, redirecting to parent dashboard', ['email' => $email]);
+                // Set session variables
+                $session->set('user_email', $email);
+                $session->set('user_type', 'parent');
+                $session->set('parent_id', $user->getParentId());
+
+                $this->logger->info('Login successful, session set, redirecting to parent dashboard', [
+                    'email' => $email,
+                    'parent_id' => $user->getParentId()
+                ]);
                 $this->addFlash('success', 'Connexion réussie !');
                 return $this->redirectToRoute('pre_dashboard', ['parentId' => $user->getParentId()]);
             } catch (AuthenticationException $e) {
@@ -101,6 +134,105 @@ class AuthController extends AbstractController
         ]);
     }
 
+    #[Route('/change-password', name: 'update_password', methods: ['GET', 'POST'])]
+    public function changePassword(Request $request): Response
+    {
+        $this->logger->info('Processing change password request', ['method' => $request->getMethod()]);
+
+        // Get session data
+        $session = $request->getSession();
+        $email = $session->get('user_email');
+        $userType = $session->get('user_type');
+        $parentId = $session->get('parent_id');
+        $adminId = $session->get('admin_id');
+
+        // Validate session
+        if (!$email || !$userType || (!$parentId && !$adminId)) {
+            $this->logger->error('Change password failed: Incomplete session data', [
+                'email' => $email,
+                'user_type' => $userType,
+                'parent_id' => $parentId,
+                'admin_id' => $adminId
+            ]);
+            $this->addFlash('error_update_password', 'Vous devez être connecté pour changer votre mot de passe.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $this->logger->debug('Authenticated user', ['email' => $email, 'type' => $userType]);
+
+        // Fetch user based on user_type
+        $user = null;
+        if ($userType === 'parent') {
+            $user = $this->entityManager->getRepository(Parents::class)->findOneBy(['email' => $email]);
+        } elseif ($userType === 'admin') {
+            $user = $this->adminRepository->findOneBy(['email' => $email]);
+        }
+
+        if (!$user) {
+            $this->logger->error('Change password failed: User not found', ['email' => $email]);
+            $this->addFlash('error_update_password', 'Utilisateur non trouvé.');
+            $session->clear(); // Clear invalid session
+            return $this->redirectToRoute('app_login');
+        }
+
+        $passwordError = null;
+        if ($request->isMethod('POST')) {
+            // Validate CSRF token
+            if (!$this->isCsrfTokenValid('change_password', $request->request->get('_csrf_token'))) {
+                $this->logger->error('Invalid CSRF token', ['email' => $email]);
+                $this->addFlash('error_update_password', 'Jeton de sécurité invalide.');
+                return $this->redirectToRoute('update_password');
+            }
+
+            $currentPassword = $request->request->get('current_password');
+            $newPassword = $request->request->get('new_password');
+            $confirmPassword = $request->request->get('confirm_password');
+
+            $this->logger->debug('Change password form data', [
+                'email' => $email,
+                'current_password' => $currentPassword ? 'provided' : 'missing',
+                'new_password' => $newPassword ? 'provided' : 'missing',
+                'confirm_password' => $confirmPassword ? 'provided' : 'missing',
+            ]);
+
+            if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
+                $this->addFlash('error_update_password', 'Veuillez remplir tous les champs du formulaire.');
+            } elseif ($newPassword !== $confirmPassword) {
+                $this->addFlash('error_update_password', 'Les nouveaux mots de passe ne correspondent pas.');
+            } elseif (!$this->isValidPassword($newPassword)) {
+                $passwordError = $this->getPasswordRequirementsError($newPassword);
+                $this->addFlash('error_update_password', $passwordError);
+            } else {
+                try {
+                    if ($user instanceof Parents) {
+                        $this->authService->changePassword($user, $currentPassword, $newPassword);
+                        $this->logger->info('Password changed successfully for parent', ['email' => $email]);
+                        $this->addFlash('success_update_password', 'Votre mot de passe a été changé avec succès.');
+                        return $this->redirectToRoute('pre_dashboard', ['parentId' => $parentId]);
+                    } elseif ($user instanceof Admin) {
+                        $this->authService->changeAdminPassword($user, $currentPassword, $newPassword);
+                        $this->logger->info('Password changed successfully for admin', ['email' => $email]);
+                        $this->addFlash('success_update_password', 'Votre mot de passe a été changé avec succès.');
+                        return $this->redirectToRoute('admin_dashboard', ['adminId' => $adminId]);
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('Change password failed: {error}', [
+                        'error' => $e->getMessage(),
+                        'email' => $email,
+                    ]);
+                    $this->addFlash('error_update_password', $e->getMessage());
+                }
+            }
+        }
+
+        $this->logger->info('Rendering change password page');
+        return $this->render('auth/update_password.html.twig', [
+            'password_error' => $passwordError,
+            'email' => $email,
+        ]);
+    }
+
+    // Other methods unchanged
     #[Route('/register', name: 'app_register', methods: ['GET', 'POST'])]
     public function register(Request $request): Response
     {
@@ -123,12 +255,7 @@ class AuthController extends AbstractController
             } elseif ($password !== $confirmPassword) {
                 $this->addFlash('error', 'Les mots de passe ne correspondent pas.');
             } elseif (!$this->isValidPassword($password)) {
-                $passwordError = 'Le mot de passe doit contenir :';
-                $passwordError .= '<ul>';
-                $passwordError .= strlen($password) < 6 ? '<li>Au moins 6 caractères</li>' : '';
-                $passwordError .= !preg_match('/[A-Z]/', $password) ? '<li>Au moins une majuscule</li>' : '';
-                $passwordError .= !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password) ? '<li>Au moins un caractère spécial</li>' : '';
-                $passwordError .= '</ul>';
+                $passwordError = $this->getPasswordRequirementsError($password);
                 $this->addFlash('error', $passwordError);
             } else {
                 try {
@@ -326,110 +453,4 @@ class AuthController extends AbstractController
             'confirm_password' => $formData['confirm_password'] ?? null
         ]);
     }
-
-    private function getPasswordRequirementsError(string $password): string
-    {
-        $error = 'Le mot de passe doit contenir :<ul>';
-        $error .= strlen($password) < 6 ? '<li>Au moins 6 caractères</li>' : '';
-        $error .= !preg_match('/[A-Z]/', $password) ? '<li>Au moins une majuscule</li>' : '';
-        $error .= !preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password) ? '<li>Au moins un caractère spécial</li>' : '';
-        $error .= '</ul>';
-        return $error;
-    }
-
-    private function getAndClearFlash(string $type): ?string
-    {
-        $flashBag = $this->container->get('request_stack')->getSession()->getFlashBag();
-        return $flashBag->has($type) ? $flashBag->get($type)[0] : null;
-    }
-#[Route('/change-password', name: 'update_password', methods: ['GET', 'POST'])]
-public function changePassword(Request $request): Response
-{
-    $this->logger->info('Processing change password request', ['method' => $request->getMethod()]);
-
-    // Get session data
-    $session = $request->getSession();
-    $email = $session->get('user_email');
-    $userType = $session->get('user_type');
-    $parentId = $session->get('parent_id');
-    $adminId = $session->get('admin_id');
-
-    if (!$email || !$userType) {
-        $this->logger->error('Change password failed: No authenticated user in session');
-        $this->addFlash('error_update_password', 'Vous devez être connecté pour changer votre mot de passe.');
-        return $this->redirectToRoute('app_login');
-    }
-
-    $this->logger->debug('Authenticated user', ['email' => $email, 'type' => $userType]);
-
-    // Fetch user based on user_type
-    $user = null;
-    if ($userType === 'parent') {
-        $user = $this->entityManager->getRepository(Parents::class)->findOneBy(['email' => $email]);
-    } elseif ($userType === 'admin') {
-        $user = $this->adminRepository->findOneBy(['email' => $email]);
-    }
-
-    if (!$user) {
-        $this->logger->error('Change password failed: User not found', ['email' => $email]);
-        $this->addFlash('error_update_password', 'Utilisateur non trouvé.');
-        return $this->redirectToRoute('app_login');
-    }
-
-    $passwordError = null;
-    if ($request->isMethod('POST')) {
-        // Validate CSRF token
-        if (!$this->isCsrfTokenValid('change_password', $request->request->get('_csrf_token'))) {
-            $this->logger->error('Invalid CSRF token', ['email' => $email]);
-            $this->addFlash('error_update_password', 'Jeton de sécurité invalide.');
-            return $this->redirectToRoute('update_password');
-        }
-
-        $currentPassword = $request->request->get('current_password');
-        $newPassword = $request->request->get('new_password');
-        $confirmPassword = $request->request->get('confirm_password');
-
-        $this->logger->debug('Change password form data', [
-            'email' => $email,
-            'current_password' => $currentPassword ? 'provided' : 'missing',
-            'new_password' => $newPassword ? 'provided' : 'missing',
-            'confirm_password' => $confirmPassword ? 'provided' : 'missing',
-        ]);
-
-        if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-            $this->addFlash('error_update_password', 'Veuillez remplir tous les champs du formulaire.');
-        } elseif ($newPassword !== $confirmPassword) {
-            $this->addFlash('error_update_password', 'Les nouveaux mots de passe ne correspondent pas.');
-        } elseif (!$this->isValidPassword($newPassword)) {
-            $passwordError = $this->getPasswordRequirementsError($newPassword);
-            $this->addFlash('error_update_password', $passwordError);
-        } else {
-            try {
-                if ($user instanceof Parents) {
-                    $this->authService->changePassword($user, $currentPassword, $newPassword);
-                    $this->logger->info('Password changed successfully for parent', ['email' => $email]);
-                    $this->addFlash('success_update_password', 'Votre mot de passe a été changé avec succès.');
-                    return $this->redirectToRoute('pre_dashboard', ['parentId' => $parentId]);
-                } elseif ($user instanceof Admin) {
-                    $this->authService->changeAdminPassword($user, $currentPassword, $newPassword);
-                    $this->logger->info('Password changed successfully for admin', ['email' => $email]);
-                    $this->addFlash('success_update_password', 'Votre mot de passe a été changé avec succès.');
-                    return $this->redirectToRoute('admin_dashboard', ['adminId' => $adminId]);
-                }
-            } catch (\Exception $e) {
-                $this->logger->error('Change password failed: {error}', [
-                    'error' => $e->getMessage(),
-                    'email' => $email,
-                ]);
-                $this->addFlash('error_update_password', $e->getMessage());
-            }
-        }
-    }
-
-    $this->logger->info('Rendering change password page');
-    return $this->render('auth/update_password.html.twig', [
-        'password_error' => $passwordError,
-        'email' => $email,
-    ]);
-}
 }
